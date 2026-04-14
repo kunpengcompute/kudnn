@@ -1,0 +1,11 @@
+.vscode
+out
+test/dnn/acl/arm_compute_version.embed
+KML
+securec
+opensource
+dependencies
+test/dnn/llt/gtest/gtest_lib/
+test/dnn/llt/gtest/include/
+cmake-build-debug
+.codemate
