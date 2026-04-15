@@ -172,9 +172,9 @@ KuDNN目前支持的算子如表 KuDNN支持的算子如下所示。
 ``` python
 kuDNN/
 ├── build/
-│  ├── build_dnn.sh              # kudnn编译脚本
-│  ├── pre_env_dnn_compile.sh    # 测试程序依赖库Googletest编译脚本
-|  └── pre_env_dnn.sh            # 测试程序依赖库Googletest下载和编译脚本
+│  ├── build_kudnn.sh              # kudnn编译脚本
+│  ├── pre_env_kudnn_compile.sh    # 测试程序依赖库Googletest编译脚本
+|  └── pre_env_kudnn.sh            # 测试程序依赖库Googletest下载和编译脚本
 ├── src/dnn/                        
 │  ├── include/                  # 头文件
 │  └── src/                      # kudnn库源码
