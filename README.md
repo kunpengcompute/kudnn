@@ -4,13 +4,13 @@
 - [2026/03] KuDNN首次上线，支持linear、softmax和normal等算子，使用KML BLAS高性能库和JIT动态代码生成kernel作为底层计算方法
 
 ## 🚀概述
-KDNN鲲鹏深度神经网络算子库，结合鲲鹏CPU微架构特性与软优化手段，优化AI算子性能。KDNN可以通过算子库插件形式集成进开源软件oneDNN框架，也可以单独作为后端加速算子集成到TensorFlow或者Pytorch。
+KuDNN鲲鹏深度神经网络算子库，结合鲲鹏CPU微架构特性与软优化手段，优化AI算子性能。KuDNN可以通过算子库插件形式集成进开源软件oneDNN框架，也可以单独作为后端加速算子集成到TensorFlow或者Pytorch。
 
 
 ## 📝版本配套
 
 - 运行平台
-    - 鲲鹏 920Pro
+    - 鲲鹏 920 专业版
 - 系统规格
     - openEuler 20.03（LTS-SP3）AArch64
     - openEuler 22.03（LTS-SP2）AArch64
@@ -45,7 +45,6 @@ module use [HPCKit安装目录]/HPCKit/latest/modulefiles   #添加HPCkit到MODU
 module avail                                            #查看HPCKit各组件名称
 ```
 ##### 加载编译器环境变量
-- 若使用Bisheng（编译器版本号根据实际情况调整）
 ``` shell
 module load bisheng/compiler5.1.0/bishengmodule #加载Bisheng编译器，版本号根据实际情况调整
 ```
@@ -71,7 +70,6 @@ module use [HPCKit安装目录]/HPCKit/latest/modulefiles   #添加HPCkit到MODU
 module avail                                            #查看HPCKit各组件名称
 ```
 ##### 加载编译器环境变量
-- 若使用GCC（编译器版本号根据实际情况调整）
 ``` shell
 module load gcc/compiler12.3.1/gccmodule    #加载gcc编译器，版本号根据实际情况调整
 ```
@@ -165,9 +163,9 @@ KuDNN目前支持的算子如表 KuDNN支持的算子如下所示。
 |[Root Mean Square Normalization](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_187.html)|均方根归一化算子|
 |[Rotary Position Embedding](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_190.html)|旋转位置编码|
 
-更多学习教程见HPCkit开发指南的KuDNN章节。
+更多学习教程见KuDNN开发指南。
 
-[HPCkit开发指南KuDNN](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_158.html): 详细介绍了KuDNN的接口定义、使用说明和代码样例。
+[KuDNN开发指南](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_158.html): 详细介绍了KuDNN的接口定义、使用说明和代码样例。
 
 ## 🔍目录结构
 
