@@ -93,7 +93,7 @@ sh build/build_kudnn.sh --only_kudnn=on --build_type=Release --compiler=gcc --in
 #### (1) 编译测试程序
 KuDNN的gtest测试程序依赖googletest，进入KuDNN根目录执行脚本下载安装googletest。
 ``` shell
-sh build/pre_env_dnn.sh
+sh build/pre_env_kudnn.sh
 ```
 
 安装完成后会在opensource/install/googletest/lib64下生成gtest相关库
