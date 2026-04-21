@@ -55,7 +55,15 @@ module load bisheng/kupl26.0.RC1/release        #加载Kupl
 ```
 
 ##### 编译KuDNN
-进入KuDNN根目录执行如下命令
+上传并解压 KuDNN 项目源码包（分支名根据实际情况调整）
+```
+unzip kudnn-main.zip
+```
+进入KuDNN项目源码根目录（分支名根据实际情况调整）
+```
+cd kudnn-main
+```
+执行如下命令
 ``` shell
 sh build/build_kudnn.sh --only_kudnn=on --build_type=Release --compiler=clang --install_path=[KuDNN安装目录]
 # --only_kudnn=on 表示只编译kudnn，不编译测试程序
@@ -80,7 +88,16 @@ module load gcc/kupl26.0.RC1/release        #加载Kupl
 ```
 
 ##### 编译KuDNN
-进入KuDNN根目录执行如下命令
+
+上传并解压 KuDNN 项目源码包（分支名根据实际情况调整）
+```
+unzip kudnn-main.zip
+```
+进入KuDNN项目源码根目录（分支名根据实际情况调整）
+```
+cd kudnn-main
+```
+执行如下命令
 ``` shell
 sh build/build_kudnn.sh --only_kudnn=on --build_type=Release --compiler=gcc --install_path=[KuDNN安装目录]
 # --only_kudnn=on 表示只编译kudnn，不编译测试程序
@@ -96,10 +113,16 @@ KuDNN的gtest测试程序依赖googletest，进入KuDNN根目录执行脚本下�
 sh build/pre_env_kudnn.sh
 ```
 
+如果pre_env_kudnn.sh脚本因网络问题下载googletest失败，可手动下载[googletest](https://github.com/google/googletest/tree/v1.15.2)。如果下载的googletest根目录带有后缀名，需重命名为不带后缀的googletest，再上传至KuDNN根目录的opensource/路径下。最后执行如下命令跳过下载直接开始构建。
+```
+sh build/pre_env_kudnn_compile.sh
+```
+
 安装完成后会在opensource/install/googletest/lib64下生成gtest相关库
 ```
 libgmock.a  libgmock_main.a  libgtest.a  libgtest_main.a
 ```
+
 
 在kudnn编译完成的基础上，编译测试程序，测试程序只支持在Bisheng编译KuDNN的基础上编译。
 ``` shell
