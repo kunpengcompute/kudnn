@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -25,19 +25,24 @@ namespace Detail {
 
 class EmbeddingLayerFWDImpl final {
 public:
-    EmbeddingLayerFWDImpl(const int num_embeddings, const int embedding_dim,  __fp16 *_weight,
-        const int padding_idx, const float max_norm, const float norm_type) noexcept(false)
-        : num_embeddings(num_embeddings), embedding_dim(embedding_dim), weight(_weight), padding_idx(padding_idx),
-        max_norm(max_norm), norm_type(norm_type)
+    EmbeddingLayerFWDImpl(const int num_embeddings, const int embedding_dim, __fp16 *_weight, const int padding_idx,
+                          const float max_norm, const float norm_type) noexcept(false)
+        : num_embeddings(num_embeddings),
+          embedding_dim(embedding_dim),
+          weight(_weight),
+          padding_idx(padding_idx),
+          max_norm(max_norm),
+          norm_type(norm_type)
     {
-        Service::ThrowOnStatus(EmbeddingLayerFWD::ValidateInput(
-            num_embeddings, embedding_dim, weight, padding_idx, max_norm, norm_type), "Embedding layer");
+        Service::ThrowOnStatus(
+            EmbeddingLayerFWD::ValidateInput(num_embeddings, embedding_dim, weight, padding_idx, max_norm, norm_type),
+            "Embedding layer");
         if (padding_idx != -1) {
             memset(&weight[embedding_dim * padding_idx], 0, sizeof(__fp16) * embedding_dim);
         }
     }
 
-    __fp16* Run(int *indice, int dims) const noexcept(false)
+    __fp16 *Run(int *indice, int dims) const noexcept(false)
     {
         if (dims <= 0) {
             return nullptr;
@@ -46,7 +51,7 @@ public:
         (void)norm_type;
         (void)padding_idx;
 
-        __fp16 *out = (__fp16*)malloc(sizeof(__fp16) * dims * embedding_dim);
+        __fp16 *out = (__fp16 *)malloc(sizeof(__fp16) * dims * embedding_dim);
         if (out == nullptr) {
             return nullptr;
         }
@@ -72,22 +77,24 @@ private:
     float norm_type;
 };
 
-} // Detail
+} // namespace Detail
 
 EmbeddingLayerFWD::~EmbeddingLayerFWD() noexcept {}
 
 EmbeddingLayerFWD::EmbeddingLayerFWD(const int num_embeddings, const int embedding_dim, __fp16 *_weight,
-    const int padding_idx, const float max_norm, const float norm_type) noexcept(false)
-    : pImpl(new Detail::EmbeddingLayerFWDImpl(num_embeddings, embedding_dim, _weight, padding_idx, max_norm,
-      norm_type)) {}
+                                     const int padding_idx, const float max_norm, const float norm_type) noexcept(false)
+    : pImpl(new Detail::EmbeddingLayerFWDImpl(num_embeddings, embedding_dim, _weight, padding_idx, max_norm, norm_type))
+{
+}
 
 EmbeddingLayerFWD::EmbeddingLayerFWD(const EmbeddingLayerFWD &other) noexcept(false)
-    : pImpl(new Detail::EmbeddingLayerFWDImpl{*(other.pImpl.get())}) {}
+    : pImpl(new Detail::EmbeddingLayerFWDImpl{*(other.pImpl.get())})
+{
+}
 
-EmbeddingLayerFWD::EmbeddingLayerFWD(EmbeddingLayerFWD &&other) noexcept
-    : pImpl(std::move(other.pImpl)) {}
+EmbeddingLayerFWD::EmbeddingLayerFWD(EmbeddingLayerFWD &&other) noexcept : pImpl(std::move(other.pImpl)) {}
 
-EmbeddingLayerFWD& EmbeddingLayerFWD::operator=(const EmbeddingLayerFWD &other) noexcept(false)
+EmbeddingLayerFWD &EmbeddingLayerFWD::operator=(const EmbeddingLayerFWD &other) noexcept(false)
 {
     if (this != &other) {
         this->pImpl.reset(new Detail::EmbeddingLayerFWDImpl{*(other.pImpl.get())});
@@ -95,7 +102,7 @@ EmbeddingLayerFWD& EmbeddingLayerFWD::operator=(const EmbeddingLayerFWD &other) 
     return *this;
 }
 
-EmbeddingLayerFWD& EmbeddingLayerFWD::operator=(EmbeddingLayerFWD &&other) noexcept
+EmbeddingLayerFWD &EmbeddingLayerFWD::operator=(EmbeddingLayerFWD &&other) noexcept
 {
     if (this != &other) {
         this->pImpl = std::move(other.pImpl);
@@ -103,13 +110,13 @@ EmbeddingLayerFWD& EmbeddingLayerFWD::operator=(EmbeddingLayerFWD &&other) noexc
     return *this;
 }
 
-__fp16* EmbeddingLayerFWD::Run(int *indice, int dims) const noexcept(false)
+__fp16 *EmbeddingLayerFWD::Run(int *indice, int dims) const noexcept(false)
 {
     return pImpl->Run(indice, dims);
 }
 
 Status EmbeddingLayerFWD::ValidateInput(const int num_embeddings, const int embedding_dim, __fp16 *_weight,
-    const int padding_idx, const float max_norm, const float norm_type) noexcept
+                                        const int padding_idx, const float max_norm, const float norm_type) noexcept
 {
     (void)max_norm;
     (void)norm_type;
@@ -129,4 +136,4 @@ Status EmbeddingLayerFWD::ValidateInput(const int num_embeddings, const int embe
     return Status::SUCCESS;
 }
 
-} // KuDNN
+} // namespace KuDNN

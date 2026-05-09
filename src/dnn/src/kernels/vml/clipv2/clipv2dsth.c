@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -14,7 +14,7 @@
 #include "kernels/vml/common_macro.h"
 
 static void ClipV2DstMainKernelBwdF16(const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
-    __fp16 *ds, int step)
+                                      __fp16 *ds, int step)
 {
     svbool_t pgB32 = svptrue_b32();
     svbool_t pgB16 = svptrue_b16();
@@ -46,12 +46,13 @@ static void ClipV2DstMainKernelBwdF16(const float alpha, const float beta, const
 }
 
 void ClipV2DstSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
-    __fp16 *ds)
+                        __fp16 *ds)
 {
     int64_t i = 0;
     int64_t loopClipDstV2h = svcnth();
 
-    for (; i <= len - loopClipDstV2h * VML_VectorComputation_UNFOLD_N; i += loopClipDstV2h * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopClipDstV2h * VML_VectorComputation_UNFOLD_N;
+         i += loopClipDstV2h * VML_VectorComputation_UNFOLD_N) {
         ClipV2DstMainKernelBwdF16(alpha, beta, src + i, dd + i, ds + i, loopClipDstV2h);
     }
     for (; i < len; i += loopClipDstV2h) {

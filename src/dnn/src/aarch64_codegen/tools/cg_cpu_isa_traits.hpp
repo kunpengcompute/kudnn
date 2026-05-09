@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -54,9 +54,13 @@ inline bool CompareIsa(CPUISAT isa1, CpuIsaCmpT cmp, CPUISAT isa2)
     unsigned maskcommon = mask1 & mask2;
 
     switch (cmp) {
-        case CpuIsaCmpT::SUBSET: return mask1 == maskcommon;
-        case CpuIsaCmpT::SUPERSET: return mask2 == maskcommon;
-        default: assert(!"unsupported comparison of isa"); return false;
+        case CpuIsaCmpT::SUBSET:
+            return mask1 == maskcommon;
+        case CpuIsaCmpT::SUPERSET:
+            return mask2 == maskcommon;
+        default:
+            assert(!"unsupported comparison of isa");
+            return false;
     }
 }
 
@@ -135,22 +139,26 @@ inline bool MayIUse(const CPUISAT cpuIsa)
 {
     using namespace ARMCG::Util;
     switch (cpuIsa) {
-        case CPUISAT::ASIMD: return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation);
+        case CPUISAT::ASIMD:
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation);
         case CPUISAT::VectorComputation_128:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_128;
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation) &&
+                   ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_128;
         case CPUISAT::VectorComputation_256:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_256;
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation) &&
+                   ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_256;
         case CPUISAT::VectorComputation_384:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_384;
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation) &&
+                   ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_384;
         case CPUISAT::VectorComputation_512:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_512;
-        case CPUISAT::ISA_UNDEF: return true;
-        case CPUISAT::ISA_ALL: return false;
-        default: return false;
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation) &&
+                   ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_512;
+        case CPUISAT::ISA_UNDEF:
+            return true;
+        case CPUISAT::ISA_ALL:
+            return false;
+        default:
+            return false;
     }
     return false;
 }
@@ -172,4 +180,4 @@ inline bool MayIUseBF16()
 
 } // namespace ARMCG
 
-#endif  // CG_CPU_ISA_TRAITS_HPP
+#endif // CG_CPU_ISA_TRAITS_HPP

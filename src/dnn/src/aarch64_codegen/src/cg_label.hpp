@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -21,9 +21,8 @@ namespace ARMCG {
 struct JmpLabel {
     // type of partially applied function for encoding
     using EncFunc = std::function<uint32_t(int64_t)>;
-    explicit JmpLabel(const EncFunc &encFuncIn, size_t endOfJmpIn = 0)
-        : endOfJmp(endOfJmpIn), encFunc(encFuncIn) {}
-    
+    explicit JmpLabel(const EncFunc &encFuncIn, size_t endOfJmpIn = 0) : endOfJmp(endOfJmpIn), encFunc(encFuncIn) {}
+
     size_t endOfJmp; // offset from top to the end address of jmp
     EncFunc encFunc;
 };

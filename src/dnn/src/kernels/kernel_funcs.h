@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -32,16 +32,15 @@ typedef void (*EltwiseFwdFuncF16AX)(const int64_t, const float, const __fp16 *, 
 typedef void (*EltwiseFwdFuncF16ABX)(const int64_t, const float, const float, const __fp16 *, __fp16 *);
 typedef void (*EltwiseBwdFuncF16X)(const int64_t, const __fp16 *, const __fp16 *, __fp16 *);
 typedef void (*EltwiseBwdFuncF16AX)(const int64_t, const float, const __fp16 *, const __fp16 *, __fp16 *);
-typedef void (*EltwiseBwdFuncF16ABX)(const int64_t, const float, const float,
-    const __fp16 *, const __fp16 *, __fp16 *);
+typedef void (*EltwiseBwdFuncF16ABX)(const int64_t, const float, const float, const __fp16 *, const __fp16 *, __fp16 *);
 
 typedef void (*EltwiseFwdFuncBF16X)(const int64_t, const __bf16 *, __bf16 *);
 typedef void (*EltwiseFwdFuncBF16AX)(const int64_t, const float, const __bf16 *, __bf16 *);
 typedef void (*EltwiseFwdFuncBF16ABX)(const int64_t, const float, const float, const __bf16 *, __bf16 *);
 typedef void (*EltwiseBwdFuncBF16X)(const int64_t, const __bf16 *, const __bf16 *, __bf16 *);
 typedef void (*EltwiseBwdFuncBF16AX)(const int64_t, const float, const __bf16 *, const __bf16 *, __bf16 *);
-typedef void (*EltwiseBwdFuncBF16ABX)(const int64_t, const float, const float,
-    const __bf16 *, const __bf16 *, __bf16 *);
+typedef void (*EltwiseBwdFuncBF16ABX)(const int64_t, const float, const float, const __bf16 *, const __bf16 *,
+                                      __bf16 *);
 
 void AbsLaSveFWDF32(const int64_t len, const float *src, float *dst);
 void AbsLaSveBWDF32(const int64_t len, const float *src, const float *dd, float *ds);
@@ -51,14 +50,14 @@ void AbsLaSveFWDBF16(const int64_t len, const __bf16 *src, __bf16 *dst);
 void AbsLaSveBWDBF16(const int64_t len, const __bf16 *src, const __bf16 *dd, __bf16 *ds);
 
 void HardSigmoidLaSveFWDF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst);
-void HardSigmoidLaSveBWDF32(const int64_t len, const float alpha, const float beta,
-    const float *src, const float *dd, float *ds);
+void HardSigmoidLaSveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                            float *ds);
 void HardSigmoidLaSveFWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, __fp16 *dst);
-void HardSigmoidLaSveBWDF16(const int64_t len, const float alpha, const float beta,
-    const __fp16 *src, const __fp16 *dd, __fp16 *ds);
+void HardSigmoidLaSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+                            __fp16 *ds);
 void HardSigmoidLaSveFWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst);
-void HardSigmoidLaSveBWDBF16(const int64_t len, const float alpha, const float beta,
-    const __bf16 *src, const __bf16 *dd, __bf16 *ds);
+void HardSigmoidLaSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src,
+                             const __bf16 *dd, __bf16 *ds);
 
 void ExpLaSveFWDF32(const int64_t len, const float *src, float *dst);
 void ExpLaSveFWDF16(const int64_t len, const __fp16 *src, __fp16 *dst);
@@ -94,14 +93,14 @@ void TanhDstSveBWDF16(const int64_t len, const __fp16 *src, const __fp16 *dd, __
 void TanhDstSveBWDBF16(const int64_t len, const __bf16 *src, const __bf16 *dd, __bf16 *ds);
 
 void PowxaLaSveFWDF32(const int64_t len, const float alpha, const float y, const float *src, float *dst);
-void PowxaLaSveBWDF32(const int64_t len, const float alpha, const float beta,
-    const float *src, const float *dd, float *ds);
+void PowxaLaSveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                      float *ds);
 void PowxaLaSveFWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, __fp16 *dst);
-void PowxaLaSveBWDF16(const int64_t len, const float alpha, const float beta,
-    const __fp16 *src, const __fp16 *dd, __fp16 *ds);
+void PowxaLaSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+                      __fp16 *ds);
 void PowxaLaSveFWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst);
-void PowxaLaSveBWDBF16(const int64_t len, const float alpha, const float beta,
-    const __bf16 *src, const __bf16 *dd, __bf16 *ds);
+void PowxaLaSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
+                       __bf16 *ds);
 
 void TanhLaSveFWDF32(const int64_t len, const float *src, float *dst);
 void TanhLaSveBWDF32(const int64_t len, const float *src, const float *dd, float *ds);
@@ -179,34 +178,34 @@ void ReluSveFWDBF16(const int64_t len, const float alpha, const __bf16 *src, __b
 void ReluSveBWDBF16(const int64_t len, const float alpha, const __bf16 *src, const __bf16 *dd, __bf16 *ds);
 
 void ClipSveFWDF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst);
-void ClipSveBWDF32(const int64_t len, const float alpha, const float beta,
-                   const float *src, const float *dd, float *ds);
+void ClipSveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                   float *ds);
 void ClipSveFWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, __fp16 *dst);
-void ClipSveBWDF16(const int64_t len, const float alpha, const float beta,
-                   const __fp16 *src, const __fp16 *dd, __fp16 *ds);
+void ClipSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+                   __fp16 *ds);
 void ClipSveFWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst);
-void ClipSveBWDBF16(const int64_t len, const float alpha, const float beta,
-                    const __bf16 *src, const __bf16 *dd, __bf16 *ds);
+void ClipSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
+                    __bf16 *ds);
 
 void ClipV2SveFWDF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst);
-void ClipV2SveBWDF32(const int64_t len, const float alpha, const float beta,
-                     const float *src, const float *dd, float *ds);
+void ClipV2SveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                     float *ds);
 void ClipV2SveFWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, __fp16 *dst);
-void ClipV2SveBWDF16(const int64_t len, const float alpha, const float beta,
-                     const __fp16 *src, const __fp16 *dd, __fp16 *ds);
+void ClipV2SveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+                     __fp16 *ds);
 void ClipV2SveFWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst);
-void ClipV2SveBWDBF16(const int64_t len, const float alpha, const float beta,
-                      const __bf16 *src, const __bf16 *dd, __bf16 *ds);
+void ClipV2SveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
+                      __bf16 *ds);
 
 void HardSwishSveFWDF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst);
-void HardSwishSveBWDF32(const int64_t len, const float alpha, const float beta,
-                        const float *src, const float *dd, float *ds);
+void HardSwishSveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                        float *ds);
 void HardSwishSveFWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, __fp16 *dst);
-void HardSwishSveBWDF16(const int64_t len, const float alpha, const float beta,
-                        const __fp16 *src, const __fp16 *dd, __fp16 *ds);
+void HardSwishSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+                        __fp16 *ds);
 void HardSwishSveFWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst);
-void HardSwishSveBWDBF16(const int64_t len, const float alpha, const float beta,
-                         const __bf16 *src, const __bf16 *dd, __bf16 *ds);
+void HardSwishSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
+                         __bf16 *ds);
 
 void SigmoidSveFWDBF16(const int64_t len, const __bf16 *src, __bf16 *dst);
 void SigmoidSveBWDBF16(const int64_t len, const __bf16 *src, const __bf16 *diffDst, __bf16 *diffSrc);
@@ -225,11 +224,11 @@ void SoftmaxAxisBF16(const __bf16 *srcPtr, __bf16 *dstPtr, size_t axisSize, size
 void SoftmaxCrossAxisBF16(const __bf16 *srcPtr, __bf16 *dstPtr, size_t innerSize, size_t axisSize, size_t outerSize);
 
 void ClipV2DstSveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
-    float *ds);
+                        float *ds);
 void ClipV2DstSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
-    __fp16 *ds);
+                        __fp16 *ds);
 void ClipV2DstSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
-    __bf16 *ds);
+                         __bf16 *ds);
 
 void EluDstSveFWDF32(const int64_t len, const float alpha, const float *src, float *dst);
 void EluDstSveFWDF16(const int64_t len, const float alpha, const __fp16 *src, __fp16 *dst);

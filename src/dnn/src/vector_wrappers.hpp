@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -52,8 +52,7 @@ constexpr SizeType VectorComputation_MAX_BYTE_LEN_920B = 32;
 constexpr SizeType VectorComputation_MAX_BYTE_LEN_920Pro = 64;
 
 template <typename ScalarType>
-struct Vec {
-};
+struct Vec {};
 
 template <>
 struct Vec<float> {
@@ -91,26 +90,26 @@ KUDNN_INLINE constexpr inline SizeType GetMinSize()
     return sizeof(T);
 }
 
-template <typename T1, typename T2, typename ... Rest>
+template <typename T1, typename T2, typename... Rest>
 KUDNN_INLINE constexpr inline SizeType GetMinSize()
 {
-    return (sizeof(T1) > GetMinSize<T2, Rest ...>()) ? GetMinSize<T2, Rest ...>() : sizeof(T1);
+    return (sizeof(T1) > GetMinSize<T2, Rest...>()) ? GetMinSize<T2, Rest...>() : sizeof(T1);
 }
 
 template <typename ScalarType>
 KUDNN_INLINE inline SizeType Length();
 
-template <typename ... Args>
+template <typename... Args>
 KUDNN_INLINE inline SizeType UnrollLength()
 {
-    return svcntb() / GetMinSize<Args ...>();
+    return svcntb() / GetMinSize<Args...>();
 }
 
 // Computes how many of T-type registers will be used
-template <typename T, typename ... Rest>
+template <typename T, typename... Rest>
 KUDNN_INLINE constexpr inline SizeType GetUsedRegsN()
 {
-    return sizeof(T) / GetMinSize<T, Rest ...>();
+    return sizeof(T) / GetMinSize<T, Rest...>();
 }
 
 // Single Predicate operations
@@ -158,10 +157,10 @@ struct DupFloat final {
 
 template <typename Type>
 struct GatherLoad final {
-    static_assert(std::is_same_v<Type, float> || std::is_same_v<Type, __fp16> ||
-        std::is_same_v<Type, __bf16>, "Only f32, f16, bf16 are supported for gather load");
-    static void Do(const Type *src, SizeType loopVar, SizeType loopMax,
-        SizeType offset, typename Vec<Type>::Type &in) noexcept
+    static_assert(std::is_same_v<Type, float> || std::is_same_v<Type, __fp16> || std::is_same_v<Type, __bf16>,
+                  "Only f32, f16, bf16 are supported for gather load");
+    static void Do(const Type *src, SizeType loopVar, SizeType loopMax, SizeType offset,
+                   typename Vec<Type>::Type &in) noexcept
     {
         if constexpr (std::is_same_v<Type, float>) {
             svbool_t pg = svwhilelt_b32(loopVar, loopMax);
@@ -173,27 +172,20 @@ struct GatherLoad final {
             svbool_t pg1 = svwhilelt_b32_s64(0, (loopMax - loopVar) / 2);
             svuint32_t offsets = svindex_u32(0, 2 * offset * sizeof(Type));
             // there's no gather-load intrinsics for fp16 and bf16, so we use assembly w/a
-            asm volatile(
-                "ld1h {z0.s}, %[pg0]/z, [%[src0], %[offsets].s, uxtw]\n"
-                "ld1h {z1.s}, %[pg1]/z, [%[src1], %[offsets].s, uxtw]\n"
-                "trn1 %[in].h, z0.h, z1.h\n"
-                :  // outputs
-                [in] "=w"(in)
-                :  // inputs
-                [src0] "r"(src0),
-                [src1] "r"(src1),
-                [offsets] "w"(offsets),
-                [pg0] "Upl"(pg0),
-                [pg1] "Upl"(pg1)
-                :  // clobbers
-                "cc", "memory",
-                "z0", "z1"
-            );
+            asm volatile("ld1h {z0.s}, %[pg0]/z, [%[src0], %[offsets].s, uxtw]\n"
+                         "ld1h {z1.s}, %[pg1]/z, [%[src1], %[offsets].s, uxtw]\n"
+                         "trn1 %[in].h, z0.h, z1.h\n"
+                         : // outputs
+                         [in] "=w"(in)
+                         : // inputs
+                         [src0] "r"(src0), [src1] "r"(src1), [offsets] "w"(offsets), [pg0] "Upl"(pg0),
+                         [pg1] "Upl"(pg1)
+                         : // clobbers
+                         "cc", "memory", "z0", "z1");
         }
     }
 
-    static void Do(const Type *src, svbool_t pg, SizeType offset,
-        typename Vec<Type>::Type &in) noexcept
+    static void Do(const Type *src, svbool_t pg, SizeType offset, typename Vec<Type>::Type &in) noexcept
     {
         if constexpr (std::is_same_v<Type, float>) {
             svuint32_t offsets = svindex_u32(0, offset * sizeof(Type));
@@ -207,10 +199,10 @@ struct GatherLoad final {
 
 template <typename Type>
 struct ScatterStore final {
-    static_assert(std::is_same_v<Type, float> || std::is_same_v<Type, __fp16> ||
-        std::is_same_v<Type, __bf16>, "Only f32, f16, bf16 are supported for gather load");
-    static void Do(SizeType loopVar, SizeType loopMax,
-        SizeType offset, typename Vec<Type>::Type &out, Type *dst) noexcept
+    static_assert(std::is_same_v<Type, float> || std::is_same_v<Type, __fp16> || std::is_same_v<Type, __bf16>,
+                  "Only f32, f16, bf16 are supported for gather load");
+    static void Do(SizeType loopVar, SizeType loopMax, SizeType offset, typename Vec<Type>::Type &out,
+                   Type *dst) noexcept
     {
         if constexpr (std::is_same_v<Type, float>) {
             svbool_t pg = svwhilelt_b32(loopVar, loopMax);
@@ -222,28 +214,22 @@ struct ScatterStore final {
             svbool_t pg1 = svwhilelt_b32_s64(0, (loopMax - loopVar) / 2);
             svuint32_t offsets = svindex_u32(0, 2 * offset * sizeof(Type));
             // there's no scatter-store intrinsics for fp16 and bf16, so we use assembly w/a
-            asm volatile(
-                "trn1 z0.h, %[out].h, %[out].h\n"
-                "trn2 z1.h, %[out].h, %[out].h\n"
-                "st1h {z0.s}, %[pg0], [%[dst0], %[offsets].s, uxtw]\n"
-                "st1h {z1.s}, %[pg1], [%[dst1], %[offsets].s, uxtw]\n"
-                :  // outputs
-                [dst0] "+r"(dst0),
-                [dst1] "+r"(dst1)
-                :  // inputs
-                [out] "w"(out),
-                [offsets] "w"(offsets),
-                [pg0] "Upl"(pg0),
-                [pg1] "Upl"(pg1)
-                :  // clobbers
-                "cc", "memory",
-                "z0", "z1"
-            );
+            asm volatile("trn1 z0.h, %[out].h, %[out].h\n"
+                         "trn2 z1.h, %[out].h, %[out].h\n"
+                         "st1h {z0.s}, %[pg0], [%[dst0], %[offsets].s, uxtw]\n"
+                         "st1h {z1.s}, %[pg1], [%[dst1], %[offsets].s, uxtw]\n"
+                         : // outputs
+                         [dst0] "+r"(dst0),
+                         [dst1] "+r"(dst1)
+                         : // inputs
+                         [out] "w"(out), [offsets] "w"(offsets), [pg0] "Upl"(pg0),
+                         [pg1] "Upl"(pg1)
+                         : // clobbers
+                         "cc", "memory", "z0", "z1");
         }
     }
 
-    static void Do(svbool_t pg, SizeType offset,
-        typename Vec<Type>::Type &out, Type *dst) noexcept
+    static void Do(svbool_t pg, SizeType offset, typename Vec<Type>::Type &out, Type *dst) noexcept
     {
         if constexpr (std::is_same_v<Type, float>) {
             svuint32_t offsets = svindex_u32(0, offset * sizeof(Type));
@@ -260,39 +246,36 @@ struct ScatterStore final {
 template <typename Type, SizeType N>
 struct InitPGN final {
     static void Do(svbool_t &pg0, svbool_t &pg1, svbool_t &pg2, svbool_t &pg3, SizeType loopVar,
-        SizeType loopMax) noexcept;
+                   SizeType loopMax) noexcept;
 };
 
 // Memory operations
 
 template <typename InType, typename ComputeType, SizeType N>
 struct LoadN final {
-    static void Do(const InType *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
-        typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
+    static void Do(const InType *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
+                   typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
 };
 
 template <typename InType, typename ComputeType, SizeType N>
 struct DupN {
-    static void Do(const InType &src,
-        typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
-        typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
+    static void Do(const InType &src, typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
+                   typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
 };
 
 template <typename InType, typename ComputeType, SizeType N>
 struct DupFloatN final {
-    static void Do(const float &src,
-        typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
-        typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
+    static void Do(const float &src, typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
+                   typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
 };
 
 template <typename OutType, typename ComputeType, SizeType N>
 struct StoreN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<ComputeType>::Type &out0, const typename Vec<ComputeType>::Type &out1,
-        const typename Vec<ComputeType>::Type &out2, const typename Vec<ComputeType>::Type &out3,
-        OutType *dst) noexcept;
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &out0, const typename Vec<ComputeType>::Type &out1,
+                   const typename Vec<ComputeType>::Type &out2, const typename Vec<ComputeType>::Type &out3,
+                   OutType *dst) noexcept;
 };
 
 template <typename FromType, typename ToType>
@@ -302,31 +285,30 @@ struct Convert final {
 
 template <typename FromType, typename ToType, SizeType N>
 struct ConvertN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<FromType>::Type &in0, const typename Vec<FromType>::Type &in1,
-        const typename Vec<FromType>::Type &in2, const typename Vec<FromType>::Type &in3,
-        typename Vec<ToType>::Type &out0, typename Vec<ToType>::Type &out1,
-        typename Vec<ToType>::Type &out2, typename Vec<ToType>::Type &out3) noexcept;
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<FromType>::Type &in0, const typename Vec<FromType>::Type &in1,
+                   const typename Vec<FromType>::Type &in2, const typename Vec<FromType>::Type &in3,
+                   typename Vec<ToType>::Type &out0, typename Vec<ToType>::Type &out1, typename Vec<ToType>::Type &out2,
+                   typename Vec<ToType>::Type &out3) noexcept;
 };
 
 template <typename InType, typename ComputeType, SizeType N>
 struct LoadWrapperN final {
-    static void Do(const InType *src, SizeType higherIdx, SizeType lowerIdx,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
-        typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3) noexcept
+    static void Do(const InType *src, SizeType higherIdx, SizeType lowerIdx, const svbool_t &pg0, const svbool_t &pg1,
+                   const svbool_t &pg2, const svbool_t &pg3, typename Vector::Vec<ComputeType>::Type &in0,
+                   typename Vector::Vec<ComputeType>::Type &in1, typename Vector::Vec<ComputeType>::Type &in2,
+                   typename Vector::Vec<ComputeType>::Type &in3) noexcept
     {
-        Vector::LoadN<InType, ComputeType, N>::Do(src + higherIdx + lowerIdx, pg0, pg1, pg2, pg3,
-            in0, in1, in2, in3);
+        Vector::LoadN<InType, ComputeType, N>::Do(src + higherIdx + lowerIdx, pg0, pg1, pg2, pg3, in0, in1, in2, in3);
     }
 };
 
 template <typename InType, typename ComputeType, SizeType N>
 struct DupWrapperN final {
-    static void Do(const InType *src, SizeType higherIdx, SizeType lowerIdx,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
-        typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3) noexcept
+    static void Do(const InType *src, SizeType higherIdx, SizeType lowerIdx, const svbool_t &pg0, const svbool_t &pg1,
+                   const svbool_t &pg2, const svbool_t &pg3, typename Vector::Vec<ComputeType>::Type &in0,
+                   typename Vector::Vec<ComputeType>::Type &in1, typename Vector::Vec<ComputeType>::Type &in2,
+                   typename Vector::Vec<ComputeType>::Type &in3) noexcept
     {
         Vector::DupN<InType, ComputeType, N>::Do(*(src + higherIdx), in0, in1, in2, in3);
         Service::Unused(lowerIdx, pg0, pg1, pg2, pg3);
@@ -337,14 +319,13 @@ struct DupWrapperN final {
 
 template <typename ComputeType, SizeType N>
 struct SelN final {
-    static void Do(const svbool_t& mask0, const svbool_t &mask1,
-        const svbool_t &mask2, const svbool_t &mask3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &mask0, const svbool_t &mask1, const svbool_t &mask2, const svbool_t &mask3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svsel(mask0, lhs0, rhs0);
@@ -364,9 +345,10 @@ struct SelN final {
 
 template <typename ComputeType, SizeType N>
 struct AddvN final {
-    static ComputeType Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3) noexcept
+    static ComputeType Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                          const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                          const typename Vec<ComputeType>::Type &lhs2,
+                          const typename Vec<ComputeType>::Type &lhs3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         ComputeType result = svaddv(pg0, lhs0);
@@ -385,9 +367,9 @@ struct AddvN final {
 
 template <>
 struct AddvN<int32_t, 1> final {
-    static int32_t Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<int32_t>::Type &lhs0, const typename Vec<int32_t>::Type &lhs1,
-        const typename Vec<int32_t>::Type &lhs2, const typename Vec<int32_t>::Type &lhs3) noexcept
+    static int32_t Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                      const typename Vec<int32_t>::Type &lhs0, const typename Vec<int32_t>::Type &lhs1,
+                      const typename Vec<int32_t>::Type &lhs2, const typename Vec<int32_t>::Type &lhs3) noexcept
     {
         int32_t result = svaddv_s32(pg0, lhs0);
         Service::Unused(pg1, pg2, pg3, lhs1, lhs2, lhs3);
@@ -397,9 +379,10 @@ struct AddvN<int32_t, 1> final {
 
 template <typename ComputeType, SizeType N>
 struct MaxvN final {
-    static ComputeType Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3) noexcept
+    static ComputeType Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                          const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                          const typename Vec<ComputeType>::Type &lhs2,
+                          const typename Vec<ComputeType>::Type &lhs3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         ComputeType max = svmaxv(pg0, lhs0);
@@ -421,20 +404,20 @@ struct MaxvN final {
 template <typename ComputeType>
 struct Log final {
     static void Do(const svbool_t &pg, typename Vector::Vec<ComputeType>::Type &in,
-        typename Vector::Vec<ComputeType>::Type &out) noexcept;
+                   typename Vector::Vec<ComputeType>::Type &out) noexcept;
     static void DoStore(const svbool_t &pg, svbool_t &pgRetNan, svbool_t &pgRetInf, svbool_t &pgRetNegInf,
-        typename Vector::Vec<ComputeType>::Type &poly, typename Vector::Vec<ComputeType>::Type &out,
-        typename Vector::Vec<ComputeType>::Type &n) noexcept;
+                        typename Vector::Vec<ComputeType>::Type &poly, typename Vector::Vec<ComputeType>::Type &out,
+                        typename Vector::Vec<ComputeType>::Type &n) noexcept;
 };
 
 template <typename ComputeType, SizeType N>
 struct LogN final {
-    static void Do(const svbool_t& pg0,
-        const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
-        typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3,
-        typename Vector::Vec<ComputeType>::Type &out0, typename Vector::Vec<ComputeType>::Type &out1,
-        typename Vector::Vec<ComputeType>::Type &out2, typename Vector::Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
+                   typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3,
+                   typename Vector::Vec<ComputeType>::Type &out0, typename Vector::Vec<ComputeType>::Type &out1,
+                   typename Vector::Vec<ComputeType>::Type &out2,
+                   typename Vector::Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         Log<ComputeType>::Do(pg0, in0, out0);
@@ -452,24 +435,24 @@ struct LogN final {
 
 template <typename ComputeType, SizeType N>
 struct ExpN final {
-    static void Do(const svbool_t& pg0,
-        const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
-        typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3,
-        typename Vector::Vec<ComputeType>::Type &out0, typename Vector::Vec<ComputeType>::Type &out1,
-        typename Vector::Vec<ComputeType>::Type &out2, typename Vector::Vec<ComputeType>::Type &out3) noexcept;
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
+                   typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3,
+                   typename Vector::Vec<ComputeType>::Type &out0, typename Vector::Vec<ComputeType>::Type &out1,
+                   typename Vector::Vec<ComputeType>::Type &out2,
+                   typename Vector::Vec<ComputeType>::Type &out3) noexcept;
 };
 
 #ifdef KUDNN_DEBUG
 template <typename Type>
-inline void PrintRegister(const svbool_t& pg, typename Vector::Vec<Type>::Type &data) noexcept
+inline void PrintRegister(const svbool_t &pg, typename Vector::Vec<Type>::Type &data) noexcept
 {
 #ifdef KUDNNL_920Pro
     Type buffer[VectorComputation_MAX_BYTE_LEN_920Pro / sizeof(Type)];
 #else
     Type buffer[VectorComputation_MAX_BYTE_LEN_920B / sizeof(Type)];
 #endif
-    
+
     svst1(pg, buffer, data);
 
     SizeType activeCount = svcntp_b8(svptrue_b8(), pg);
@@ -489,10 +472,9 @@ inline void PrintRegister(const svbool_t& pg, typename Vector::Vec<Type>::Type &
 }
 
 template <typename Type, SizeType N>
-inline void PrintRegister(const svbool_t& pg0,
-    const svbool_t& pg1, const svbool_t& pg2, const svbool_t& pg3,
-    typename Vector::Vec<Type>::Type &data0, typename Vector::Vec<Type>::Type &data1,
-    typename Vector::Vec<Type>::Type &data2, typename Vector::Vec<Type>::Type &data3) noexcept
+inline void PrintRegister(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                          typename Vector::Vec<Type>::Type &data0, typename Vector::Vec<Type>::Type &data1,
+                          typename Vector::Vec<Type>::Type &data2, typename Vector::Vec<Type>::Type &data3) noexcept
 {
     std::cout << "====================" << std::endl;
     std::cout << "[VReg0]";
@@ -513,9 +495,9 @@ inline void PrintRegister(const svbool_t& pg0,
 }
 #endif
 
-} // Vector
-} // Detail
-} // KuDNN
+} // namespace Vector
+} // namespace Detail
+} // namespace KuDNN
 
 #include "vector_apis/vector_compare.hpp"
 #include "vector_apis/vector_arithmetic.hpp"

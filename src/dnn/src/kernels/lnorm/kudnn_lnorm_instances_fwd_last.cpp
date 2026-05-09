@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,12 +16,11 @@ namespace KuDNN {
 namespace Detail {
 namespace LNorm {
 
-template
-void EvaluateLastAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+template void EvaluateLastAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
     SizeType execAcrossAxis, const IN_TYPE *src, OUT_TYPE *dst, const SCALE_SHIFT_TYPE *scale,
-    const SCALE_SHIFT_TYPE *shift, float *mean, float *variance,
-    bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;
+    const SCALE_SHIFT_TYPE *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags,
+    SizeType axisSize) noexcept;
 
-} // LNorm
-} // Detail
-} // KuDNN
+} // namespace LNorm
+} // namespace Detail
+} // namespace KuDNN

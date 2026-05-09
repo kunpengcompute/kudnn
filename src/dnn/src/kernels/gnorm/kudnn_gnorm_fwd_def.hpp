@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,9 +30,9 @@ struct GroupNormCrossFWD final {
     }
 
     // for mean calculation. Mean is computed in float precision
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        typename Vector::Vec<float>::Type &vMean0, typename Vector::Vec<float>::Type &vMean1,
-        typename Vector::Vec<float>::Type &vMean2, typename Vector::Vec<float>::Type &vMean3)
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, typename Vector::Vec<float>::Type &vMean0,
+                   typename Vector::Vec<float>::Type &vMean1, typename Vector::Vec<float>::Type &vMean2,
+                   typename Vector::Vec<float>::Type &vMean3)
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -50,21 +50,19 @@ struct GroupNormCrossFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<float,
-            Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
+        Vector::InitPGN<float, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
-        Vector::AddMN<float,
-            Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, vMean0, vMean1, vMean2, vMean3,
-            data0, data1, data2, data3, vMean0, vMean1, vMean2, vMean3);
+        Vector::AddMN<float, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
+            opPG0, opPG1, opPG2, opPG3, vMean0, vMean1, vMean2, vMean3, data0, data1, data2, data3, vMean0, vMean1,
+            vMean2, vMean3);
     }
 
     // for variance calculation. Variance is computed in float precision
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        typename Vector::Vec<float>::Type &vMean0, typename Vector::Vec<float>::Type &vMean1,
-        typename Vector::Vec<float>::Type &vMean2, typename Vector::Vec<float>::Type &vMean3,
-        typename Vector::Vec<float>::Type &vVariance0, typename Vector::Vec<float>::Type &vVariance1,
-        typename Vector::Vec<float>::Type &vVariance2, typename Vector::Vec<float>::Type &vVariance3)
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, typename Vector::Vec<float>::Type &vMean0,
+                   typename Vector::Vec<float>::Type &vMean1, typename Vector::Vec<float>::Type &vMean2,
+                   typename Vector::Vec<float>::Type &vMean3, typename Vector::Vec<float>::Type &vVariance0,
+                   typename Vector::Vec<float>::Type &vVariance1, typename Vector::Vec<float>::Type &vVariance2,
+                   typename Vector::Vec<float>::Type &vVariance3)
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -82,57 +80,56 @@ struct GroupNormCrossFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+        Vector::InitPGN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
         typename Vector::Vec<float>::Type m0;
         typename Vector::Vec<float>::Type m1;
         typename Vector::Vec<float>::Type m2;
         typename Vector::Vec<float>::Type m3;
-        Vector::SubXN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-            vMean0, vMean1, vMean2, vMean3, m0, m1, m2, m3);
-        Vector::MlaMN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, vVariance0, vVariance1, vVariance2, vVariance3,
-            m0, m1, m2, m3, m0, m1, m2, m3, vVariance0, vVariance1, vVariance2, vVariance3);
+        Vector::SubXN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, vMean0, vMean1, vMean2, vMean3, m0, m1, m2, m3);
+        Vector::MlaMN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+            opPG0, opPG1, opPG2, opPG3, vVariance0, vVariance1, vVariance2, vVariance3, m0, m1, m2, m3, m0, m1, m2, m3,
+            vVariance0, vVariance1, vVariance2, vVariance3);
     }
 
-    static void DoScale(svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        const ScaleShiftType *scale, SizeType scaleshiftIdx,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
-        typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
-        typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3) noexcept
+    static void DoScale(svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3, const ScaleShiftType *scale,
+                        SizeType scaleshiftIdx, typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
+                        typename Vector::Vec<CompType>::Type &constants0,
+                        typename Vector::Vec<CompType>::Type &constants1,
+                        typename Vector::Vec<CompType>::Type &constants2,
+                        typename Vector::Vec<CompType>::Type &constants3) noexcept
     {
         typename Vector::Vec<CompType>::Type scaleVal0;
         typename Vector::Vec<CompType>::Type scaleVal1;
         typename Vector::Vec<CompType>::Type scaleVal2;
         typename Vector::Vec<CompType>::Type scaleVal3;
         Vector::DupN<ScaleShiftType, CompType,
-            Vector::GetUsedRegsN<ScaleShiftType, float, InType, CompType, OutType>()>::Do(
-            scale[scaleshiftIdx], scaleVal0, scaleVal1, scaleVal2, scaleVal3);
+                     Vector::GetUsedRegsN<ScaleShiftType, float, InType, CompType, OutType>()>::Do(scale[scaleshiftIdx],
+                                                                                                   scaleVal0, scaleVal1,
+                                                                                                   scaleVal2,
+                                                                                                   scaleVal3);
         Vector::MulXN<CompType, Vector::GetUsedRegsN<CompType, ScaleShiftType, float, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, scaleVal0, scaleVal1, scaleVal2, scaleVal3,
-            invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3,
-            constants0, constants1, constants2, constants3);
+            opPG0, opPG1, opPG2, opPG3, scaleVal0, scaleVal1, scaleVal2, scaleVal3, invSqrtVarianceVec0,
+            invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2,
+            constants3);
     }
 
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        const ScaleShiftType *scale, const ScaleShiftType *shift,
-        bool useScale, bool useShift, SizeType innerSize, SizeType group, SizeType channelPerGroup, SizeType channel,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
-        typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
-        typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3,
-        typename Vector::Vec<CompType>::Type &vMean0, typename Vector::Vec<CompType>::Type &vMean1,
-        typename Vector::Vec<CompType>::Type &vMean2, typename Vector::Vec<CompType>::Type &vMean3,
-        OutType *dst) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, const ScaleShiftType *scale,
+                   const ScaleShiftType *shift, bool useScale, bool useShift, SizeType innerSize, SizeType group,
+                   SizeType channelPerGroup, SizeType channel,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
+                   typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
+                   typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3,
+                   typename Vector::Vec<CompType>::Type &vMean0, typename Vector::Vec<CompType>::Type &vMean1,
+                   typename Vector::Vec<CompType>::Type &vMean2, typename Vector::Vec<CompType>::Type &vMean3,
+                   OutType *dst) noexcept
     {
         Service::Unused(innerSize);
         svbool_t opPG0;
@@ -144,7 +141,7 @@ struct GroupNormCrossFWD final {
         SizeType scaleshiftIdx = channel + group * channelPerGroup;
         if (useScale) {
             DoScale(opPG0, opPG1, opPG2, opPG3, scale, scaleshiftIdx, invSqrtVarianceVec0, invSqrtVarianceVec1,
-                invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2, constants3);
+                    invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2, constants3);
         }
 
         typename Vector::Vec<CompType>::Type shiftVal0;
@@ -152,11 +149,18 @@ struct GroupNormCrossFWD final {
         typename Vector::Vec<CompType>::Type shiftVal2;
         typename Vector::Vec<CompType>::Type shiftVal3;
         if (useShift) {
-            Vector::DupN<ScaleShiftType, CompType, Vector::GetUsedRegsN<ScaleShiftType, float, InType,
-                CompType, OutType>()>::Do(shift[scaleshiftIdx], shiftVal0, shiftVal1, shiftVal2, shiftVal3);
+            Vector::DupN<
+                ScaleShiftType, CompType,
+                Vector::GetUsedRegsN<ScaleShiftType, float, InType, CompType, OutType>()>::Do(shift[scaleshiftIdx],
+                                                                                              shiftVal0, shiftVal1,
+                                                                                              shiftVal2, shiftVal3);
         } else {
-            Vector::DupFloatN<ScaleShiftType, CompType, Vector::GetUsedRegsN<ScaleShiftType, CompType, float,
-                InType, OutType>()>::Do(0.0f, shiftVal0, shiftVal1, shiftVal2, shiftVal3);
+            Vector::DupFloatN<ScaleShiftType, CompType,
+                              Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(0.0f,
+                                                                                                            shiftVal0,
+                                                                                                            shiftVal1,
+                                                                                                            shiftVal2,
+                                                                                                            shiftVal3);
         }
 
         svbool_t ldPG0;
@@ -172,11 +176,11 @@ struct GroupNormCrossFWD final {
         Vector::LoadN<InType, CompType, Vector::GetUsedRegsN<InType, ScaleShiftType, CompType, float, OutType>()>::Do(
             src + loopIdx, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3);
         Vector::SubXN<CompType, Vector::GetUsedRegsN<CompType, InType, ScaleShiftType, float, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-            vMean0, vMean1, vMean2, vMean3, data0, data1, data2, data3);
+            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, vMean0, vMean1, vMean2, vMean3, data0, data1, data2,
+            data3);
         Vector::MlaXN<CompType, Vector::GetUsedRegsN<CompType, InType, ScaleShiftType, float, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, shiftVal0, shiftVal1, shiftVal2, shiftVal3,
-            constants0, constants1, constants2, constants3, data0, data1, data2, data3, data0, data1, data2, data3);
+            opPG0, opPG1, opPG2, opPG3, shiftVal0, shiftVal1, shiftVal2, shiftVal3, constants0, constants1, constants2,
+            constants3, data0, data1, data2, data3, data0, data1, data2, data3);
         svbool_t stPG0;
         svbool_t stPG1;
         svbool_t stPG2;
@@ -190,8 +194,9 @@ struct GroupNormCrossFWD final {
 
 template <typename CompType, typename InType, typename OutType, typename ScaleShiftType>
 void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst, SizeType groupSize,
-    const ScaleShiftType *scale, const ScaleShiftType *shift, float *mean, float *variance,
-    bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept
+                       const ScaleShiftType *scale, const ScaleShiftType *shift, float *mean, float *variance,
+                       bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize,
+                       SizeType innerSize) noexcept
 {
     bool calculateStats = !static_cast<bool>(flags & NormalizationFlags::USE_GLOBAL_STATS);
     bool useScale = static_cast<bool>(flags & NormalizationFlags::USE_SCALE);
@@ -220,30 +225,39 @@ void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst, Size
             float vMean = calculateStats ? 0.0f : mean[offsetStats];
             float vVariance = calculateStats ? 0.0f : variance[offsetStats];
             Vector::DupFloatN<InType, float,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                vMean, vMean0, vMean1, vMean2, vMean3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vMean,
+                                                                                                            vMean0,
+                                                                                                            vMean1,
+                                                                                                            vMean2,
+                                                                                                            vMean3);
             Vector::DupFloatN<InType, float,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                vVariance, vVariance0, vVariance1, vVariance2, vVariance3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vVariance,
+                                                                                                            vVariance0,
+                                                                                                            vVariance1,
+                                                                                                            vVariance2,
+                                                                                                            vVariance3);
 
             if (calculateStats) {
                 svbool_t pgTrue = svptrue_b32();
                 Service::UnrollFor::Do<1>(innerSize * channelPerGroup,
-                    GroupNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{},
-                    src + offset, vMean0, vMean1, vMean2, vMean3);
-                vMean = Vector::AddvN<float,
-                    Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::Do(
-                    pgTrue, pgTrue, pgTrue, pgTrue, vMean0, vMean1, vMean2, vMean3);
+                                          GroupNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{}, src + offset,
+                                          vMean0, vMean1, vMean2, vMean3);
+                vMean =
+                    Vector::AddvN<float, Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::Do(
+                        pgTrue, pgTrue, pgTrue, pgTrue, vMean0, vMean1, vMean2, vMean3);
                 vMean /= dataPerGroup;
                 Vector::DupFloatN<InType, float,
-                    Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                    vMean, vMean0, vMean1, vMean2, vMean3);
-                Service::UnrollFor::Do<1>(innerSize * channelPerGroup,
-                    GroupNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{},
+                                  Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vMean,
+                                                                                                                vMean0,
+                                                                                                                vMean1,
+                                                                                                                vMean2,
+                                                                                                                vMean3);
+                Service::UnrollFor::Do<1>(
+                    innerSize * channelPerGroup, GroupNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{},
                     src + offset, vMean0, vMean1, vMean2, vMean3, vVariance0, vVariance1, vVariance2, vVariance3);
-                vVariance = Vector::AddvN<float,
-                    Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::Do(
-                    pgTrue, pgTrue, pgTrue, pgTrue, vVariance0, vVariance1, vVariance2, vVariance3);
+                vVariance =
+                    Vector::AddvN<float, Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::Do(
+                        pgTrue, pgTrue, pgTrue, pgTrue, vVariance0, vVariance1, vVariance2, vVariance3);
                 vVariance /= dataPerGroup;
                 if (saveStats) {
                     mean[offsetStats] = vMean;
@@ -257,30 +271,35 @@ void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst, Size
             typename Vector::Vec<CompType>::Type invSqrtVarianceVec2;
             typename Vector::Vec<CompType>::Type invSqrtVarianceVec3;
             Vector::DupFloatN<InType, CompType,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                invSqrtVariance, invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::
+                Do(invSqrtVariance, invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3);
             typename Vector::Vec<CompType>::Type constants0;
             typename Vector::Vec<CompType>::Type constants1;
             typename Vector::Vec<CompType>::Type constants2;
             typename Vector::Vec<CompType>::Type constants3;
-            Vector::DupFloatN<InType, CompType,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                invSqrtVariance, constants0, constants1, constants2, constants3);
+            Vector::DupFloatN<
+                InType, CompType,
+                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(invSqrtVariance,
+                                                                                              constants0, constants1,
+                                                                                              constants2, constants3);
             typename Vector::Vec<CompType>::Type vMeanVect0;
             typename Vector::Vec<CompType>::Type vMeanVect1;
             typename Vector::Vec<CompType>::Type vMeanVect2;
             typename Vector::Vec<CompType>::Type vMeanVect3;
             Vector::DupFloatN<InType, CompType,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                vMean, vMeanVect0, vMeanVect1, vMeanVect2, vMeanVect3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vMean,
+                                                                                                            vMeanVect0,
+                                                                                                            vMeanVect1,
+                                                                                                            vMeanVect2,
+                                                                                                            vMeanVect3);
 
             for (SizeType c = 0; c < channelPerGroup; ++c) {
                 Service::UnrollFor::Do<1>(innerSize, GroupNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{},
-                    src + offset + c * innerSize, scale, shift, useScale, useShift,
-                    innerSize, group, channelPerGroup, c,
-                    invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3,
-                    constants0, constants1, constants2, constants3,
-                    vMeanVect0, vMeanVect1, vMeanVect2, vMeanVect3, dst + offset + c * innerSize);
+                                          src + offset + c * innerSize, scale, shift, useScale, useShift, innerSize,
+                                          group, channelPerGroup, c, invSqrtVarianceVec0, invSqrtVarianceVec1,
+                                          invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2,
+                                          constants3, vMeanVect0, vMeanVect1, vMeanVect2, vMeanVect3,
+                                          dst + offset + c * innerSize);
             }
         }
     }
@@ -292,9 +311,9 @@ struct GroupNormLastFWD final {
     {
         return Vector::UnrollLength<InType, CompType, OutType, ScaleShiftType, float>();
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        typename Vector::Vec<float>::Type &vMean0, typename Vector::Vec<float>::Type &vMean1,
-        typename Vector::Vec<float>::Type &vMean2, typename Vector::Vec<float>::Type &vMean3) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, typename Vector::Vec<float>::Type &vMean0,
+                   typename Vector::Vec<float>::Type &vMean1, typename Vector::Vec<float>::Type &vMean2,
+                   typename Vector::Vec<float>::Type &vMean3) noexcept
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -312,19 +331,17 @@ struct GroupNormLastFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<float,
-            Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
+        Vector::InitPGN<float, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
-        Vector::AddMN<float,
-            Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, vMean0, vMean1, vMean2, vMean3,
-            data0, data1, data2, data3, vMean0, vMean1, vMean2, vMean3);
+        Vector::AddMN<float, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
+            opPG0, opPG1, opPG2, opPG3, vMean0, vMean1, vMean2, vMean3, data0, data1, data2, data3, vMean0, vMean1,
+            vMean2, vMean3);
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        typename Vector::Vec<float>::Type &vMean0, typename Vector::Vec<float>::Type &vMean1,
-        typename Vector::Vec<float>::Type &vMean2, typename Vector::Vec<float>::Type &vMean3,
-        typename Vector::Vec<float>::Type &vVariance0, typename Vector::Vec<float>::Type &vVariance1,
-        typename Vector::Vec<float>::Type &vVariance2, typename Vector::Vec<float>::Type &vVariance3) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, typename Vector::Vec<float>::Type &vMean0,
+                   typename Vector::Vec<float>::Type &vMean1, typename Vector::Vec<float>::Type &vMean2,
+                   typename Vector::Vec<float>::Type &vMean3, typename Vector::Vec<float>::Type &vVariance0,
+                   typename Vector::Vec<float>::Type &vVariance1, typename Vector::Vec<float>::Type &vVariance2,
+                   typename Vector::Vec<float>::Type &vVariance3) noexcept
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -342,31 +359,29 @@ struct GroupNormLastFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+        Vector::InitPGN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
         typename Vector::Vec<float>::Type m0;
         typename Vector::Vec<float>::Type m1;
         typename Vector::Vec<float>::Type m2;
         typename Vector::Vec<float>::Type m3;
-        Vector::SubXN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-            vMean0, vMean1, vMean2, vMean3, m0, m1, m2, m3);
-        Vector::MlaMN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, vVariance0, vVariance1, vVariance2, vVariance3,
-            m0, m1, m2, m3, m0, m1, m2, m3, vVariance0, vVariance1, vVariance2, vVariance3);
+        Vector::SubXN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, vMean0, vMean1, vMean2, vMean3, m0, m1, m2, m3);
+        Vector::MlaMN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+            opPG0, opPG1, opPG2, opPG3, vVariance0, vVariance1, vVariance2, vVariance3, m0, m1, m2, m3, m0, m1, m2, m3,
+            vVariance0, vVariance1, vVariance2, vVariance3);
     }
 
-    static void DoScale(svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        SizeType loopIdx, SizeType loopRange, const ScaleShiftType *scale, SizeType g,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
-        typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
-        typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3) noexcept
+    static void DoScale(svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3, SizeType loopIdx,
+                        SizeType loopRange, const ScaleShiftType *scale, SizeType g,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
+                        typename Vector::Vec<CompType>::Type &constants0,
+                        typename Vector::Vec<CompType>::Type &constants1,
+                        typename Vector::Vec<CompType>::Type &constants2,
+                        typename Vector::Vec<CompType>::Type &constants3) noexcept
     {
         typename Vector::Vec<CompType>::Type scaleVal0;
         typename Vector::Vec<CompType>::Type scaleVal1;
@@ -376,48 +391,61 @@ struct GroupNormLastFWD final {
         svbool_t ldscalepg1;
         svbool_t ldscalepg2;
         svbool_t ldscalepg3;
-        Vector::InitPGN<ScaleShiftType,
-            Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(
+        Vector::InitPGN<ScaleShiftType, Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(
             ldscalepg0, ldscalepg1, ldscalepg2, ldscalepg3, loopIdx, loopRange);
         Vector::LoadN<ScaleShiftType, CompType,
-            Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(
-            scale + loopIdx + g * loopRange, ldscalepg0, ldscalepg1, ldscalepg2, ldscalepg3,
-            scaleVal0, scaleVal1, scaleVal2, scaleVal3);
+                      Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(scale + loopIdx +
+                                                                                                        g * loopRange,
+                                                                                                    ldscalepg0,
+                                                                                                    ldscalepg1,
+                                                                                                    ldscalepg2,
+                                                                                                    ldscalepg3,
+                                                                                                    scaleVal0,
+                                                                                                    scaleVal1,
+                                                                                                    scaleVal2,
+                                                                                                    scaleVal3);
         Vector::MulXN<CompType, Vector::GetUsedRegsN<CompType, ScaleShiftType, float, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, scaleVal0, scaleVal1, scaleVal2, scaleVal3,
-            invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3,
-            constants0, constants1, constants2, constants3);
+            opPG0, opPG1, opPG2, opPG3, scaleVal0, scaleVal1, scaleVal2, scaleVal3, invSqrtVarianceVec0,
+            invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2,
+            constants3);
     }
 
     static void DoShift(SizeType loopIdx, SizeType loopRange, const ScaleShiftType *shift, SizeType g,
-        typename Vector::Vec<CompType>::Type &shiftVal0, typename Vector::Vec<CompType>::Type &shiftVal1,
-        typename Vector::Vec<CompType>::Type &shiftVal2, typename Vector::Vec<CompType>::Type &shiftVal3) noexcept
+                        typename Vector::Vec<CompType>::Type &shiftVal0,
+                        typename Vector::Vec<CompType>::Type &shiftVal1,
+                        typename Vector::Vec<CompType>::Type &shiftVal2,
+                        typename Vector::Vec<CompType>::Type &shiftVal3) noexcept
     {
         svbool_t ldshiftpg0;
         svbool_t ldshiftpg1;
         svbool_t ldshiftpg2;
         svbool_t ldshiftpg3;
-        Vector::InitPGN<ScaleShiftType,
-            Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(
+        Vector::InitPGN<ScaleShiftType, Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(
             ldshiftpg0, ldshiftpg1, ldshiftpg2, ldshiftpg3, loopIdx, loopRange);
         Vector::LoadN<ScaleShiftType, CompType,
-            Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(
-            shift + loopIdx + g * loopRange, ldshiftpg0, ldshiftpg1, ldshiftpg2, ldshiftpg3,
-            shiftVal0, shiftVal1, shiftVal2, shiftVal3);
+                      Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(shift + loopIdx +
+                                                                                                        g * loopRange,
+                                                                                                    ldshiftpg0,
+                                                                                                    ldshiftpg1,
+                                                                                                    ldshiftpg2,
+                                                                                                    ldshiftpg3,
+                                                                                                    shiftVal0,
+                                                                                                    shiftVal1,
+                                                                                                    shiftVal2,
+                                                                                                    shiftVal3);
     }
 
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        const ScaleShiftType *scale, const ScaleShiftType *shift,
-        bool useScale, bool useShift, SizeType g,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
-        typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
-        typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3,
-        typename Vector::Vec<CompType>::Type &vMean0, typename Vector::Vec<CompType>::Type &vMean1,
-        typename Vector::Vec<CompType>::Type &vMean2, typename Vector::Vec<CompType>::Type &vMean3,
-        OutType *dst) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, const ScaleShiftType *scale,
+                   const ScaleShiftType *shift, bool useScale, bool useShift, SizeType g,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
+                   typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
+                   typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3,
+                   typename Vector::Vec<CompType>::Type &vMean0, typename Vector::Vec<CompType>::Type &vMean1,
+                   typename Vector::Vec<CompType>::Type &vMean2, typename Vector::Vec<CompType>::Type &vMean3,
+                   OutType *dst) noexcept
     {
         svbool_t opPG0;
         svbool_t opPG1;
@@ -427,7 +455,7 @@ struct GroupNormLastFWD final {
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
         if (useScale) {
             DoScale(opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange, scale, g, invSqrtVarianceVec0, invSqrtVarianceVec1,
-                invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2, constants3);
+                    invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2, constants3);
         }
         typename Vector::Vec<CompType>::Type shiftVal0;
         typename Vector::Vec<CompType>::Type shiftVal1;
@@ -437,8 +465,11 @@ struct GroupNormLastFWD final {
             DoShift(loopIdx, loopRange, shift, g, shiftVal0, shiftVal1, shiftVal2, shiftVal3);
         } else {
             Vector::DupFloatN<ScaleShiftType, CompType,
-                Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(
-                0.0f, shiftVal0, shiftVal1, shiftVal2, shiftVal3);
+                              Vector::GetUsedRegsN<ScaleShiftType, CompType, float, InType, OutType>()>::Do(0.0f,
+                                                                                                            shiftVal0,
+                                                                                                            shiftVal1,
+                                                                                                            shiftVal2,
+                                                                                                            shiftVal3);
         }
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -453,13 +484,11 @@ struct GroupNormLastFWD final {
         Vector::LoadN<InType, CompType, Vector::GetUsedRegsN<InType, ScaleShiftType, CompType, float, OutType>()>::Do(
             src + loopIdx, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3);
         Vector::SubXN<CompType, Vector::GetUsedRegsN<CompType, InType, ScaleShiftType, float, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-            vMean0, vMean1, vMean2, vMean3, data0, data1, data2, data3);
+            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, vMean0, vMean1, vMean2, vMean3, data0, data1, data2,
+            data3);
         Vector::MlaXN<CompType, Vector::GetUsedRegsN<CompType, InType, ScaleShiftType, float, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, shiftVal0, shiftVal1, shiftVal2, shiftVal3,
-            constants0, constants1, constants2, constants3,
-            data0, data1, data2, data3,
-            data0, data1, data2, data3);
+            opPG0, opPG1, opPG2, opPG3, shiftVal0, shiftVal1, shiftVal2, shiftVal3, constants0, constants1, constants2,
+            constants3, data0, data1, data2, data3, data0, data1, data2, data3);
         svbool_t stPG0;
         svbool_t stPG1;
         svbool_t stPG2;
@@ -473,8 +502,8 @@ struct GroupNormLastFWD final {
 
 template <typename CompType, typename InType, typename OutType, typename ScaleShiftType>
 void EvaluateLastAxis(SizeType outerSize, SizeType batchSize, const InType *src, OutType *dst, SizeType groupSize,
-    const ScaleShiftType *scale, const ScaleShiftType *shift, float *mean, float *variance,
-    bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept
+                      const ScaleShiftType *scale, const ScaleShiftType *shift, float *mean, float *variance,
+                      bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept
 {
     bool calculateStats = !static_cast<bool>(flags & NormalizationFlags::USE_GLOBAL_STATS);
     bool useScale = static_cast<bool>(flags & NormalizationFlags::USE_SCALE);
@@ -491,8 +520,11 @@ void EvaluateLastAxis(SizeType outerSize, SizeType batchSize, const InType *src,
             typename Vector::Vec<float>::Type vMean2;
             typename Vector::Vec<float>::Type vMean3;
             Vector::DupFloatN<InType, float,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                vMean, vMean0, vMean1, vMean2, vMean3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vMean,
+                                                                                                            vMean0,
+                                                                                                            vMean1,
+                                                                                                            vMean2,
+                                                                                                            vMean3);
             float vVariance = calculateStats ? 0.0f : variance[offsetStats];
             svbool_t pgTrue = svptrue_b32();
             typename Vector::Vec<float>::Type vVariance0;
@@ -500,41 +532,52 @@ void EvaluateLastAxis(SizeType outerSize, SizeType batchSize, const InType *src,
             typename Vector::Vec<float>::Type vVariance2;
             typename Vector::Vec<float>::Type vVariance3;
             Vector::DupFloatN<InType, float,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                vVariance, vVariance0, vVariance1, vVariance2, vVariance3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vVariance,
+                                                                                                            vVariance0,
+                                                                                                            vVariance1,
+                                                                                                            vVariance2,
+                                                                                                            vVariance3);
 
             if (calculateStats) {
                 for (SizeType n = 0; n < dhw; ++n) {
                     SizeType offset = a * dhw * axisSize + n * axisSize + g * channelPerGroup;
                     Service::UnrollFor::Do<1>(channelPerGroup,
-                        GroupNormLastFWD<CompType, InType, OutType, ScaleShiftType>{},
-                        src + offset, vMean0, vMean1, vMean2, vMean3);
-                    float tmpMean = Vector::AddvN<float,
-                        Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::Do(
-                        pgTrue, pgTrue, pgTrue, pgTrue, vMean0, vMean1, vMean2, vMean3);
+                                              GroupNormLastFWD<CompType, InType, OutType, ScaleShiftType>{},
+                                              src + offset, vMean0, vMean1, vMean2, vMean3);
+                    float tmpMean =
+                        Vector::AddvN<float, Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::
+                            Do(pgTrue, pgTrue, pgTrue, pgTrue, vMean0, vMean1, vMean2, vMean3);
                     vMean += tmpMean;
-                    Vector::DupFloatN<InType, float,
-                        Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                        0.0f, vMean0, vMean1, vMean2, vMean3);
+                    Vector::DupFloatN<
+                        InType, float,
+                        Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(0.0f, vMean0,
+                                                                                                      vMean1, vMean2,
+                                                                                                      vMean3);
                 }
                 vMean /= dataPerGroup;
 
                 Vector::DupFloatN<InType, float,
-                    Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                    vMean, vMean0, vMean1, vMean2, vMean3);
+                                  Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vMean,
+                                                                                                                vMean0,
+                                                                                                                vMean1,
+                                                                                                                vMean2,
+                                                                                                                vMean3);
 
                 for (SizeType n = 0; n < dhw; ++n) {
                     SizeType offset = a * dhw * axisSize + n * axisSize + g * channelPerGroup;
-                    Service::UnrollFor::Do<1>(channelPerGroup,
-                        GroupNormLastFWD<CompType, InType, OutType, ScaleShiftType>{},
-                        src + offset, vMean0, vMean1, vMean2, vMean3, vVariance0, vVariance1, vVariance2, vVariance3);
-                    float tmpVariance = Vector::AddvN<float,
-                        Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::Do(
-                        pgTrue, pgTrue, pgTrue, pgTrue, vVariance0, vVariance1, vVariance2, vVariance3);
+                    Service::UnrollFor::Do<1>(
+                        channelPerGroup, GroupNormLastFWD<CompType, InType, OutType, ScaleShiftType>{}, src + offset,
+                        vMean0, vMean1, vMean2, vMean3, vVariance0, vVariance1, vVariance2, vVariance3);
+                    float tmpVariance =
+                        Vector::AddvN<float, Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleShiftType>()>::
+                            Do(pgTrue, pgTrue, pgTrue, pgTrue, vVariance0, vVariance1, vVariance2, vVariance3);
                     vVariance += tmpVariance;
-                    Vector::DupFloatN<InType, float,
-                        Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                        0.0f, vVariance0, vVariance1, vVariance2, vVariance3);
+                    Vector::DupFloatN<
+                        InType, float,
+                        Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(0.0f, vVariance0,
+                                                                                                      vVariance1,
+                                                                                                      vVariance2,
+                                                                                                      vVariance3);
                 }
                 vVariance /= dataPerGroup;
             }
@@ -549,37 +592,41 @@ void EvaluateLastAxis(SizeType outerSize, SizeType batchSize, const InType *src,
             typename Vector::Vec<CompType>::Type invSqrtVarianceVec2;
             typename Vector::Vec<CompType>::Type invSqrtVarianceVec3;
             Vector::DupFloatN<InType, CompType,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                invSqrtVariance, invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::
+                Do(invSqrtVariance, invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3);
             typename Vector::Vec<CompType>::Type constants0;
             typename Vector::Vec<CompType>::Type constants1;
             typename Vector::Vec<CompType>::Type constants2;
             typename Vector::Vec<CompType>::Type constants3;
-            Vector::DupFloatN<InType, CompType,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                invSqrtVariance, constants0, constants1, constants2, constants3);
+            Vector::DupFloatN<
+                InType, CompType,
+                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(invSqrtVariance,
+                                                                                              constants0, constants1,
+                                                                                              constants2, constants3);
             typename Vector::Vec<CompType>::Type vMeanVect0;
             typename Vector::Vec<CompType>::Type vMeanVect1;
             typename Vector::Vec<CompType>::Type vMeanVect2;
             typename Vector::Vec<CompType>::Type vMeanVect3;
             Vector::DupFloatN<InType, CompType,
-                Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                vMean, vMeanVect0, vMeanVect1, vMeanVect2, vMeanVect3);
+                              Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(vMean,
+                                                                                                            vMeanVect0,
+                                                                                                            vMeanVect1,
+                                                                                                            vMeanVect2,
+                                                                                                            vMeanVect3);
             for (SizeType n = 0; n < dhw; ++n) {
                 SizeType offset = a * dhw * axisSize + n * axisSize + g * channelPerGroup;
                 Service::UnrollFor::Do<1>(channelPerGroup,
-                    GroupNormLastFWD<CompType, InType, OutType, ScaleShiftType>{},
-                    src + offset, scale, shift, useScale, useShift, g,
-                    invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3,
-                    constants0, constants1, constants2, constants3,
-                    vMeanVect0, vMeanVect1, vMeanVect2, vMeanVect3, dst + offset);
+                                          GroupNormLastFWD<CompType, InType, OutType, ScaleShiftType>{}, src + offset,
+                                          scale, shift, useScale, useShift, g, invSqrtVarianceVec0, invSqrtVarianceVec1,
+                                          invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2,
+                                          constants3, vMeanVect0, vMeanVect1, vMeanVect2, vMeanVect3, dst + offset);
             }
         }
     }
 }
 
-} // GNorm
-} // Detail
-} // KuDNN
+} // namespace GNorm
+} // namespace Detail
+} // namespace KuDNN
 
 #endif //  KUDNN_GNORM_FWD_DEF_HPP

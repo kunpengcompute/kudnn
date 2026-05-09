@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF) 
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS_RELEASE "")
 set(CMAKE_C_FLAGS_RELEASE "")
@@ -104,7 +104,7 @@ add_library(kudnn SHARED $<TARGET_OBJECTS:src>
                         ${LNORM_KERNELS_LIST}
                         ${RMSNORM_KERNELS_LIST}
                         ${REORDER_KERNELS_LIST}
-                        ${SOFTMAX_KERNELS_LIST})                  
+                        ${SOFTMAX_KERNELS_LIST})
 
 set(PACKAGE_NUM_VERSION $ENV{PACKAGE_NUM_VERSION})
 if ("$ENV{PACKAGE_NUM_VERSION}" STREQUAL "")

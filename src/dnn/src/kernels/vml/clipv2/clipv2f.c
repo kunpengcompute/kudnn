@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,8 +13,8 @@
 #include "kernels/vml/vml_sve_base.h"
 #include "kernels/vml/common_macro.h"
 
-static inline void ClipV2MainKernelFWDF32(
-    svbool_t pg, const float alpha, const float beta, const float *src, float *dst)
+static inline void ClipV2MainKernelFWDF32(svbool_t pg, const float alpha, const float beta, const float *src,
+                                          float *dst)
 {
     svfloat32_t res = svld1_f32(pg, src);
     svbool_t pgRetAlpha = svcmple_n_f32(pg, res, alpha);
@@ -55,13 +55,14 @@ static void ClipV2MainKernelBwdF32(float alpha, float beta, const float *src, co
     VML_VectorComputation_ST_STEP(svst1_f32, pg, ds, step, res);
 }
 
-void ClipV2SveBWDF32(const int64_t len, const float alpha, const float beta,
-                     const float *src, const float *dd, float *ds)
+void ClipV2SveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                     float *ds)
 {
     int64_t i;
     int64_t loopClipV2f = svcntw();
 
-    for (i = 0; i <= len - loopClipV2f * VML_VectorComputation_UNFOLD_N; i += loopClipV2f * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopClipV2f * VML_VectorComputation_UNFOLD_N;
+         i += loopClipV2f * VML_VectorComputation_UNFOLD_N) {
         ClipV2MainKernelBwdF32(alpha, beta, src + i, dd + i, ds + i, loopClipV2f);
     }
     for (; i < len; i += loopClipV2f) {

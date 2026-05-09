@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,9 +20,7 @@ namespace ARMCG {
 // base for SIMD vector register
 class VRegVec : public Reg {
 public:
-    explicit VRegVec(uint32_t index, uint32_t bit, uint32_t lane)
-        : Reg(index, Kind::VREG_VEC, bit),
-          lane_(lane) {};
+    explicit VRegVec(uint32_t index, uint32_t bit, uint32_t lane) : Reg(index, Kind::VREG_VEC, bit), lane_(lane) {};
 
     uint32_t GetLane() const
     {
@@ -37,12 +35,15 @@ private:
 class VRegElem : public VRegVec {
 public:
     explicit VRegElem(uint32_t index, uint32_t eidx, uint32_t bit, uint32_t lane)
-        : VRegVec(index, bit, lane), elemIdx_(eidx) {}
+        : VRegVec(index, bit, lane), elemIdx_(eidx)
+    {
+    }
 
     uint32_t GetElemIdx() const
     {
         return elemIdx_;
     }
+
 private:
     uint32_t elemIdx_;
 };
@@ -50,17 +51,17 @@ private:
 // base for SIMD Vector Register List
 class VRegList : public VRegVec {
 public:
-    explicit VRegList(const VRegVec &s)
-        : VRegVec(s.GetIdx(), s.GetBit(), s.GetLane()),
-          len_(1) {}
+    explicit VRegList(const VRegVec &s) : VRegVec(s.GetIdx(), s.GetBit(), s.GetLane()), len_(1) {}
     explicit VRegList(const VRegVec &s, const VRegVec &e)
-        : VRegVec(s.GetIdx(), s.GetBit(), s.GetLane()),
-          len_(((e.GetIdx() + VAL_32 - s.GetIdx()) % VAL_32) + 1) {}
+        : VRegVec(s.GetIdx(), s.GetBit(), s.GetLane()), len_(((e.GetIdx() + VAL_32 - s.GetIdx()) % VAL_32) + 1)
+    {
+    }
 
     uint32_t GetLen() const
     {
         return len_;
     }
+
 private:
     uint32_t len_;
 };
@@ -371,11 +372,24 @@ class VReg : public VRegVec {
 public:
     explicit VReg(uint32_t index)
         : VRegVec(index, BIT_128, LANE_1),
-          b4(index), b8(index), b16(index), b(index),
-          h2(index), h4(index), h8(index), h(index),
-          s2(index), s4(index), s(index),
-          d1(index), d2(index), d(index),
-          q1(index), q(index) {}
+          b4(index),
+          b8(index),
+          b16(index),
+          b(index),
+          h2(index),
+          h4(index),
+          h8(index),
+          h(index),
+          s2(index),
+          s4(index),
+          s(index),
+          d1(index),
+          d2(index),
+          d(index),
+          q1(index),
+          q(index)
+    {
+    }
 
     VReg4B b4;
     VReg8B b8;
@@ -395,6 +409,6 @@ public:
     VReg1Q q;
 };
 
-} // ARMCG
+} // namespace ARMCG
 
 #endif // CG_REG_V_HPP

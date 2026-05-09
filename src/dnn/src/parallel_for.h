@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -35,17 +35,13 @@ public:
 
 class KuplBackend : public ParallelBackend {
 public:
-    void parallel_for(int64_t total,
-                      int numThreads,
-                      const std::function<void(int64_t)> &fn);
+    void parallel_for(int64_t total, int numThreads, const std::function<void(int64_t)> &fn);
     static int get_default_num_threads();
 };
 
 class OpenMPBackend : public ParallelBackend {
 public:
-    void parallel_for(int64_t total,
-                      int numThreads,
-                      const std::function<void(int64_t)> &fn);
+    void parallel_for(int64_t total, int numThreads, const std::function<void(int64_t)> &fn);
     static int get_default_num_threads();
 };
 
@@ -90,7 +86,8 @@ public:
                 std::array<int64_t, N> idx;
                 decode(linear, shape, idx);
                 call_func(func, idx, std::make_index_sequence<N>{});
-            }, total, numThreads);
+            },
+            total, numThreads);
     }
 
 private:
@@ -111,5 +108,5 @@ private:
     }
 };
 
-}  // namespace Threading
-}  // namespace KuDNN
+} // namespace Threading
+} // namespace KuDNN

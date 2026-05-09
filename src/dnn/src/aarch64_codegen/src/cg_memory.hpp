@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -110,18 +110,15 @@ private:
 #endif
 
 // 2nd parameter for constructor of CodeArray(maxSize, userPtr, alloc)
-void *const AUTO_GROW = reinterpret_cast<void*>(AUTO_GROW_VAL);
-void *const DONT_SET_PROTECT_RWE = reinterpret_cast<void*>(DONT_SET_PROTECT_RWE_VAL);
+void *const AUTO_GROW = reinterpret_cast<void *>(AUTO_GROW_VAL);
+void *const DONT_SET_PROTECT_RWE = reinterpret_cast<void *>(DONT_SET_PROTECT_RWE_VAL);
 
 class CodeArray {
 public:
     // type of partially applied function for encoding
     using EncFunc = std::function<uint32_t(int64_t)>;
     struct AddrInfo {
-        AddrInfo(size_t offset, size_t addr, EncFunc func)
-            : codeOffset(offset),
-              jmpAddr(addr),
-              encFunc(func) {}
+        AddrInfo(size_t offset, size_t addr, EncFunc func) : codeOffset(offset), jmpAddr(addr), encFunc(func) {}
         uint32_t GetVal() const
         {
             return encFunc(static_cast<int64_t>(jmpAddr - codeOffset) * CSIZE);
@@ -144,20 +141,21 @@ public:
 
     CodeArray(const CodeArray &rhs);
     explicit CodeArray(size_t maxSize, void *userPtr = nullptr, Allocator *allocator = nullptr)
-        : type_(userPtr == AUTO_GROW ? Type::MEM_AUTO_GROW :
-             (userPtr == nullptr || userPtr == DONT_SET_PROTECT_RWE) ? Type::BUF_ALLOC : Type::BUF_USER),
+        : type_(userPtr == AUTO_GROW                                    ? Type::MEM_AUTO_GROW :
+                (userPtr == nullptr || userPtr == DONT_SET_PROTECT_RWE) ? Type::BUF_ALLOC :
+                                                                          Type::BUF_USER),
           alloc_(allocator ? allocator : static_cast<Allocator *>(&defaultAllocator_)),
           maxSize_(maxSize / CSIZE),
           top_(type_ == Type::BUF_USER ? static_cast<uint32_t *>(userPtr) :
-              alloc_->Alloc((std::max<size_t>)(maxSize, CSIZE))),
+                                         alloc_->Alloc((std::max<size_t>)(maxSize, CSIZE))),
           size_(0),
           isCalledCalcJmpAddress_(false)
     {
         if (maxSize_ > 0 && top_ == nullptr) {
             throw Error(Err::CANT_ALLOC);
         }
-        if ((type_ == Type::BUF_ALLOC && userPtr != DONT_SET_PROTECT_RWE &&
-                UseProtect()) && !SetProtectMode(ProtectMode::RWE, false)) {
+        if ((type_ == Type::BUF_ALLOC && userPtr != DONT_SET_PROTECT_RWE && UseProtect()) &&
+            !SetProtectMode(ProtectMode::RWE, false)) {
             alloc_->Free(top_);
             throw Error(Err::CANT_PROTECT);
         }
@@ -170,9 +168,8 @@ public:
             if (UseProtect()) {
                 try {
                     SetProtectModeRW(false);
-                } catch (ARMCG::Error& err) {
-                    printf("%s err:%s\n",
-                        __FUNCTION__, err.What());
+                } catch (ARMCG::Error &err) {
+                    printf("%s err:%s\n", __FUNCTION__, err.What());
                     isNeedFree = false;
                 }
             }
@@ -232,7 +229,7 @@ public:
     }
     uint8_t *GetCode() const
     {
-        return static_cast<uint8_t *>(static_cast<void*>(top_));
+        return static_cast<uint8_t *>(static_cast<void *>(top_));
     }
     template <class F>
     const F GetCode() const
@@ -241,12 +238,12 @@ public:
     }
     uint8_t *GetCurr() const
     {
-        return static_cast<uint8_t *>(static_cast<void*>(&top_[size_]));
+        return static_cast<uint8_t *>(static_cast<void *>(&top_[size_]));
     }
     template <class F>
     const F GetCurr() const
     {
-        return static_cast<F>(static_cast<void*>(&top_[size_]));
+        return static_cast<F>(static_cast<void *>(&top_[size_]));
     }
     // return byte size
     size_t GetSize() const
@@ -333,7 +330,7 @@ public:
     {
         uintptr_t addrVal = reinterpret_cast<uintptr_t>(addr);
         return reinterpret_cast<uint32_t *>((static_cast<size_t>(addrVal) + alignedSize - 1) &
-            ~(alignedSize - static_cast<size_t>(1)));
+                                            ~(alignedSize - static_cast<size_t>(1)));
     }
 
 protected:
@@ -344,8 +341,7 @@ protected:
     // allocate new memory and copy old data to the new area
     void GrowMemory()
     {
-        const size_t newSize = (std::max<size_t>)(static_cast<size_t>(MaxCodeSize::DEFAULT),
-            GetMaxSize() * 2);
+        const size_t newSize = (std::max<size_t>)(static_cast<size_t>(MaxCodeSize::DEFAULT), GetMaxSize() * 2);
         uint32_t *newTop = alloc_->Alloc(newSize);
         if (newTop == nullptr) {
             throw Error(Err::CANT_ALLOC);
@@ -363,8 +359,7 @@ protected:
         if (isCalledCalcJmpAddress_) {
             return;
         }
-        for (AddrInfoList::const_iterator i = addrInfoList_.begin(), ie = addrInfoList_.end();
-                i != ie; ++i) {
+        for (AddrInfoList::const_iterator i = addrInfoList_.begin(), ie = addrInfoList_.end(); i != ie; ++i) {
             uint32_t disp = i->GetVal();
             Rewrite(i->codeOffset, disp);
         }

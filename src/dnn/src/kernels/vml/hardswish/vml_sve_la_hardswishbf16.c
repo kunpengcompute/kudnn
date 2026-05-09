@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -46,7 +46,8 @@ void HardSwishSveFWDBF16(const int64_t len, const float alpha, const float beta,
     svfloat32_t va = svdup_n_f32(alpha);
     svfloat32_t vb = svdup_n_f32(beta);
 
-    for (i = 0; i <= len - loopHardSwishh * VML_VectorComputation_UNFOLD_N; i += loopHardSwishh * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopHardSwishh * VML_VectorComputation_UNFOLD_N;
+         i += loopHardSwishh * VML_VectorComputation_UNFOLD_N) {
         HardSwishMainKernelFwdBF16(va, vb, src + i, dst + i, loopHardSwishh);
     }
     for (; i < len; i += loopHardSwishh) {
@@ -75,8 +76,8 @@ void HardSwishSveFWDBF16(const int64_t len, const float alpha, const float beta,
     }
 }
 
-static void HardSwishMainKernelBwdBF16(svfloat32_t va, svfloat32_t vb, svfloat32_t halfVb,
-                                       const __bf16 *src, const __bf16 *dd, __bf16 *ds, int step)
+static void HardSwishMainKernelBwdBF16(svfloat32_t va, svfloat32_t vb, svfloat32_t halfVb, const __bf16 *src,
+                                       const __bf16 *dd, __bf16 *ds, int step)
 {
     svbool_t pgB16 = svptrue_b16();
     svbool_t pgB32 = svptrue_b32();
@@ -118,8 +119,8 @@ static void HardSwishMainKernelBwdBF16(svfloat32_t va, svfloat32_t vb, svfloat32
     CONVERT_STORE_FP32_TO_BF16(ds, pgB16, resBot, resTop, step);
 }
 
-void HardSwishSveBWDBF16(const int64_t len, const float alpha, const float beta,
-                         const __bf16 *src, const __bf16 *dd, __bf16 *ds)
+void HardSwishSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
+                         __bf16 *ds)
 {
     int64_t i;
     int64_t loopHardSwishh = svcnth();
@@ -127,7 +128,8 @@ void HardSwishSveBWDBF16(const int64_t len, const float alpha, const float beta,
     svfloat32_t vb = svdup_n_f32(beta);
     svfloat32_t halfVb = svdup_n_f32(beta * FLOAT_HALF);
 
-    for (i = 0; i <= len - loopHardSwishh * VML_VectorComputation_UNFOLD_N; i += loopHardSwishh * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopHardSwishh * VML_VectorComputation_UNFOLD_N;
+         i += loopHardSwishh * VML_VectorComputation_UNFOLD_N) {
         HardSwishMainKernelBwdBF16(va, vb, halfVb, src + i, dd + i, ds + i, loopHardSwishh);
     }
     for (; i < len; i += loopHardSwishh) {
@@ -150,16 +152,16 @@ void HardSwishSveBWDBF16(const int64_t len, const float alpha, const float beta,
 
         svbool_t pgRetDD = svcmpge(pgB32, resBot, VectorComputation_FLOAT_ONE); /* alpha * s + beta >= 1 */
         svbool_t pgMain = svcmpgt(pgB32, resBot, VectorComputation_FLOAT_ZERO); /* 0 < alpha * s + beta < 1 */
-        pgMain = svcmplt(pgMain, resBot, VectorComputation_FLOAT_ONE); /* 0 < alpha * s + beta < 1 */
-        resBot = svmad_f32_x(pgB32, xBot, va, halfVb); /* alpha * s + beta / 2 */
-        resBot = svmul_f32_x(pgB32, resBot, VectorComputation_FLOAT_TWO); /* 2 * alpha * s + beta */
+        pgMain = svcmplt(pgMain, resBot, VectorComputation_FLOAT_ONE);          /* 0 < alpha * s + beta < 1 */
+        resBot = svmad_f32_x(pgB32, xBot, va, halfVb);                          /* alpha * s + beta / 2 */
+        resBot = svmul_f32_x(pgB32, resBot, VectorComputation_FLOAT_TWO);       /* 2 * alpha * s + beta */
         resBot = svmul_f32_z(pgMain, resBot, ddBot); /* dd * (2 * alpha * s + beta) for pgMain, zero for others */
         resBot = svsel_f32(pgRetDD, ddBot, resBot);
 
-        pgRetDD = svcmpge(pgB32, resTop, VectorComputation_FLOAT_ONE); /* alpha * s + beta >= 1 */
-        pgMain = svcmpgt(pgB32, resTop, VectorComputation_FLOAT_ZERO); /* 0 < alpha * s + beta < 1 */
-        pgMain = svcmplt(pgMain, resTop, VectorComputation_FLOAT_ONE); /* 0 < alpha * s + beta < 1 */
-        resTop = svmad_f32_x(pgB32, xTop, va, halfVb); /* alpha * s + beta / 2 */
+        pgRetDD = svcmpge(pgB32, resTop, VectorComputation_FLOAT_ONE);    /* alpha * s + beta >= 1 */
+        pgMain = svcmpgt(pgB32, resTop, VectorComputation_FLOAT_ZERO);    /* 0 < alpha * s + beta < 1 */
+        pgMain = svcmplt(pgMain, resTop, VectorComputation_FLOAT_ONE);    /* 0 < alpha * s + beta < 1 */
+        resTop = svmad_f32_x(pgB32, xTop, va, halfVb);                    /* alpha * s + beta / 2 */
         resTop = svmul_f32_x(pgB32, resTop, VectorComputation_FLOAT_TWO); /* 2 * alpha * s + beta */
         resTop = svmul_f32_z(pgMain, resTop, ddTop); /* dd * (2 * alpha * s + beta) for pgMain, zero for others */
         resTop = svsel_f32(pgRetDD, ddTop, resTop);

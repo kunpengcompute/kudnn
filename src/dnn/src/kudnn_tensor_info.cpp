@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,18 +20,20 @@ namespace KuDNN {
 SizeType TensorInfo::GetAxisNumAccordingToLayout(SizeType axisNum) const noexcept(false)
 {
     if (axisNum > dims.GetNumDims()) {
-        throw Service::LogicError {"Tensor Info: axisNum > tensor dimensionality"};
+        throw Service::LogicError{"Tensor Info: axisNum > tensor dimensionality"};
     }
     SizeType idxArr[] = {IDX_0, IDX_1, IDX_2, IDX_3, IDX_4};
     Shape idx = Service::GetShapeAccordingToLayout(Shape(idxArr, dims.GetNumDims()), layout);
     SizeType num = 0;
-    while (idx[num] != axisNum) { num++; }
+    while (idx[num] != axisNum) {
+        num++;
+    }
     return num;
 }
 
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::ValidateElementType(
-    Element::Type parType) noexcept(areExcetionsDeclined)
+typename std::conditional<areExcetionsDeclined, Status, void>::type
+TensorInfo::ValidateElementType(Element::Type parType) noexcept(areExcetionsDeclined)
 {
     if (parType == Element::TypeT::UNDEFINED) {
         if constexpr (areExcetionsDeclined) {
@@ -46,17 +48,15 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
     }
 }
 
-template
-typename std::conditional<false, Status, void>::type TensorInfo::ValidateElementType<false>(Element::Type
-    parType) noexcept(false);
+template typename std::conditional<false, Status, void>::type TensorInfo::ValidateElementType<false>(
+    Element::Type parType) noexcept(false);
 
-template
-typename std::conditional<true, Status, void>::type TensorInfo::ValidateElementType<true>(Element::Type
-    parType) noexcept(true);
+template typename std::conditional<true, Status, void>::type TensorInfo::ValidateElementType<true>(
+    Element::Type parType) noexcept(true);
 
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::ValidateLayout(
-    Shape parDims, Layout parLayout) noexcept(areExcetionsDeclined)
+typename std::conditional<areExcetionsDeclined, Status, void>::type
+TensorInfo::ValidateLayout(Shape parDims, Layout parLayout) noexcept(areExcetionsDeclined)
 {
     /*
         KuDNN supports tensors up to 5D, below we consider each dimensionality
@@ -78,32 +78,30 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
         }
         case DIM_3: {
             bool layoutNotSupported = (parLayout != Layout::ABC) && (parLayout != Layout::ACB) &&
-                (parLayout != Layout::BAC) && (parLayout != Layout::BCA) &&
-                (parLayout != Layout::CAB) && (parLayout != Layout::CBA);
+                                      (parLayout != Layout::BAC) && (parLayout != Layout::BCA) &&
+                                      (parLayout != Layout::CAB) && (parLayout != Layout::CBA);
             if (layoutNotSupported) {
                 isInvalidLayout = true;
             }
             break;
         }
         case DIM_4: {
-            bool layoutNotSupported = (parLayout != Layout::ABCD) && (parLayout != Layout::ABDC) &&
-                (parLayout != Layout::ACBD) && (parLayout != Layout::ACDB) &&
-                (parLayout != Layout::ADBC) && (parLayout != Layout::ADCB) &&
-                (parLayout != Layout::BACD) && (parLayout != Layout::BCDA) &&
-                (parLayout != Layout::CDAB) && (parLayout != Layout::CDBA) &&
-                (parLayout != Layout::DCAB);
+            bool layoutNotSupported =
+                (parLayout != Layout::ABCD) && (parLayout != Layout::ABDC) && (parLayout != Layout::ACBD) &&
+                (parLayout != Layout::ACDB) && (parLayout != Layout::ADBC) && (parLayout != Layout::ADCB) &&
+                (parLayout != Layout::BACD) && (parLayout != Layout::BCDA) && (parLayout != Layout::CDAB) &&
+                (parLayout != Layout::CDBA) && (parLayout != Layout::DCAB);
             if (layoutNotSupported) {
                 isInvalidLayout = true;
             }
             break;
         }
         case DIM_5: {
-            bool layoutNotSupported = (parLayout != Layout::ABCDE) && (parLayout != Layout::ABCED) &&
-                (parLayout != Layout::ABDEC) && (parLayout != Layout::ACBDE) &&
-                (parLayout != Layout::ACDEB) && (parLayout != Layout::ADECB) &&
-                (parLayout != Layout::BACDE) && (parLayout != Layout::BCDEA) &&
-                (parLayout != Layout::CDEAB) && (parLayout != Layout::CDEBA) &&
-                (parLayout != Layout::DECAB);
+            bool layoutNotSupported =
+                (parLayout != Layout::ABCDE) && (parLayout != Layout::ABCED) && (parLayout != Layout::ABDEC) &&
+                (parLayout != Layout::ACBDE) && (parLayout != Layout::ACDEB) && (parLayout != Layout::ADECB) &&
+                (parLayout != Layout::BACDE) && (parLayout != Layout::BCDEA) && (parLayout != Layout::CDEAB) &&
+                (parLayout != Layout::CDEBA) && (parLayout != Layout::DECAB);
             if (layoutNotSupported) {
                 isInvalidLayout = true;
             }
@@ -113,7 +111,7 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
             if constexpr (areExcetionsDeclined) {
                 return Status::BAD_ARGUMENTS;
             } else {
-                throw Service::LogicError {"Tensor Info: tensor dimensionality is incorrect"};
+                throw Service::LogicError{"Tensor Info: tensor dimensionality is incorrect"};
             }
         }
     }
@@ -122,8 +120,8 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
         if constexpr (areExcetionsDeclined) {
             return Status::BAD_ARGUMENTS;
         } else {
-            throw Service::LogicError {"Tensor Info: incorrect layout for " + std::to_string(parDims.GetNumDims())
-                + "D tensor"};
+            throw Service::LogicError{"Tensor Info: incorrect layout for " + std::to_string(parDims.GetNumDims()) +
+                                      "D tensor"};
         }
     }
 
@@ -132,17 +130,15 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
     }
 }
 
-template
-typename std::conditional<false, Status, void>::type TensorInfo::ValidateLayout<false>(Shape parDims,
-    Layout parLayout) noexcept(false);
+template typename std::conditional<false, Status, void>::type TensorInfo::ValidateLayout<false>(
+    Shape parDims, Layout parLayout) noexcept(false);
 
-template
-typename std::conditional<true, Status, void>::type TensorInfo::ValidateLayout<true>(Shape parDims,
-    Layout parLayout) noexcept(true);
+template typename std::conditional<true, Status, void>::type TensorInfo::ValidateLayout<true>(
+    Shape parDims, Layout parLayout) noexcept(true);
 
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::SetMinimumRequiredStrides(
-    Shape parDims, Layout parLayout, Shape &parStrides) noexcept(areExcetionsDeclined)
+typename std::conditional<areExcetionsDeclined, Status, void>::type
+TensorInfo::SetMinimumRequiredStrides(Shape parDims, Layout parLayout, Shape &parStrides) noexcept(areExcetionsDeclined)
 {
     /*
         KuDNN supports tensors up to 5D, below we consider each layout
@@ -265,9 +261,8 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
             break;
         }
         case Layout::ADECB: {
-            parStrides.ResetShape(parDims[IDX_1] * parDims[IDX_2] * parDims[IDX_3] * parDims[IDX_4], 1,
-                                  parDims[IDX_1], parDims[IDX_1] * parDims[IDX_2] * parDims[IDX_4],
-                                  parDims[IDX_1] * parDims[IDX_2]);
+            parStrides.ResetShape(parDims[IDX_1] * parDims[IDX_2] * parDims[IDX_3] * parDims[IDX_4], 1, parDims[IDX_1],
+                                  parDims[IDX_1] * parDims[IDX_2] * parDims[IDX_4], parDims[IDX_1] * parDims[IDX_2]);
             break;
         }
         case Layout::BACDE: {
@@ -308,7 +303,7 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
             if constexpr (areExcetionsDeclined) {
                 return Status::BAD_ARGUMENTS;
             } else {
-                throw Service::LogicError {"Tensor Info: layout wasn't processed"};
+                throw Service::LogicError{"Tensor Info: layout wasn't processed"};
             }
             break;
         }
@@ -320,23 +315,21 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
     }
 }
 
-template
-typename std::conditional<false, Status, void>::type TensorInfo::SetMinimumRequiredStrides<false>(Shape parDims,
-    Layout parLayout, Shape& parStrides) noexcept(false);
+template typename std::conditional<false, Status, void>::type TensorInfo::SetMinimumRequiredStrides<false>(
+    Shape parDims, Layout parLayout, Shape &parStrides) noexcept(false);
 
-template
-typename std::conditional<true, Status, void>::type TensorInfo::SetMinimumRequiredStrides<true>(Shape parDims,
-    Layout parLayout, Shape& parStrides) noexcept(true);
+template typename std::conditional<true, Status, void>::type TensorInfo::SetMinimumRequiredStrides<true>(
+    Shape parDims, Layout parLayout, Shape &parStrides) noexcept(true);
 
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::ValidateDimsAndStrides(
-    Shape parDims, Layout parLayout, Shape parStrides) noexcept(areExcetionsDeclined)
+typename std::conditional<areExcetionsDeclined, Status, void>::type
+TensorInfo::ValidateDimsAndStrides(Shape parDims, Layout parLayout, Shape parStrides) noexcept(areExcetionsDeclined)
 {
     if (parDims.GetNumDims() != parStrides.GetNumDims()) {
         if constexpr (areExcetionsDeclined) {
             return Status::BAD_ARGUMENTS;
         } else {
-            throw Service::LogicError {"Tensor Info: dims and strides have different dimensionality"};
+            throw Service::LogicError{"Tensor Info: dims and strides have different dimensionality"};
         }
     }
     if constexpr (areExcetionsDeclined) {
@@ -355,7 +348,7 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
         if constexpr (areExcetionsDeclined) {
             return Status::BAD_ARGUMENTS;
         } else {
-            throw Service::LogicError {"TensorInfo: total size doesn't fit in SizeType"};
+            throw Service::LogicError{"TensorInfo: total size doesn't fit in SizeType"};
         }
     }
     Shape minStrides = parDims;
@@ -372,7 +365,7 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
             if constexpr (areExcetionsDeclined) {
                 return Status::BAD_ARGUMENTS;
             } else {
-                throw Service::LogicError {"Tensor Info: incorrect strides"};
+                throw Service::LogicError{"Tensor Info: incorrect strides"};
             }
         }
     }
@@ -382,13 +375,10 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
     }
 }
 
-template
-typename std::conditional<false, Status, void>::type TensorInfo::ValidateDimsAndStrides<false>(Shape parDims,
-    Layout parLayout, Shape parStrides) noexcept(false);
+template typename std::conditional<false, Status, void>::type TensorInfo::ValidateDimsAndStrides<false>(
+    Shape parDims, Layout parLayout, Shape parStrides) noexcept(false);
 
-template
-typename std::conditional<true, Status, void>::type TensorInfo::ValidateDimsAndStrides<true>(Shape parDims,
-    Layout parLayout, Shape parStrides) noexcept(true);
+template typename std::conditional<true, Status, void>::type TensorInfo::ValidateDimsAndStrides<true>(
+    Shape parDims, Layout parLayout, Shape parStrides) noexcept(true);
 
-
-} // KuDNN
+} // namespace KuDNN

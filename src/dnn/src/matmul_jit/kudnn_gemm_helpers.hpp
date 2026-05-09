@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -34,17 +34,17 @@ enum class DstLoadFlags : std::int64_t {
     ADD_BIAS_MN = 0x400uLL
 };
 
-inline DstLoadFlags operator | (const DstLoadFlags lhs, const DstLoadFlags rhs)
+inline DstLoadFlags operator|(const DstLoadFlags lhs, const DstLoadFlags rhs)
 {
     return static_cast<DstLoadFlags>(static_cast<std::uint64_t>(lhs) | static_cast<std::uint64_t>(rhs));
 }
 
-inline DstLoadFlags operator & (const DstLoadFlags lhs, const DstLoadFlags rhs)
+inline DstLoadFlags operator&(const DstLoadFlags lhs, const DstLoadFlags rhs)
 {
     return static_cast<DstLoadFlags>(static_cast<std::uint64_t>(lhs) & static_cast<std::uint64_t>(rhs));
 }
 
-inline DstLoadFlags operator << (const DstLoadFlags lhs, IntType shift)
+inline DstLoadFlags operator<<(const DstLoadFlags lhs, IntType shift)
 {
     return static_cast<DstLoadFlags>(static_cast<std::uint64_t>(lhs) << shift);
 }
@@ -71,8 +71,10 @@ struct GemmInfo final {
         float beta;
     };
     GemmInfo(const TensorInfo &srcInfoPara, const TensorInfo &weiInfoPara, const TensorInfo &dstInfoPara,
-        const TensorInfo & biaInfoPara) noexcept(false)
-        : srcInfo(srcInfoPara), weiInfo(weiInfoPara), dstInfo(dstInfoPara), biaInfo(biaInfoPara) {}
+             const TensorInfo &biaInfoPara) noexcept(false)
+        : srcInfo(srcInfoPara), weiInfo(weiInfoPara), dstInfo(dstInfoPara), biaInfo(biaInfoPara)
+    {
+    }
     TensorInfo srcInfo;
     TensorInfo weiInfo;
     TensorInfo dstInfo;
@@ -81,11 +83,11 @@ struct GemmInfo final {
 
 inline bool operator==(const GemmInfo &lhs, const GemmInfo &rhs) noexcept
 {
-    return ((lhs.srcInfo == rhs.srcInfo) && (lhs.weiInfo == rhs.weiInfo) &&
-        (lhs.dstInfo == rhs.dstInfo) && (lhs.biaInfo == rhs.biaInfo));
+    return ((lhs.srcInfo == rhs.srcInfo) && (lhs.weiInfo == rhs.weiInfo) && (lhs.dstInfo == rhs.dstInfo) &&
+            (lhs.biaInfo == rhs.biaInfo));
 }
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_GEMM_HELPERS_HPP

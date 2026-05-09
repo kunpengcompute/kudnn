@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -38,15 +38,18 @@ inline svfloat32_t SveMishBwdF32XPart(svfloat32_t x, svfloat32_t e, svbool_t pg)
 {
     // e^3x + 4*e^2x
     svfloat32_t e2 = svmul_f32_x(pg, e, e);
-    svfloat32_t g1 = svmad_f32_x(pg, e2, e, svmul_f32_x(pg, svmul_f32_x(pg, e2, VectorComputation_FLOAT_TWO), VectorComputation_FLOAT_TWO));
+    svfloat32_t g1 = svmad_f32_x(
+        pg, e2, e, svmul_f32_x(pg, svmul_f32_x(pg, e2, VectorComputation_FLOAT_TWO), VectorComputation_FLOAT_TWO));
 
     // e^3x + 4*e^2x + 4*e^x*(x+1.5)
     svfloat32_t xa1 = svadd_f32_x(pg, x, VectorComputation_FLOAT_ONE);
     svfloat32_t g2 = svadd_f32_x(pg, xa1, VectorComputation_FLOAT_HALF);
-    g2 = svmad_f32_x(pg, svmul_f32_x(pg, svmul_f32_x(pg, g2, VectorComputation_FLOAT_TWO), VectorComputation_FLOAT_TWO), e, g1);
+    g2 = svmad_f32_x(pg, svmul_f32_x(pg, svmul_f32_x(pg, g2, VectorComputation_FLOAT_TWO), VectorComputation_FLOAT_TWO),
+                     e, g1);
 
     // omega = e^3x + 4*e^2x + 4*e^x*(x+1.5) + 4*(x+1)
-    svfloat32_t res = svmad_f32_x(pg, svmul_f32_x(pg, xa1, VectorComputation_FLOAT_TWO), VectorComputation_FLOAT_TWO, g2);
+    svfloat32_t res =
+        svmad_f32_x(pg, svmul_f32_x(pg, xa1, VectorComputation_FLOAT_TWO), VectorComputation_FLOAT_TWO, g2);
     return res;
 }
 

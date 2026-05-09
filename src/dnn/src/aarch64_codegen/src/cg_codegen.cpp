@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,9 +10,7 @@
  * See the Mulan PSL v2 for more details.
  */
 
-
 #include "cg_codegen.hpp"
-
 
 #include "src/cg_error.hpp"
 #include "src/cg_memory.hpp"
@@ -50,7 +48,7 @@ bool CodeGenerator::CheckPtn(uint64_t v, uint32_t esize, uint32_t size)
     for (uint32_t i = 0; i < maxNum; ++i) {
         ptns.push_back((v >> (esize * i)) & Ones(esize));
     }
-    return std::all_of(ptns.begin(), ptns.end(), [&ptns](uint64_t x) {return x == ptns[0];});
+    return std::all_of(ptns.begin(), ptns.end(), [&ptns](uint64_t x) { return x == ptns[0]; });
 }
 
 uint32_t CodeGenerator::GetPtnSize(uint64_t v, uint32_t size)
@@ -221,8 +219,8 @@ uint32_t CodeGenerator::GenNImmrImms(uint64_t imm, uint32_t size)
     }
     uint32_t n = (ptnSize > VAL_32) ? 1 : 0;
     uint32_t immr = rotateNum;
-    uint32_t imms = static_cast<uint32_t>((Ones(VAL_6)
-            & ~Ones(static_cast<uint32_t>(std::log2(ptnSize)) + 1)) | (oneBitNum - 1));
+    uint32_t imms =
+        static_cast<uint32_t>((Ones(VAL_6) & ~Ones(static_cast<uint32_t>(std::log2(ptnSize)) + 1)) | (oneBitNum - 1));
     return (n << VAL_12) | (immr << VAL_6) | imms;
 }
 
@@ -239,4 +237,4 @@ uint64_t CodeGenerator::GenLabelOffset(const Label &label, const JmpLabel &jmpL)
     return labelOffset;
 }
 
-} // ARMCG
+} // namespace ARMCG

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_TENSORINFO_HPP
 #define KUDNN_TENSORINFO_HPP
@@ -132,7 +131,7 @@ constexpr IntType NUM_1024 = 1024;
 // This class is designed to describe multidimensional data: it's type, Layout, Shape and strides
 struct KUDNN_API_PUBLIC TensorInfo final {
     using SizeType = ::KuDNN::SizeType;
-    TensorInfo(const Shape& shape, const Element::Type & t, const Layout& l) noexcept(false)
+    TensorInfo(const Shape &shape, const Element::Type &t, const Layout &l) noexcept(false)
         : dims(shape), type(t), layout(l), stridesInfo()
     {
         ValidateElementType(type);
@@ -140,7 +139,7 @@ struct KUDNN_API_PUBLIC TensorInfo final {
         SetMinimumRequiredStrides(dims, layout, stridesInfo);
     }
 
-    TensorInfo(const Shape& shape, const Element::Type & t, const Layout& l, const Shape& strides) noexcept(false)
+    TensorInfo(const Shape &shape, const Element::Type &t, const Layout &l, const Shape &strides) noexcept(false)
         : dims(shape), type(t), layout(l), stridesInfo(strides)
     {
         ValidateElementType(type);
@@ -211,7 +210,7 @@ struct KUDNN_API_PUBLIC TensorInfo final {
                 return Layout::ABCDE;
             }
             default: {
-                throw Service::LogicError {"Tensor Info: tensor dimensionality is incorrect"};
+                throw Service::LogicError{"Tensor Info: tensor dimensionality is incorrect"};
             }
         }
     }
@@ -235,7 +234,7 @@ struct KUDNN_API_PUBLIC TensorInfo final {
                 return Layout::ACDEB;
             }
             default: {
-                throw Service::LogicError {"Tensor Info: tensor dimensionality is incorrect"};
+                throw Service::LogicError{"Tensor Info: tensor dimensionality is incorrect"};
             }
         }
     }
@@ -259,7 +258,7 @@ struct KUDNN_API_PUBLIC TensorInfo final {
                 return Layout::BCDEA;
             }
             default: {
-                throw Service::LogicError {"Tensor Info: tensor dimensionality is incorrect"};
+                throw Service::LogicError{"Tensor Info: tensor dimensionality is incorrect"};
             }
         }
     }
@@ -268,19 +267,19 @@ struct KUDNN_API_PUBLIC TensorInfo final {
 
     template <bool areExcetionsDeclined = false>
     static typename std::conditional<areExcetionsDeclined, Status, void>::type
-        ValidateElementType(Element::Type parType) noexcept(areExcetionsDeclined);
+    ValidateElementType(Element::Type parType) noexcept(areExcetionsDeclined);
 
     template <bool areExcetionsDeclined = false>
     static typename std::conditional<areExcetionsDeclined, Status, void>::type
-        ValidateLayout(Shape parDims, Layout parLayout) noexcept(areExcetionsDeclined);
+    ValidateLayout(Shape parDims, Layout parLayout) noexcept(areExcetionsDeclined);
 
     template <bool areExcetionsDeclined = false>
     static typename std::conditional<areExcetionsDeclined, Status, void>::type
-        SetMinimumRequiredStrides(Shape parDims, Layout parLayout, Shape& parStrides) noexcept(areExcetionsDeclined);
+    SetMinimumRequiredStrides(Shape parDims, Layout parLayout, Shape &parStrides) noexcept(areExcetionsDeclined);
 
     template <bool areExcetionsDeclined = false>
     static typename std::conditional<areExcetionsDeclined, Status, void>::type
-        ValidateDimsAndStrides(Shape parDims, Layout parLayout, Shape parStrides) noexcept(areExcetionsDeclined);
+    ValidateDimsAndStrides(Shape parDims, Layout parLayout, Shape parStrides) noexcept(areExcetionsDeclined);
 
 private:
     Shape dims;
@@ -292,8 +291,8 @@ private:
 inline bool operator==(const TensorInfo &lhs, const TensorInfo &rhs) noexcept
 {
     return (lhs.GetDims() == rhs.GetDims()) &&
-        (static_cast<Element::TypeT>(lhs.GetType()) == static_cast<Element::TypeT>(rhs.GetType())) &&
-        (lhs.GetLayout() == rhs.GetLayout()) && (lhs.GetStrides() == rhs.GetStrides());
+           (static_cast<Element::TypeT>(lhs.GetType()) == static_cast<Element::TypeT>(rhs.GetType())) &&
+           (lhs.GetLayout() == rhs.GetLayout()) && (lhs.GetStrides() == rhs.GetStrides());
 }
 
 inline bool operator!=(const TensorInfo &lhs, const TensorInfo &rhs) noexcept
@@ -301,6 +300,6 @@ inline bool operator!=(const TensorInfo &lhs, const TensorInfo &rhs) noexcept
     return !(lhs == rhs);
 }
 
-} // KuDNN
+} // namespace KuDNN
 
 #endif // KUDNN_TENSORINFO_HPP

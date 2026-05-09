@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,18 +16,16 @@ namespace KuDNN {
 namespace Detail {
 namespace GNorm {
 
-template
-void EvaluteAbx<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+template void EvaluteAbx<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
     SizeType batchNum, SizeType eltPerGroup, const IN_TYPE *src, const float *mean, const float *variance,
     const OUT_TYPE *diffDst, const SCALE_SHIFT_TYPE *scale, IN_TYPE *diffSrc, float *diffScale, float *diffShift,
     float eps, NormalizationFlags flags, SizeType channelSize, SizeType channelPerGroup) noexcept;
 
-template
-void EvaluteAxb<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+template void EvaluteAxb<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
     SizeType batchNum, SizeType eltPerGroup, const IN_TYPE *src, const float *mean, const float *variance,
     const OUT_TYPE *diffDst, const SCALE_SHIFT_TYPE *scale, IN_TYPE *diffSrc, float *diffScale, float *diffShift,
     float eps, NormalizationFlags flags, SizeType channelSize, SizeType channelPerGroup) noexcept;
 
-} // GNorm
-} // Detail
-} // KuDNN
+} // namespace GNorm
+} // namespace Detail
+} // namespace KuDNN

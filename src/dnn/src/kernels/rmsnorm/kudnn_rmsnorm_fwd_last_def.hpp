@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,8 +30,9 @@ struct RMSNormLastFWD final {
     }
     // for variance calculation. Variance is computed in float precision
     static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        typename Vector::Vec<float>::Type &vVariance0, typename Vector::Vec<float>::Type &vVariance1,
-        typename Vector::Vec<float>::Type &vVariance2, typename Vector::Vec<float>::Type &vVariance3) noexcept
+                   typename Vector::Vec<float>::Type &vVariance0, typename Vector::Vec<float>::Type &vVariance1,
+                   typename Vector::Vec<float>::Type &vVariance2,
+                   typename Vector::Vec<float>::Type &vVariance3) noexcept
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -50,23 +51,23 @@ struct RMSNormLastFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleType>()>::Do(
+        Vector::InitPGN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleType>()>::Do(
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
-        Vector::MlaMN<float,
-            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, vVariance0, vVariance1, vVariance2, vVariance3,
-            data0, data1, data2, data3, data0, data1, data2, data3, vVariance0, vVariance1, vVariance2, vVariance3);
+        Vector::MlaMN<float, Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleType>()>::Do(
+            opPG0, opPG1, opPG2, opPG3, vVariance0, vVariance1, vVariance2, vVariance3, data0, data1, data2, data3,
+            data0, data1, data2, data3, vVariance0, vVariance1, vVariance2, vVariance3);
     }
 
-    static void DoScale(svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        SizeType loopIdx, SizeType loopRange, const ScaleType *scale,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
-        typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
-        typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3) noexcept
+    static void DoScale(svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3, SizeType loopIdx,
+                        SizeType loopRange, const ScaleType *scale,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
+                        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
+                        typename Vector::Vec<CompType>::Type &constants0,
+                        typename Vector::Vec<CompType>::Type &constants1,
+                        typename Vector::Vec<CompType>::Type &constants2,
+                        typename Vector::Vec<CompType>::Type &constants3) noexcept
     {
         typename Vector::Vec<CompType>::Type scaleVal0;
         typename Vector::Vec<CompType>::Type scaleVal1;
@@ -76,28 +77,25 @@ struct RMSNormLastFWD final {
         svbool_t ldscalepg1;
         svbool_t ldscalepg2;
         svbool_t ldscalepg3;
-        Vector::InitPGN<ScaleType,
-            Vector::GetUsedRegsN<ScaleType, CompType, float, InType, OutType>()>::Do(
+        Vector::InitPGN<ScaleType, Vector::GetUsedRegsN<ScaleType, CompType, float, InType, OutType>()>::Do(
             ldscalepg0, ldscalepg1, ldscalepg2, ldscalepg3, loopIdx, loopRange);
-        Vector::LoadN<ScaleType, CompType,
-            Vector::GetUsedRegsN<ScaleType, CompType, float, InType, OutType>()>::Do(
-            scale + loopIdx, ldscalepg0, ldscalepg1, ldscalepg2, ldscalepg3,
-            scaleVal0, scaleVal1, scaleVal2, scaleVal3);
+        Vector::LoadN<ScaleType, CompType, Vector::GetUsedRegsN<ScaleType, CompType, float, InType, OutType>()>::Do(
+            scale + loopIdx, ldscalepg0, ldscalepg1, ldscalepg2, ldscalepg3, scaleVal0, scaleVal1, scaleVal2,
+            scaleVal3);
         Vector::MulXN<CompType, Vector::GetUsedRegsN<CompType, ScaleType, float, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, scaleVal0, scaleVal1, scaleVal2, scaleVal3,
-            invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3,
-            constants0, constants1, constants2, constants3);
+            opPG0, opPG1, opPG2, opPG3, scaleVal0, scaleVal1, scaleVal2, scaleVal3, invSqrtVarianceVec0,
+            invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2,
+            constants3);
     }
 
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        const ScaleType *scale, bool useScale,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
-        typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
-        typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
-        typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3,
-        OutType *dst) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, const ScaleType *scale, bool useScale,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec0,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec1,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec2,
+                   typename Vector::Vec<CompType>::Type &invSqrtVarianceVec3,
+                   typename Vector::Vec<CompType>::Type &constants0, typename Vector::Vec<CompType>::Type &constants1,
+                   typename Vector::Vec<CompType>::Type &constants2, typename Vector::Vec<CompType>::Type &constants3,
+                   OutType *dst) noexcept
     {
         svbool_t opPG0;
         svbool_t opPG1;
@@ -107,7 +105,7 @@ struct RMSNormLastFWD final {
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
         if (useScale) {
             DoScale(opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange, scale, invSqrtVarianceVec0, invSqrtVarianceVec1,
-                invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2, constants3);
+                    invSqrtVarianceVec2, invSqrtVarianceVec3, constants0, constants1, constants2, constants3);
         }
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -122,8 +120,8 @@ struct RMSNormLastFWD final {
         Vector::LoadN<InType, CompType, Vector::GetUsedRegsN<InType, ScaleType, CompType, float, OutType>()>::Do(
             src + loopIdx, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3);
         Vector::MulXN<CompType, Vector::GetUsedRegsN<CompType, InType, ScaleType, float, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, constants0, constants1, constants2, constants3,
-            data0, data1, data2, data3, data0, data1, data2, data3);
+            opPG0, opPG1, opPG2, opPG3, constants0, constants1, constants2, constants3, data0, data1, data2, data3,
+            data0, data1, data2, data3);
         svbool_t stPG0;
         svbool_t stPG1;
         svbool_t stPG2;
@@ -135,10 +133,9 @@ struct RMSNormLastFWD final {
     }
 };
 
-
 template <typename CompType, typename InType, typename OutType, typename ScaleType>
-void EvaluateLastAxis(SizeType execAcrossAxis, const InType *src, OutType *dst, const ScaleType *scale,
-    float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept
+void EvaluateLastAxis(SizeType execAcrossAxis, const InType *src, OutType *dst, const ScaleType *scale, float *variance,
+                      bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept
 {
     bool calculateStats = !static_cast<bool>(flags & NormalizationFlags::USE_GLOBAL_STATS);
     bool useScale = static_cast<bool>(flags & NormalizationFlags::USE_SCALE);
@@ -154,9 +151,8 @@ void EvaluateLastAxis(SizeType execAcrossAxis, const InType *src, OutType *dst, 
             vVariance, vVariance0, vVariance1, vVariance2, vVariance3);
         if (calculateStats) {
             Service::UnrollFor::Do<1>(axisSize, RMSNormLastFWD<CompType, InType, OutType, ScaleType>{},
-                src + n * axisSize, vVariance0, vVariance1, vVariance2, vVariance3);
-            vVariance = Vector::AddvN<float,
-                Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleType>()>::Do(
+                                      src + n * axisSize, vVariance0, vVariance1, vVariance2, vVariance3);
+            vVariance = Vector::AddvN<float, Vector::GetUsedRegsN<float, InType, OutType, CompType, ScaleType>()>::Do(
                 pgTrue, pgTrue, pgTrue, pgTrue, vVariance0, vVariance1, vVariance2, vVariance3);
             vVariance /= axisSize;
             if (saveStats) {
@@ -168,27 +164,24 @@ void EvaluateLastAxis(SizeType execAcrossAxis, const InType *src, OutType *dst, 
         typename Vector::Vec<CompType>::Type invSqrtVarianceVec1;
         typename Vector::Vec<CompType>::Type invSqrtVarianceVec2;
         typename Vector::Vec<CompType>::Type invSqrtVarianceVec3;
-        Vector::DupFloatN<InType, CompType,
-            Vector::GetUsedRegsN<InType, OutType, CompType, ScaleType, float>()>::Do(
+        Vector::DupFloatN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType, ScaleType, float>()>::Do(
             invSqrtVariance, invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3);
         typename Vector::Vec<CompType>::Type constants0;
         typename Vector::Vec<CompType>::Type constants1;
         typename Vector::Vec<CompType>::Type constants2;
         typename Vector::Vec<CompType>::Type constants3;
-        Vector::DupFloatN<InType, CompType,
-            Vector::GetUsedRegsN<InType, OutType, CompType, ScaleType, float>()>::Do(
+        Vector::DupFloatN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType, ScaleType, float>()>::Do(
             invSqrtVariance, constants0, constants1, constants2, constants3);
-        
-        Service::UnrollFor::Do<1>(axisSize, RMSNormLastFWD<CompType, InType, OutType, ScaleType>{},
-            src + n * axisSize, scale, useScale,
-            invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2, invSqrtVarianceVec3,
-            constants0, constants1, constants2, constants3,
-            dst + n * axisSize);
+
+        Service::UnrollFor::Do<1>(axisSize, RMSNormLastFWD<CompType, InType, OutType, ScaleType>{}, src + n * axisSize,
+                                  scale, useScale, invSqrtVarianceVec0, invSqrtVarianceVec1, invSqrtVarianceVec2,
+                                  invSqrtVarianceVec3, constants0, constants1, constants2, constants3,
+                                  dst + n * axisSize);
     }
 }
 
-} // RMSNorm
-} // Detail
-} // KuDNN
+} // namespace RMSNorm
+} // namespace Detail
+} // namespace KuDNN
 
 #endif //  KUDNN_RMSNORM_FWD_LAST_DEF_HPP

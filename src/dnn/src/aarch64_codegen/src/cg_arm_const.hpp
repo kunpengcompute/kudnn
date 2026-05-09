@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -155,14 +155,13 @@ constexpr int VectorComputation_CONTISTR_IMM_RANGE_HIGH = 7;
 constexpr int VectorComputation_CONTISTR_PG_RANGE = 7;
 constexpr int VectorComputation_STR_IMM_RANGE_LOW = -256;
 constexpr int VectorComputation_STR_IMM_RANGE_HIGH = 255;
-constexpr int MatrixComputation_ZASLICE_INDEX_RANGE_BEGIN = 12;     // slice index ws can only be w12 ~ w15
-constexpr int MatrixComputation_ZASLICE_INDEX_RANGE_END = 15;     // slice index ws can only be w12 ~ w15
-constexpr int MatrixComputation_ZASLICE_OFFS_B_RANGE = 15;    // 8 bits slice offset can only be 0 ~ 15
-constexpr int MatrixComputation_ZASLICE_OFFS_S_RANGE = 3;     // 32 bits slice offset can only be 0 ~ 3
-constexpr int MatrixComputation_ZATILE_B_RANGE = 0;     // za tile for b can only be za0
-constexpr int MatrixComputation_ZATILE_S_RANGE = 3;     // za tile for s can only be za0 ~ za3
-constexpr int MatrixComputation_PG_RANGE = 7;     // MatrixComputation operation pg can only be 0 ~ 7
-
+constexpr int MatrixComputation_ZASLICE_INDEX_RANGE_BEGIN = 12; // slice index ws can only be w12 ~ w15
+constexpr int MatrixComputation_ZASLICE_INDEX_RANGE_END = 15;   // slice index ws can only be w12 ~ w15
+constexpr int MatrixComputation_ZASLICE_OFFS_B_RANGE = 15;      // 8 bits slice offset can only be 0 ~ 15
+constexpr int MatrixComputation_ZASLICE_OFFS_S_RANGE = 3;       // 32 bits slice offset can only be 0 ~ 3
+constexpr int MatrixComputation_ZATILE_B_RANGE = 0;             // za tile for b can only be za0
+constexpr int MatrixComputation_ZATILE_S_RANGE = 3;             // za tile for s can only be za0 ~ za3
+constexpr int MatrixComputation_PG_RANGE = 7;                   // MatrixComputation operation pg can only be 0 ~ 7
 
 constexpr int RINDEX0 = 0;
 constexpr int RINDEX1 = 1;
@@ -268,20 +267,20 @@ constexpr int LANE_16 = 16;
 constexpr int POS_1 = 1;
 constexpr int POS_2 = 2;
 
-constexpr const char* CG_PATH_NODES = "/sys/devices/system/node/node";
-constexpr const char* CG_PATH_CORES = "/sys/devices/system/node/node0/cpu";
-constexpr const char* CG_PATH_CACHE_DIR = "/sys/devices/system/cpu/cpu0/cache";
-constexpr const char* CG_PATH_CACHE_LEVEL = "/sys/devices/system/cpu/cpu0/cache/index0/level";
-constexpr const char* CG_PATH_CACHE_SIZE = "/sys/devices/system/cpu/cpu0/cache/index0/size";
-constexpr const char* CG_PATH_CACHE_TYPE = "/sys/devices/system/cpu/cpu0/cache/index0/type";
-constexpr const char* CG_PATH_CACHE_LIST = "/sys/devices/system/cpu/cpu0/cache/index0/shared_cpu_list";
+constexpr const char *CG_PATH_NODES = "/sys/devices/system/node/node";
+constexpr const char *CG_PATH_CORES = "/sys/devices/system/node/node0/cpu";
+constexpr const char *CG_PATH_CACHE_DIR = "/sys/devices/system/cpu/cpu0/cache";
+constexpr const char *CG_PATH_CACHE_LEVEL = "/sys/devices/system/cpu/cpu0/cache/index0/level";
+constexpr const char *CG_PATH_CACHE_SIZE = "/sys/devices/system/cpu/cpu0/cache/index0/size";
+constexpr const char *CG_PATH_CACHE_TYPE = "/sys/devices/system/cpu/cpu0/cache/index0/type";
+constexpr const char *CG_PATH_CACHE_LIST = "/sys/devices/system/cpu/cpu0/cache/index0/shared_cpu_list";
 
-constexpr const char* DUMP_BASE_FNAME = "dnnl_dump_cpu_";
-constexpr const char* DUMP_EXT_FNAME = ".bin";
+constexpr const char *DUMP_BASE_FNAME = "dnnl_dump_cpu_";
+constexpr const char *DUMP_EXT_FNAME = ".bin";
 
 constexpr uintptr_t AUTO_GROW_VAL = 1;
 constexpr uintptr_t DONT_SET_PROTECT_RWE_VAL = 2;
 
-} // ARMCG
+} // namespace ARMCG
 
-#endif  // CG_ARM_CONST_HPP
+#endif // CG_ARM_CONST_HPP

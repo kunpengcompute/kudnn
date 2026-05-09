@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -54,8 +54,8 @@ static inline void VsPowxaSveBwdNYP1(const int64_t len, const float alpha, const
     }
 }
 
-static void VsPowxaSveBwdNYPN(const int64_t len, const float alpha, const float beta,
-    const float *src, const float *dd, float *ds)
+static void VsPowxaSveBwdNYPN(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                              float *ds)
 {
     if (unlikely(beta == 0x1.2p3f)) {
         RUN_POWXA_F32_BWD_N_PARA_MODE(len, alpha, src, dd, ds, SvePowxaF32X8);
@@ -86,8 +86,8 @@ static void VsPowxaSveBwdNYPN(const int64_t len, const float alpha, const float 
     }
 }
 
-void PowxaLaSveBWDF32(const int64_t len, const float alpha, const float beta,
-    const float *src, const float *dd, float *ds)
+void PowxaLaSveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                      float *ds)
 {
     if (unlikely(beta == 0.0f)) {
         VsPowxaLaBwdZero(len, ds);

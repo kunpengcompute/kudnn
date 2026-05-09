@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,19 +30,18 @@ namespace Detail {
 template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
 constexpr bool IsIntegerMatmul() noexcept
 {
-    constexpr bool isSrcInteger8 = std::is_same_v<SrcType, std::int8_t> ||
-        std::is_same_v<SrcType, std::uint8_t>;
-    constexpr bool isWeiInteger8 = std::is_same_v<WeiType, std::int8_t> ||
-        std::is_same_v<WeiType, std::uint8_t>;
+    constexpr bool isSrcInteger8 = std::is_same_v<SrcType, std::int8_t> || std::is_same_v<SrcType, std::uint8_t>;
+    constexpr bool isWeiInteger8 = std::is_same_v<WeiType, std::int8_t> || std::is_same_v<WeiType, std::uint8_t>;
     constexpr bool isDstInteger32 = std::is_same_v<DstType, std::int32_t>;
     constexpr bool isBiaInteger32 = std::is_same_v<BiaType, std::int32_t>;
     return (isSrcInteger8 && isWeiInteger8 && isDstInteger32 && isBiaInteger32);
 }
 
 template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
-struct MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType,
-    typename std::enable_if<IsIntegerMatmul<SrcType, WeiType, DstType, BiaType>(), MatmulDummyType>::type> :
-    MatMulKernelCodeGenBase<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType> {
+struct MatMulKernelDefaultCodeGenImpl<
+    ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType,
+    typename std::enable_if<IsIntegerMatmul<SrcType, WeiType, DstType, BiaType>(), MatmulDummyType>::type>
+    : MatMulKernelCodeGenBase<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType> {
 public:
     constexpr static const std::uint32_t kernelMSize = 2; // in VL
     constexpr static const std::uint32_t kernelNSize = 2; // in VL
@@ -84,18 +83,17 @@ public:
     //          | z1.s  | z5.s  |        | za2.s | za3.s |
     //          +--- ---+-------+  -  -  +-------+-------+
 
-    MatMulKernelDefaultCodeGenImpl(IntType m, IntType n, IntType k,
-        IntType biaOffsetArg, bool wereSrcWeiSwappedArg);
-protected:
+    MatMulKernelDefaultCodeGenImpl(IntType m, IntType n, IntType k, IntType biaOffsetArg, bool wereSrcWeiSwappedArg);
 
+protected:
     void InitializeDstRegisters(IntType m, IntType n, IntType vl);
 
     void GenerateKLoop(IntType m, IntType n, IntType k, IntType vl);
 
     void StoreDstRegisters(IntType m, IntType n, IntType vl);
 
-    void Int8Mopa(const ARMCG::ZARegS &zada, const ARMCG::PRegBase &pn,
-        const ARMCG::PRegBase &pm, const ARMCG::ZRegB &zn, const ARMCG::ZRegB &zm);
+    void Int8Mopa(const ARMCG::ZARegS &zada, const ARMCG::PRegBase &pn, const ARMCG::PRegBase &pm,
+                  const ARMCG::ZRegB &zn, const ARMCG::ZRegB &zm);
     bool wereSrcWeiSwapped;
     // function input arguments
     ARMCG::XReg srcPtr = x0;
@@ -183,23 +181,24 @@ protected:
 };
 
 template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
-struct MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType> :
-    MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType,
-        typename std::enable_if<IsIntegerMatmul<SrcType, WeiType, DstType, BiaType>(),
-        MatmulDummyType>::type> {
-    MatMulKernelDefaultCodeGen(IntType m, IntType n, IntType k,
-        IntType biaOffsetArg, bool wereSrcWeiSwapped) : MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation,
-            SrcType, WeiType, DstType, BiaType,
-            typename std::enable_if<IsIntegerMatmul<SrcType, WeiType, DstType, BiaType>(),
-            MatmulDummyType>::type>(m, n, k, biaOffsetArg, wereSrcWeiSwapped)
-        {
-            VERBOSE_PRINT;
-        }
+struct MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType>
+    : MatMulKernelDefaultCodeGenImpl<
+          ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType,
+          typename std::enable_if<IsIntegerMatmul<SrcType, WeiType, DstType, BiaType>(), MatmulDummyType>::type> {
+    MatMulKernelDefaultCodeGen(IntType m, IntType n, IntType k, IntType biaOffsetArg, bool wereSrcWeiSwapped)
+        : MatMulKernelDefaultCodeGenImpl<
+              ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType,
+              typename std::enable_if<IsIntegerMatmul<SrcType, WeiType, DstType, BiaType>(), MatmulDummyType>::type>(
+              m, n, k, biaOffsetArg, wereSrcWeiSwapped)
+    {
+        VERBOSE_PRINT;
+    }
 };
 
 template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
-struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType>> :
-    MatmulTypeHelper<SrcType, WeiType, DstType, BiaType>, ImplGenerator<GemmInfo> {
+struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType>>
+    : MatmulTypeHelper<SrcType, WeiType, DstType, BiaType>
+    , ImplGenerator<GemmInfo> {
     using CodeGen = MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, SrcType, WeiType, DstType, BiaType>;
     struct DefaultImpl : MatMulImplBase {
         DefaultImpl(const GemmInfo &task, IntType nThreads);
@@ -207,10 +206,10 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, S
         static std::uint32_t GetKernelMSize() noexcept;
 
         static std::uint32_t GetKernelNSize() noexcept;
+
     protected:
-        void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl,
-            SizeType offsetSrc, SizeType offsetWei, SizeType offsetDst, SizeType offsetBia,
-            bool wereSrcWeiSwapped) override;
+        void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl, SizeType offsetSrc, SizeType offsetWei,
+                                SizeType offsetDst, SizeType offsetBia, bool wereSrcWeiSwapped) override;
 
         IntType GetThreadBufSize(IntType m, IntType n, IntType k, IntType vlb) noexcept override;
 
@@ -219,15 +218,15 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, S
         std::vector<std::pair<Shape, Shape>> SplitWork() override;
 
         // used for packing both Src and Wei matrices
-        static void PackSimilarLt(IntType mBlock, IntType kBlock,
-            const void *src, IntType offset, void *buffer, IntType bufferOffset);
+        static void PackSimilarLt(IntType mBlock, IntType kBlock, const void *src, IntType offset, void *buffer,
+                                  IntType bufferOffset);
 
         // used for packing both Src and Wei matrices
-        static void PackDiffLt(IntType mBlock, IntType kBlock,
-            const void *src, IntType offset, void *buffer, IntType bufferOffset);
+        static void PackDiffLt(IntType mBlock, IntType kBlock, const void *src, IntType offset, void *buffer,
+                               IntType bufferOffset);
 
-        void RunSequential2D(IntType threadId, const void *src, const void *wei, void *dst,
-            const void *bia, void *buffer, float alpha, float beta) const noexcept(false) override;
+        void RunSequential2D(IntType threadId, const void *src, const void *wei, void *dst, const void *bia,
+                             void *buffer, float alpha, float beta) const noexcept(false) override;
 
         void UpdateExecParams() noexcept override;
         std::vector<std::array<CodeGenWrapper<CodeGen>, NUM_8>> perThreadImpls;
@@ -238,16 +237,18 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, S
         bool srcMatched = task.srcInfo.GetType() == Element::MatchType<SrcType>();
         bool weiMatched = task.weiInfo.GetType() == Element::MatchType<WeiType>();
         bool dstWiderImpl = (task.dstInfo.GetType().GetSize() <= sizeof(DstType)) &&
-            task.dstInfo.GetType().IsIntegral();
-        bool biaWiderImpl = (task.biaInfo.GetTotalTensorSize() != 0) ? (
-            (task.biaInfo.GetType().GetSize() <= sizeof(BiaType)) && task.biaInfo.GetType().IsIntegral()) : true;
+                            task.dstInfo.GetType().IsIntegral();
+        bool biaWiderImpl =
+            (task.biaInfo.GetTotalTensorSize() != 0) ?
+                ((task.biaInfo.GetType().GetSize() <= sizeof(BiaType)) && task.biaInfo.GetType().IsIntegral()) :
+                true;
         return (srcMatched && weiMatched && dstWiderImpl && biaWiderImpl);
     }
     float EstimateTime(const GemmInfo &task, IntType nThreads) const noexcept override
     {
         VERBOSE_PRINT;
         Service::Unused(task, nThreads);
-       
+
         return 0.25f;
     }
     std::shared_ptr<ImplBase<GemmInfo>> GetImpl(const GemmInfo &task, IntType nThreads) const override
@@ -257,7 +258,7 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, S
     }
 };
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_MATMUL_JIT_MatrixComputation_DEFAUT_IMPL_SU8SU8S32S32_HPP

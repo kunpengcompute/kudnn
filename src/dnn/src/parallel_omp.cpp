@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -29,5 +29,5 @@ int OpenMPBackend ::get_default_num_threads()
     return omp_get_max_threads();
 }
 
-}
-}
+} // namespace Threading
+} // namespace KuDNN

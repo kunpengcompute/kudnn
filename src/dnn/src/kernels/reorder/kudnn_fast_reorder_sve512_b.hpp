@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -51,7 +51,7 @@ static inline void TranspKernelB(const void *src, void *dst, SizeType strideIn, 
     svint32_t row16;
 
     row1 = svld1sb_s32(pgLoad, Service::AddOffset<const std::int8_t *>(src, NUM_0 * strideIn));
- 
+
     if constexpr (InHeight > NUM_1) {
         row2 = svld1sb_s32(pgLoad, Service::AddOffset<const std::int8_t *>(src, NUM_1 * strideIn));
     } else {
@@ -263,8 +263,8 @@ static inline void TranspKernelB(const void *src, void *dst, SizeType strideIn, 
     }
 }
 
-} // Reorder
-} // Detail
-} // KuDNN
+} // namespace Reorder
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_FAST_REORDER_VectorComputation512_B_HPP

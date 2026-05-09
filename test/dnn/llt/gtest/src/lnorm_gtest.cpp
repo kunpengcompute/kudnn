@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -83,7 +83,7 @@ static void lnormRef(SizeType outerSize, SizeType innerSize,
 
 // backward
 template <typename T>
-static bool BackwardFunc1(const KuDNN::TensorInfo srcInfo, const KuDNN::TensorInfo statInfo, const KuDNN::TensorInfo diffSrcInfo, 
+static bool BackwardFunc1(const KuDNN::TensorInfo srcInfo, const KuDNN::TensorInfo statInfo, const KuDNN::TensorInfo diffSrcInfo,
                         const KuDNN::TensorInfo diffDstInfo, const KuDNN::TensorInfo scaleShiftInfo, const KuDNN::TensorInfo diffScaleShiftInfo,
                         KuDNN::NormalizationFlags flags)
 {
@@ -142,7 +142,7 @@ static bool ForwardFunc1(const TensorInfo &srcInfo, const TensorInfo &statInfo,
     }
 
     bool global_stats = static_cast<bool>(flags & KuDNN::NormalizationFlags::USE_GLOBAL_STATS);
-    
+
     // generate random test data
     std::uniform_real_distribution<float> u(-1, 1);
     std::default_random_engine e(time(NULL));

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,7 +20,7 @@ namespace Detail {
 
 KuDNN::Layout GetSrcLayoutWithoutLastDim(const Layout &srcLayout);
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif //  KUDNN_LNORM_IMPL_HPP

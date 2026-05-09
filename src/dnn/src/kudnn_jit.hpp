@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -31,6 +31,7 @@ struct KUDNN_JIT_Generator : public ARMCG::CodeGenerator {
     {
         VERBOSE_PRINT;
     }
+
 protected:
     void Preamble()
     {
@@ -39,13 +40,11 @@ protected:
         Stp(ARMCG::XReg(29), ARMCG::XReg(30), PrePtr(sp, -16));
         // store callee-saved X registers (x19-x28)
         for (int i = NUM_19; i < NUM_28; i += NUM_2) {
-            Stp(ARMCG::XReg(i), ARMCG::XReg(i + 1),
-                PrePtr(sp, -16)); // 16 is a size of 2x64-bit X registers
+            Stp(ARMCG::XReg(i), ARMCG::XReg(i + 1), PrePtr(sp, -16)); // 16 is a size of 2x64-bit X registers
         }
         // store callee-saved vector registers (d8-d15)
         for (int i = NUM_8; i < NUM_15; i += NUM_2) {
-            Stp(ARMCG::DReg(i), ARMCG::DReg(i + 1),
-                PrePtr(sp, -16)); // 16 is a size of 2x64-bit D registers
+            Stp(ARMCG::DReg(i), ARMCG::DReg(i + 1), PrePtr(sp, -16)); // 16 is a size of 2x64-bit D registers
         }
     }
     void Postamble()
@@ -53,13 +52,11 @@ protected:
         VERBOSE_PRINT;
         // load callee-saved vector registers (d8-d15)
         for (int i = NUM_15; i >= NUM_8; i -= NUM_2) {
-            Ldp(ARMCG::DReg(i - 1), ARMCG::DReg(i),
-                PostPtr(sp, 16)); // 16 is a size of 2x64-bit D registers
+            Ldp(ARMCG::DReg(i - 1), ARMCG::DReg(i), PostPtr(sp, 16)); // 16 is a size of 2x64-bit D registers
         }
         // load callee-saved X registers (x19-x28)
         for (int i = NUM_28; i >= NUM_19; i -= NUM_2) {
-            Ldp(ARMCG::XReg(i - 1), ARMCG::XReg(i),
-                PostPtr(sp, 16)); // 16 is a size of 2x64-bit X registers
+            Ldp(ARMCG::XReg(i - 1), ARMCG::XReg(i), PostPtr(sp, 16)); // 16 is a size of 2x64-bit X registers
         }
         // store x29 and x30 to stack for ABI requirement and decrement stack pointer by 16 bytes (2x64-bit D registers)
         Ldp(ARMCG::XReg(29), ARMCG::XReg(30), PostPtr(sp, 16));
@@ -87,6 +84,7 @@ struct ImplBase {
     {
         VERBOSE_PRINT;
     }
+
 protected:
     Task implTask;
     IntType implNThreads;
@@ -104,7 +102,7 @@ struct ImplGenerator {
 };
 
 template <typename Task>
-std::vector<std::shared_ptr<ImplGenerator<Task>>>& GetImplGeneratorList() noexcept;
+std::vector<std::shared_ptr<ImplGenerator<Task>>> &GetImplGeneratorList() noexcept;
 
 template <typename Task>
 std::shared_ptr<ImplBase<Task>> FindSolution(const Task &task, IntType nThreads) noexcept(false);
@@ -114,27 +112,28 @@ struct SolutionHandler final {
     SolutionHandler() noexcept = default;
     SolutionHandler(const SolutionHandler &other) = delete;
     SolutionHandler(SolutionHandler &&other) noexcept = delete;
-    SolutionHandler& operator=(const SolutionHandler &other) = delete;
-    SolutionHandler& operator=(SolutionHandler &&other) noexcept = delete;
+    SolutionHandler &operator=(const SolutionHandler &other) = delete;
+    SolutionHandler &operator=(SolutionHandler &&other) noexcept = delete;
     std::shared_ptr<ImplBase<Task>> Find(const Task &task, IntType nThreads) noexcept(false)
     {
         VERBOSE_PRINT;
-        for (auto&& solution : solutions) {
+        for (auto &&solution : solutions) {
             if ((solution->GetTask() == task) && (solution->GetNThreads() == nThreads)) {
                 return solution;
             }
         }
-        auto&& implKind = ChooseImplGenerator(task, nThreads);
+        auto &&implKind = ChooseImplGenerator(task, nThreads);
         solutions.push_back(implKind->GetImpl(task, nThreads));
         return solutions[solutions.size() - 1];
     }
+
 protected:
     std::shared_ptr<ImplGenerator<Task>> ChooseImplGenerator(const Task &task, IntType nThreads) noexcept(false)
     {
         VERBOSE_PRINT;
         std::shared_ptr<ImplGenerator<Task>> ret;
         float bestTime = std::numeric_limits<float>::max();
-        for (auto&& implKind : GetImplGeneratorList<Task>()) {
+        for (auto &&implKind : GetImplGeneratorList<Task>()) {
             if (implKind->Supports(task)) {
                 auto currentEstimatedTime = implKind->EstimateTime(task, nThreads);
                 if (currentEstimatedTime < bestTime) {
@@ -144,7 +143,7 @@ protected:
             }
         }
         if (ret == nullptr) {
-            throw Service::LogicError {"Solution for problem wasn't found"};
+            throw Service::LogicError{"Solution for problem wasn't found"};
         }
         return ret;
     }
@@ -152,7 +151,7 @@ protected:
     std::vector<std::shared_ptr<ImplBase<Task>>> solutions;
 };
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_JIT_HPP

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -55,8 +55,8 @@ KUDNN_INLINE inline SizeType Length<std::int32_t>()
     return svcntw();
 }
 
-} // Vector
-} // Detail
-} // KuDNN
+} // namespace Vector
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_VECTOR_LENGTH

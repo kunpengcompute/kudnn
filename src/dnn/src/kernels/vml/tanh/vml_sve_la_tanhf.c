@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -48,7 +48,8 @@ void TanhLaSveFWDF32(const int64_t len, const float *src, float *dst)
 {
     int64_t i;
     int loopTanhf = svcntw();
-    for (i = 0; i <= len - loopTanhf * VML_VectorComputation_UNFOLD_N; i += loopTanhf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopTanhf * VML_VectorComputation_UNFOLD_N;
+         i += loopTanhf * VML_VectorComputation_UNFOLD_N) {
         KplVmlVsTanhLaSveMainN(src + i, dst + i, loopTanhf);
     }
     for (; i < len; i += loopTanhf) {

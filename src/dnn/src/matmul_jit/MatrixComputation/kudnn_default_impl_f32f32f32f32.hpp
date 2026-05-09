@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -29,9 +29,9 @@
 namespace KuDNN {
 namespace Detail {
 
-template<>
-struct MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType> :
-    MatMulKernelCodeGenBase<ARCH::MatrixComputation, float, float, float, float> {
+template <>
+struct MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType>
+    : MatMulKernelCodeGenBase<ARCH::MatrixComputation, float, float, float, float> {
 public:
     constexpr static const std::uint32_t kernelMSize = 2; // in VL
     constexpr static const std::uint32_t kernelNSize = 2; // in VL
@@ -45,14 +45,14 @@ public:
     {
         Service::Unused(m, k);
         // all the constants are experimentally measured to obtain better perf
-        if (n > 4096) { // 4096 is the largest thresholder
-            return 160; // 160 is the NB blocksize when n larger than 4096
+        if (n > 4096) {       // 4096 is the largest thresholder
+            return 160;       // 160 is the NB blocksize when n larger than 4096
         } else if (n > 256) { // 256 is the second largest thresholder
             return 128;       // 128 is the NB blocksize when n larger than 256
         } else if (n > 144) { // 144 is the third largest thresholder
             return 96;        // 96 is the NB blocksize when n larger than 144
         } else {
-            return 64;        // 64 is the NB blocksize when n less or equal than 144
+            return 64; // 64 is the NB blocksize when n less or equal than 144
         }
     }
     constexpr static IntType GetKBlockSize(IntType m, IntType n, IntType k) noexcept
@@ -81,13 +81,10 @@ public:
     //          | z1.s  | z5.s  |        | za2.s | za3.s |
     //          +--- ---+-------+  -  -  +-------+-------+
 
-    MatMulKernelDefaultCodeGenImpl(IntType m, IntType n, IntType k,
-        IntType srcOffsetArg,
-        IntType weiOffsetArg,
-        IntType dstOffsetArg,
-        IntType biaOffsetArg);
-protected:
+    MatMulKernelDefaultCodeGenImpl(IntType m, IntType n, IntType k, IntType srcOffsetArg, IntType weiOffsetArg,
+                                   IntType dstOffsetArg, IntType biaOffsetArg);
 
+protected:
     void InitializeDstRegisters(IntType m, IntType n, IntType vl);
 
     void GenerateKLoop(IntType m, IntType n, IntType k, IntType vl);
@@ -123,22 +120,20 @@ protected:
 };
 
 template <>
-struct MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, float, float, float, float> :
-    MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType> {
-    MatMulKernelDefaultCodeGen(IntType m, IntType n, IntType k,
-        IntType srcOffsetArg,
-        IntType weiOffsetArg,
-        IntType dstOffsetArg,
-        IntType biaOffsetArg) : MatMulKernelDefaultCodeGenImpl(m, n, k, srcOffsetArg,
-            weiOffsetArg, dstOffsetArg, biaOffsetArg)
-        {
-            VERBOSE_PRINT;
-        }
+struct MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, float, float, float, float>
+    : MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType> {
+    MatMulKernelDefaultCodeGen(IntType m, IntType n, IntType k, IntType srcOffsetArg, IntType weiOffsetArg,
+                               IntType dstOffsetArg, IntType biaOffsetArg)
+        : MatMulKernelDefaultCodeGenImpl(m, n, k, srcOffsetArg, weiOffsetArg, dstOffsetArg, biaOffsetArg)
+    {
+        VERBOSE_PRINT;
+    }
 };
 
 template <>
-struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, float, float, float, float>> :
-    MatmulTypeHelper<float, float, float, float>, ImplGenerator<GemmInfo> {
+struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, float, float, float, float>>
+    : MatmulTypeHelper<float, float, float, float>
+    , ImplGenerator<GemmInfo> {
     using CodeGen = MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, float, float, float, float>;
     struct DefaultImpl : MatMulImplBase {
         DefaultImpl(const GemmInfo &task, IntType nThreads);
@@ -146,10 +141,10 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, f
         static std::uint32_t GetKernelMSize() noexcept;
 
         static std::uint32_t GetKernelNSize() noexcept;
+
     protected:
-        void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl,
-            SizeType offsetSrc, SizeType offsetWei, SizeType offsetDst, SizeType offsetBia,
-            bool wereSrcWeiSwapped) override;
+        void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl, SizeType offsetSrc, SizeType offsetWei,
+                                SizeType offsetDst, SizeType offsetBia, bool wereSrcWeiSwapped) override;
 
         IntType GetThreadBufSize(IntType m, IntType n, IntType k, IntType vl) noexcept override;
 
@@ -159,16 +154,16 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, f
 
         // used for packing both Src and Wei matrices
         template <bool AlphaMul = false>
-        static void PackSimilarLt(IntType m, IntType k,
-            const float *src, IntType offset, float *buffer, IntType bufferOffset, float alpha = 1.0f);
+        static void PackSimilarLt(IntType m, IntType k, const float *src, IntType offset, float *buffer,
+                                  IntType bufferOffset, float alpha = 1.0f);
 
         // used for packing both Src and Wei matrices
         template <bool AlphaMul = false>
-        static void PackDiffLt(IntType m, IntType k,
-            const float *src, IntType offset, float *buffer, IntType bufferOffset, float alpha = 1.0f);
+        static void PackDiffLt(IntType m, IntType k, const float *src, IntType offset, float *buffer,
+                               IntType bufferOffset, float alpha = 1.0f);
 
-        void RunSequential2D(IntType threadId, const void *src, const void *wei, void *dst,
-            const void *bia, void *buffer, float alpha, float beta) const noexcept(false) override;
+        void RunSequential2D(IntType threadId, const void *src, const void *wei, void *dst, const void *bia,
+                             void *buffer, float alpha, float beta) const noexcept(false) override;
 
         void UpdateExecParams() noexcept override;
         std::vector<std::array<CodeGenWrapper<CodeGen>, NUM_8>> perThreadImpls;
@@ -177,14 +172,14 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, f
     {
         VERBOSE_PRINT;
         Service::Unused(task);
-        
+
         return true;
     }
     float EstimateTime(const GemmInfo &task, IntType nThreads) const noexcept override
     {
         VERBOSE_PRINT;
         Service::Unused(task, nThreads);
-      
+
         return 0.5f;
     }
     std::shared_ptr<ImplBase<GemmInfo>> GetImpl(const GemmInfo &task, IntType nThreads) const override
@@ -194,7 +189,7 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, f
     }
 };
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_MATMUL_JIT_MatrixComputation_DEFAUT_IMPL_F32F32F32F32_HPP

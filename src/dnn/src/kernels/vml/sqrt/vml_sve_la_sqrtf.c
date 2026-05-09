@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -27,7 +27,8 @@ void SqrtLaSveFWDF32(const int64_t len, const float *src, float *dst)
 {
     int64_t i = 0;
     int64_t loopClipSqrtf = svcntw();
-    for (; i <= len - loopClipSqrtf * VML_VectorComputation_UNFOLD_N; i += loopClipSqrtf * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopClipSqrtf * VML_VectorComputation_UNFOLD_N;
+         i += loopClipSqrtf * VML_VectorComputation_UNFOLD_N) {
         SqrtLaSveKernelFWDF32(src + i, dst + i, loopClipSqrtf);
     }
     for (; i < len; i += loopClipSqrtf) {

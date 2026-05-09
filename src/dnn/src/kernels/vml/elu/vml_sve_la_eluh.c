@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -78,7 +78,7 @@ void EluLaSveBWDF16(const int64_t len, const float alpha, const __fp16 *src, con
 
         // convert back to fp16
         svfloat16_t res = svcvt_f16_f32_x(pgB32, resEven); /* resEven(f16) */
-        x = CvtOddF16F32(resOdd, pgB32); /* resOdd(f16) */
+        x = CvtOddF16F32(resOdd, pgB32);                   /* resOdd(f16) */
         res = svsel_f16(pgB32, res, x);
 
         svst1_f16(pgB16, ds + i, res);

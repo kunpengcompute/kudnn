@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -17,10 +17,9 @@
 #include "kudnn_conv_const.hpp"
 #include "kudnn_primitive_conf.hpp"
 
-
 namespace KuDNN {
 
-inline int GetVlenOfs(int ofs, const ARMCG::CPUISAT& isa)
+inline int GetVlenOfs(int ofs, const ARMCG::CPUISAT &isa)
 {
     static_cast<void>(isa);
 #ifdef KUDNNL_920Pro
@@ -39,8 +38,7 @@ bool KudnnLdrImmCheck(T ofs)
     int vlen = ARMCG::CpuIsaTraits<isa>::VLEN;
     int vlenShift = ARMCG::CpuIsaTraits<isa>::VLEN_SHIFT;
     int shiftedOfs = ofs >> vlenShift;
-    return ((shiftedOfs) <= LDRMAX) && (shiftedOfs >= LDRMIN)
-            && ((ofs % vlen) == 0);
+    return ((shiftedOfs) <= LDRMAX) && (shiftedOfs >= LDRMIN) && ((ofs % vlen) == 0);
 }
 
 // Check the immediate value for SDR(vector) instruction
@@ -52,8 +50,7 @@ bool KudnnStrImmCheck(T ofs)
     int vlen = ARMCG::CpuIsaTraits<isa>::VLEN;
     int vlenShift = ARMCG::CpuIsaTraits<isa>::VLEN_SHIFT;
     int shiftedOfs = ofs >> vlenShift;
-    return ((shiftedOfs) <= STRMAX) && (shiftedOfs >= STRMIN)
-            && ((ofs % vlen) == 0);
+    return ((shiftedOfs) <= STRMAX) && (shiftedOfs >= STRMIN) && ((ofs % vlen) == 0);
 }
 
 // Check the immediate value for LD1RW instruction
@@ -85,16 +82,16 @@ bool KudnnPrfwImmCheck(T ofs)
     int vlen = ARMCG::CpuIsaTraits<isa>::VLEN;
     int vlenShift = ARMCG::CpuIsaTraits<isa>::VLEN_SHIFT;
     int shiftedOfs = ofs >> vlenShift;
-    return (shiftedOfs <= PRFWMAX) && (shiftedOfs >= PRFWMIN)
-            && ((ofs % vlen) == 0);
+    return (shiftedOfs <= PRFWMAX) && (shiftedOfs >= PRFWMIN) && ((ofs % vlen) == 0);
 }
 
 class ZRegFactory {
 public:
     ZRegFactory() {}
     ~ZRegFactory() {}
+
 public:
-    static std::unique_ptr<ARMCG::ZRegBase> GetZRegAcdTp4Fmov(const Element::TypeT& dtp, const int idx)
+    static std::unique_ptr<ARMCG::ZRegBase> GetZRegAcdTp4Fmov(const Element::TypeT &dtp, const int idx)
     {
         assert(idx >= 0);
         switch (dtp) {
@@ -114,7 +111,7 @@ public:
         }
     }
 
-    static std::unique_ptr<ARMCG::ZRegBase> GetZRegAcdTp(const Element::TypeT& dtp, const int idx)
+    static std::unique_ptr<ARMCG::ZRegBase> GetZRegAcdTp(const Element::TypeT &dtp, const int idx)
     {
         assert(idx >= 0);
         switch (dtp) {
@@ -139,6 +136,7 @@ template <ARMCG::CPUISAT isa = ARMCG::CPUISAT::ISA_UNDEF, Element::TypeT dtp = E
 struct KudnnJitConvFwdKernel : public ARMCG::JitGenerator {
     explicit KudnnJitConvFwdKernel(const KudnnConvJitConfT &ajcp) : jcp(ajcp) {}
     KudnnConvJitConfT jcp;
+
 public:
     const char *Name() const override
     {
@@ -148,24 +146,25 @@ public:
     {
         return __FILE__;
     }
+
 private:
     using Reg64T = const ARMCG::XReg;
 
     Reg64T param = ARMCG::ABI_PARAM1;
-    Reg64T regInp = x1; // src base addr (2d)
-    Reg64T regKer = x2; // ker base addr (2d)
+    Reg64T regInp = x1;     // src base addr (2d)
+    Reg64T regKer = x2;     // ker base addr (2d)
     Reg64T auxRegKerD = x2; // ker addr (3d)
-    Reg64T regOut = x3; // dst base addr (2d)
-    Reg64T regKi = x3; // d-dim loop var (3d)
-    Reg64T regOutPrf = x6; // addr for Prefetch
+    Reg64T regOut = x3;     // dst base addr (2d)
+    Reg64T regKi = x3;      // d-dim loop var (3d)
+    Reg64T regOutPrf = x6;  // addr for Prefetch
 
-    Reg64T auxRegInp = x7; // src addr (main loop)
+    Reg64T auxRegInp = x7;   // src addr (main loop)
     Reg64T auxRegInp2 = x24; // src addr (main loop)
     Reg64T auxRegInp3 = x25; // src addr (main loop)
-    Reg64T regOutOfs = x7; // dst addr (StoreOutput)
-    Reg64T auxRegKer = x8; // ker addr (main loop)
-    Reg64T regChannel = x9; // reduce workload
-    Reg64T regBias = x10; // bias addr (prepare_out)
+    Reg64T regOutOfs = x7;   // dst addr (StoreOutput)
+    Reg64T auxRegKer = x8;   // ker addr (main loop)
+    Reg64T regChannel = x9;  // reduce workload
+    Reg64T regBias = x10;    // bias addr (prepare_out)
 
     Reg64T auxRegInpD = x11; // src addr (3d)
     Reg64T regOi = x11;
@@ -180,7 +179,7 @@ private:
     Reg64T regTmpImm = x17;
 
     Reg64T regOutOrg = x27; // dst base addr (3d)
-    Reg64T regOiOrg = x19; // base oi (3d)
+    Reg64T regOiOrg = x19;  // base oi (3d)
     Reg64T auxRegKerOrg = x20;
     // register conflict with post-op eltwise
     Reg64T regKerOrg = x22; // ker base addr (3d)
@@ -198,20 +197,15 @@ private:
     {
         const bool isNxcLayout = IsDstLayoutNxc();
         size_t owStr = isNxcLayout ? jcp.ngroups * jcp.oc : jcp.ocBlock;
-        size_t ocbStr = isNxcLayout
-                        ? jcp.ocBlock
-                        : static_cast<size_t>(jcp.od) * jcp.oh * jcp.ow * jcp.ocBlock;
+        size_t ocbStr = isNxcLayout ? jcp.ocBlock : static_cast<size_t>(jcp.od) * jcp.oh * jcp.ow * jcp.ocBlock;
         return jcp.typeSizeOut * (nOcBlock * ocbStr + oi * owStr);
     }
 
     inline size_t GetInputOffset(int ki, int ic, int oi, int padL)
     {
         const bool isNxcLayout = IsSrcLayoutNxc();
-        size_t iwStr = isNxcLayout ? jcp.ngroups * jcp.ic
-                                   : (!jcp.is1stConv ? jcp.icBlock : 1);
-        size_t icStr = !jcp.is1stConv || isNxcLayout
-                       ? 1
-                       : static_cast<size_t>(jcp.iw) * jcp.ih * jcp.id;
+        size_t iwStr = isNxcLayout ? jcp.ngroups * jcp.ic : (!jcp.is1stConv ? jcp.icBlock : 1);
+        size_t icStr = !jcp.is1stConv || isNxcLayout ? 1 : static_cast<size_t>(jcp.iw) * jcp.ih * jcp.id;
         size_t iwIdx = ki * (jcp.dilateW + 1) + oi * jcp.strideW - padL;
         return jcp.typeSizeIn * (iwIdx * iwStr + ic * icStr);
     }
@@ -233,30 +227,26 @@ private:
 
     inline bool IsSrcLayoutNxc()
     {
-        return jcp.srcTag == Layout::NDHWC
-                || jcp.srcTag == Layout::NHWC
-                || jcp.srcTag == Layout::ACB;
+        return jcp.srcTag == Layout::NDHWC || jcp.srcTag == Layout::NHWC || jcp.srcTag == Layout::ACB;
     }
 
     inline bool IsDstLayoutNxc()
     {
-        return jcp.dstTag == Layout::NDHWC
-                || jcp.dstTag == Layout::NHWC
-                || jcp.dstTag == Layout::ACB;
+        return jcp.dstTag == Layout::NDHWC || jcp.dstTag == Layout::NHWC || jcp.dstTag == Layout::ACB;
     }
 
-    inline void FmovZReg(const Element::TypeT& tp, std::unique_ptr<ARMCG::ZRegBase> pZReg)
+    inline void FmovZReg(const Element::TypeT &tp, std::unique_ptr<ARMCG::ZRegBase> pZReg)
     {
         assert(pZReg.get() != nullptr);
         switch (tp) {
             case Element::TypeT::F32: {
-                ARMCG::ZRegS* pZRegS = static_cast<ARMCG::ZRegS*>(pZReg.get());
+                ARMCG::ZRegS *pZRegS = static_cast<ARMCG::ZRegS *>(pZReg.get());
                 Fmov(*pZRegS);
                 break;
             }
             case Element::TypeT::F16:
             case Element::TypeT::BF16: {
-                ARMCG::ZRegH* pZRegH = static_cast<ARMCG::ZRegH*>(pZReg.get());
+                ARMCG::ZRegH *pZRegH = static_cast<ARMCG::ZRegH *>(pZReg.get());
                 Fmov(*pZRegH);
                 break;
             }

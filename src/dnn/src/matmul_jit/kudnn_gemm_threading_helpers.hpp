@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -37,8 +37,9 @@ Shape UpdateStride(const Shape &sizeInitial, const Shape &stridePrev, const Shap
 MatMul2DPartition GetMatMul2DPartitionBalanced(IntType m, IntType n, IntType nThreads);
 
 struct MatMulThreadPartitioner {
-    static void Do(const SizeType multiDimLoopCounter[], std::pair<Shape, Shape>* &prevWork,
-        std::vector<std::pair<Shape, Shape>> &gemmWork, const Shape &inrements, const Shape &batchedDims) noexcept
+    static void Do(const SizeType multiDimLoopCounter[], std::pair<Shape, Shape> *&prevWork,
+                   std::vector<std::pair<Shape, Shape>> &gemmWork, const Shape &inrements,
+                   const Shape &batchedDims) noexcept
     {
         Shape strideCur;
         Shape dimsCur;
@@ -60,13 +61,13 @@ struct MatMulThreadPartitioner {
 // calculate data dims and strides on each thread
 template <typename KernelInfo>
 std::vector<std::pair<Shape, Shape>> CalculateWorkOnThread(const Shape &batchedDims, IntType nThreads,
-    bool swapMNBlocks, bool isKBig)
+                                                           bool swapMNBlocks, bool isKBig)
 {
-    auto &&[lastDimSplitIdx, prod, splitDims] = Threading::GetSplitDimInfo(batchedDims,
-        static_cast<SizeType>(nThreads));
+    auto &&[lastDimSplitIdx, prod, splitDims] =
+        Threading::GetSplitDimInfo(batchedDims, static_cast<SizeType>(nThreads));
     Service::Unused(splitDims);
 
-    std::array <SizeType, MAX_DIMS> realThreadsUsageSet{{1, 1, 1, 1, 1}};
+    std::array<SizeType, MAX_DIMS> realThreadsUsageSet{{1, 1, 1, 1, 1}};
     Shape increments = batchedDims;
 
     IntType mBlock = KernelInfo::GetKernelMSize();
@@ -123,17 +124,17 @@ std::vector<std::pair<Shape, Shape>> CalculateWorkOnThread(const Shape &batchedD
             }
         }
         if (isKBig && (mPart > NUM_8)) { // sequential pipeline gives ~4x worse perf for
-        // `1xKernelNSize` kernel than for `KernelMSizexKernelNSize`,
-        // so having at least 4 kernels inside thread will will
-        // make the last piece negligible (1xKERNEL_OPS/1xKERNEL_PERF << 4*FULL_KERNEL_OPS/FULL_KERNEL_PERF)
+                                         // `1xKernelNSize` kernel than for `KernelMSizexKernelNSize`,
+                                         // so having at least 4 kernels inside thread will will
+            // make the last piece negligible (1xKERNEL_OPS/1xKERNEL_PERF << 4*FULL_KERNEL_OPS/FULL_KERNEL_PERF)
             localMCommon = Math::CeilDiv(m, tp.m);
         } else {
             localMCommon = std::min(Math::CeilDiv(mPart, tp.m) * mBlock, m);
         }
         if (isKBig && (nPart > NUM_4)) { // sequential pipeline gives ~8x worse perf for
-        // `KernelMSizex1` kernel than for `KernelMSizexKernelNSize`,
-        // so having at least 4 kernels inside thread will will
-        // make the last piece negligible (1xKERNEL_OPS/1xKERNEL_PERF << 4*FULL_KERNEL_OPS/FULL_KERNEL_PERF)
+                                         // `KernelMSizex1` kernel than for `KernelMSizexKernelNSize`,
+                                         // so having at least 4 kernels inside thread will will
+            // make the last piece negligible (1xKERNEL_OPS/1xKERNEL_PERF << 4*FULL_KERNEL_OPS/FULL_KERNEL_PERF)
             localNCommon = Math::CeilDiv(n, tp.n);
         } else {
             localNCommon = std::min(Math::CeilDiv(nPart, tp.n) * nBlock, n);
@@ -156,15 +157,15 @@ std::vector<std::pair<Shape, Shape>> CalculateWorkOnThread(const Shape &batchedD
     Shape realThreadsUsageDims(realThreadsUsageSet.data(), batchedDims.GetNumDims());
     // ==== gemm work on thread data  ===
     std::vector<std::pair<Shape, Shape>> gemmWork;
-    std::pair<Shape, Shape>* prevStrideDim = nullptr;
+    std::pair<Shape, Shape> *prevStrideDim = nullptr;
 
-    Service::ForCaller::Do(realThreadsUsageDims, MatMulThreadPartitioner{}, prevStrideDim,
-        gemmWork, increments, batchedDims);
+    Service::ForCaller::Do(realThreadsUsageDims, MatMulThreadPartitioner{}, prevStrideDim, gemmWork, increments,
+                           batchedDims);
 
     return gemmWork;
 }
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_GEMM_THREADING_HELPERS_HPP

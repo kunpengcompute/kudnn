@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -84,7 +84,9 @@ extern kupl_egroup_h *g_egroups;
 struct MatmulDummyType {};
 
 template <ARCH Arch, typename SrcType, typename WeiType, typename DstType, typename BiaType>
-struct MatMulKernelCodeGenBase : KUDNN_JIT_Generator, MatmulTypeHelper<SrcType, WeiType, DstType, BiaType> {};
+struct MatMulKernelCodeGenBase
+    : KUDNN_JIT_Generator
+    , MatmulTypeHelper<SrcType, WeiType, DstType, BiaType> {};
 
 // implementation of MatMulKernelDefaultCodeGen
 template <ARCH Arch, typename SrcType, typename WeiType, typename DstType, typename BiaType, typename Dummy>
@@ -120,8 +122,8 @@ struct MatMulImplBase : ImplBase<GemmInfo> {
         Layout weiLayout2D;
     };
 
-    MatMulImplBase(const GemmInfo &task, IntType nThreads) : ImplBase<GemmInfo>(task, nThreads),
-        isInitialized(false), taskExec(task), perThreadParams(0)
+    MatMulImplBase(const GemmInfo &task, IntType nThreads)
+        : ImplBase<GemmInfo>(task, nThreads), isInitialized(false), taskExec(task), perThreadParams(0)
     {
         VERBOSE_PRINT;
     }
@@ -140,9 +142,9 @@ struct MatMulImplBase : ImplBase<GemmInfo> {
         if ((implNThreads > 1) && (gemmWorkSize > 1)) {
             if (g_egroups == NULL) {
                 auto &&activeLevel = omp_get_active_level();
-#pragma omp parallel for num_threads(gemmWorkSize) schedule(static) \
-                    if ((activeLevel < 1) || \
-                    (Threading::GetThreadingControlStatus() == Threading::ThreadingControl::KUDNN_MANUAL))
+#pragma omp parallel for num_threads(gemmWorkSize) \
+    schedule(static) if ((activeLevel < 1) ||      \
+                             (Threading::GetThreadingControlStatus() == Threading::ThreadingControl::KUDNN_MANUAL))
                 for (IntType i = 0; i < gemmWorkSize; ++i) {
                     RunSequential(i, srcExec, weiExec, dstExec, biaExec, params.alpha, params.beta);
                 }
@@ -152,11 +154,11 @@ struct MatMulImplBase : ImplBase<GemmInfo> {
                 KUPL_1D_RANGE_INIT(range, 0, num);
 
                 kupl_parallel_for_desc_t desc = {.field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
-                    .range = &range,
-                    .egroup = nullptr,
-                    .concurrency = num,
-                    .policy = KUPL_LOOP_POLICY_STATIC};
-                
+                                                 .range = &range,
+                                                 .egroup = nullptr,
+                                                 .concurrency = num,
+                                                 .policy = KUPL_LOOP_POLICY_STATIC};
+
                 int ret = kupl::parallel_for(&desc, [&](const kupl_nd_range_t *nd_range, int tid, int tnum) {
                     Service::Unused(nd_range);
                     Service::Unused(tnum);
@@ -174,41 +176,35 @@ struct MatMulImplBase : ImplBase<GemmInfo> {
     }
 
 protected:
-
-    void InitializeTaskExec(Layout desiredSrcLayout, Layout desiredWeiLayout,
-        Layout desiredDstLayout, Layout desiredBiaLayout, Element::TypeT desiredSrcPrec,
-        Element::TypeT desiredWeiPrec, Element::TypeT desiredDstPrec, Element::TypeT desiredBiaPrec)
+    void InitializeTaskExec(Layout desiredSrcLayout, Layout desiredWeiLayout, Layout desiredDstLayout,
+                            Layout desiredBiaLayout, Element::TypeT desiredSrcPrec, Element::TypeT desiredWeiPrec,
+                            Element::TypeT desiredDstPrec, Element::TypeT desiredBiaPrec)
     {
         VERBOSE_PRINT;
-        if ((desiredSrcLayout == implTask.srcInfo.GetLayout()) &&
-            (implTask.srcInfo.GetType() == desiredSrcPrec)) {
+        if ((desiredSrcLayout == implTask.srcInfo.GetLayout()) && (implTask.srcInfo.GetType() == desiredSrcPrec)) {
             taskExec.srcInfo = implTask.srcInfo;
         } else {
             taskExec.srcInfo = {implTask.srcInfo.GetDims(), desiredSrcPrec, desiredSrcLayout};
         }
-        if ((desiredWeiLayout == implTask.weiInfo.GetLayout()) &&
-            (implTask.weiInfo.GetType() == desiredWeiPrec)) {
+        if ((desiredWeiLayout == implTask.weiInfo.GetLayout()) && (implTask.weiInfo.GetType() == desiredWeiPrec)) {
             taskExec.weiInfo = implTask.weiInfo;
         } else {
             taskExec.weiInfo = {implTask.weiInfo.GetDims(), desiredWeiPrec, desiredWeiLayout};
         }
-        if ((desiredDstLayout == implTask.dstInfo.GetLayout()) &&
-            (implTask.dstInfo.GetType() == desiredDstPrec)) {
+        if ((desiredDstLayout == implTask.dstInfo.GetLayout()) && (implTask.dstInfo.GetType() == desiredDstPrec)) {
             taskExec.dstInfo = implTask.dstInfo;
         } else {
             taskExec.dstInfo = {implTask.dstInfo.GetDims(), desiredDstPrec, desiredDstLayout};
         }
-        if ((desiredBiaLayout == implTask.biaInfo.GetLayout()) &&
-            (implTask.biaInfo.GetType() == desiredBiaPrec)) {
+        if ((desiredBiaLayout == implTask.biaInfo.GetLayout()) && (implTask.biaInfo.GetType() == desiredBiaPrec)) {
             taskExec.biaInfo = implTask.biaInfo;
         } else {
             taskExec.biaInfo = {implTask.biaInfo.GetDims(), desiredBiaPrec, desiredBiaLayout};
         }
     }
 
-    virtual void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl,
-        SizeType offsetSrc, SizeType offsetWei, SizeType offsetDst, SizeType offsetBia,
-        bool wereSrcWeiSwapped) = 0;
+    virtual void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl, SizeType offsetSrc, SizeType offsetWei,
+                                    SizeType offsetDst, SizeType offsetBia, bool wereSrcWeiSwapped) = 0;
 
     virtual IntType GetThreadBufSize(IntType m, IntType n, IntType k, IntType vl) noexcept = 0;
 
@@ -237,14 +233,14 @@ protected:
         if (taskExec.biaInfo.GetTotalTensorSize() != 0) {
             IntType m = taskExec.dstInfo.GetDims()[taskExec.dstInfo.GetNumDims() - 2];
             IntType n = taskExec.dstInfo.GetDims()[taskExec.dstInfo.GetNumDims() - 1];
-            IntType biaM = std::min<IntType>(m,
-                taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - 2]);
-            IntType biaN = std::min<IntType>(n,
-                taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - 1]);
+            IntType biaM = std::min<IntType>(m, taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - 2]);
+            IntType biaN = std::min<IntType>(n, taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - 1]);
             biaFlags = InitializeLoadFlags(dstLayout2D, biaM < m, biaN < n);
         }
         biaNOffset = (static_cast<bool>(biaFlags & DstLoadFlags::LOAD_BIAS_N) ||
-            static_cast<bool>(biaFlags & DstLoadFlags::LOAD_BIAS_MN)) ? 1 : 0;
+                      static_cast<bool>(biaFlags & DstLoadFlags::LOAD_BIAS_MN)) ?
+                         1 :
+                         0;
         InitializePerThreadParams();
         isInitialized = true;
     }
@@ -318,10 +314,8 @@ protected:
             IntType biaM = m;
             IntType biaN = n;
             if (taskExec.biaInfo.GetTotalTensorSize() != 0) {
-                biaM = std::min<IntType>(m,
-                    taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - NUM_2]);
-                biaN = std::min<IntType>(n,
-                    taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - NUM_1]);
+                biaM = std::min<IntType>(m, taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - NUM_2]);
+                biaN = std::min<IntType>(n, taskExec.biaInfo.GetDims()[taskExec.biaInfo.GetNumDims() - NUM_1]);
             }
             if (dstLayout2D == Layout::BA) {
                 std::swap(m, n);
@@ -329,10 +323,10 @@ protected:
 
             ReorderWrapper biaRW2D;
             if (taskExec.biaInfo.GetTotalTensorSize() != 0) {
-                TensorInfo biaInfo2D{Shape{static_cast<SizeType>(biaM),
-                    static_cast<SizeType>(biaN)}, taskExec.biaInfo.GetType(), biaLayout2D, biaStrides};
-                TensorInfo desiredBiaInfo2D{Shape{static_cast<SizeType>(biaM),
-                    static_cast<SizeType>(biaN)}, taskExec.biaInfo.GetType(), dstLayout2D};
+                TensorInfo biaInfo2D{Shape{static_cast<SizeType>(biaM), static_cast<SizeType>(biaN)},
+                                     taskExec.biaInfo.GetType(), biaLayout2D, biaStrides};
+                TensorInfo desiredBiaInfo2D{Shape{static_cast<SizeType>(biaM), static_cast<SizeType>(biaN)},
+                                            taskExec.biaInfo.GetType(), dstLayout2D};
                 biaRW2D.Initialize(biaInfo2D, desiredBiaInfo2D);
                 if (biaRW2D.WillReorder(biaInfo2D, desiredBiaInfo2D)) {
                     offsetBia = n;
@@ -353,13 +347,13 @@ protected:
                 strideDst += gemmWork[i].second[j] * taskExec.dstInfo.GetStrides()[j] * dstSize;
             }
             strideSrc += gemmWork[i].second[gemmWork[i].second.GetNumDims() - NUM_2] *
-                taskExec.srcInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_2] * srcSize;
+                         taskExec.srcInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_2] * srcSize;
             strideWei += gemmWork[i].second[gemmWork[i].second.GetNumDims() - NUM_1] *
-                taskExec.weiInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_1] * weiSize;
+                         taskExec.weiInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_1] * weiSize;
             strideDst += gemmWork[i].second[gemmWork[i].second.GetNumDims() - NUM_2] *
-                taskExec.dstInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_2] * dstSize;
+                         taskExec.dstInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_2] * dstSize;
             strideDst += gemmWork[i].second[gemmWork[i].second.GetNumDims() - NUM_1] *
-                taskExec.dstInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_1] * dstSize;
+                         taskExec.dstInfo.GetStrides()[gemmWork[i].second.GetNumDims() - NUM_1] * dstSize;
             if (taskExec.biaInfo.GetTotalTensorSize() != 0) {
                 for (SizeType j = 0; j < gemmWork[i].second.GetNumDims(); ++j) {
                     strideBia += gemmWork[i].second[j] * taskExec.biaInfo.GetStrides()[j] * biaSize;
@@ -367,16 +361,14 @@ protected:
             }
 
             perThreadParams.push_back({static_cast<IntType>(strideSrc), static_cast<IntType>(strideWei),
-                static_cast<IntType>(strideDst), static_cast<IntType>(strideBia),
-                Service::BroadcastTo5D(gemmWork[i].first),
-                GetThreadBufSize(m, n, k, vl),
-                std::move(biaRW2D),
-                m, n, k, static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei),
-                static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia),
-                srcLayout2D, weiLayout2D});
+                                       static_cast<IntType>(strideDst), static_cast<IntType>(strideBia),
+                                       Service::BroadcastTo5D(gemmWork[i].first), GetThreadBufSize(m, n, k, vl),
+                                       std::move(biaRW2D), m, n, k, static_cast<IntType>(offsetSrc),
+                                       static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
+                                       static_cast<IntType>(offsetBia), srcLayout2D, weiLayout2D});
 
             InitializeCodeGens(m, n, k, vl, offsetSrc, offsetWei, offsetDst, offsetBia,
-                IsLayoutAlikeBA(taskExec.dstInfo.GetLayout()));
+                               IsLayoutAlikeBA(taskExec.dstInfo.GetLayout()));
         }
     }
 
@@ -385,10 +377,10 @@ protected:
         if (hasBiaMBroadcast && hasBiaNBroadcast) {
             return DstLoadFlags::LOAD_BIAS_1;
         } else if ((hasBiaMBroadcast && IsLayoutAlikeAB(dstLayout)) ||
-            (hasBiaNBroadcast && !IsLayoutAlikeAB(dstLayout))) {
+                   (hasBiaNBroadcast && !IsLayoutAlikeAB(dstLayout))) {
             return DstLoadFlags::LOAD_BIAS_N;
         } else if ((hasBiaNBroadcast && IsLayoutAlikeAB(dstLayout)) ||
-            (hasBiaMBroadcast && !IsLayoutAlikeAB(dstLayout))) {
+                   (hasBiaMBroadcast && !IsLayoutAlikeAB(dstLayout))) {
             return DstLoadFlags::LOAD_BIAS_M;
         } else {
             return DstLoadFlags::LOAD_BIAS_MN;
@@ -398,11 +390,11 @@ protected:
     // updates taskExec if needed
     virtual void UpdateExecParams() noexcept = 0;
 
-    void RunSequential(IntType threadId,
-        const void *src, const void *wei, void *dst, const void *bia, float alpha, float beta) const noexcept(false)
+    void RunSequential(IntType threadId, const void *src, const void *wei, void *dst, const void *bia, float alpha,
+                       float beta) const noexcept(false)
     {
         VERBOSE_PRINT;
-        float* buffer = (float*) Service::AlignedAlloc(perThreadParams[threadId].bufferSize, 128);
+        float *buffer = (float *)Service::AlignedAlloc(perThreadParams[threadId].bufferSize, 128);
         if (!buffer) {
             throw Service::BadAlloc{};
         }
@@ -416,21 +408,25 @@ protected:
                     const void *srcPtr = static_cast<const void *>(
                         static_cast<const std::byte *>(src) + perThreadParams[threadId].parallelStrideSrc +
                         (i0 * broadcastedStridesSrc[IDX_0] + i1 * broadcastedStridesSrc[IDX_1] +
-                        i2 * broadcastedStridesSrc[IDX_2]) * taskExec.srcInfo.GetType().GetSize());
+                         i2 * broadcastedStridesSrc[IDX_2]) *
+                            taskExec.srcInfo.GetType().GetSize());
                     const void *weiPtr = static_cast<const void *>(
                         static_cast<const std::byte *>(wei) + perThreadParams[threadId].parallelStrideWei +
                         (i0 * broadcastedStridesWei[IDX_0] + i1 * broadcastedStridesWei[IDX_1] +
-                        i2 * broadcastedStridesWei[IDX_2]) * taskExec.weiInfo.GetType().GetSize());
+                         i2 * broadcastedStridesWei[IDX_2]) *
+                            taskExec.weiInfo.GetType().GetSize());
                     void *dstPtr = static_cast<void *>(
                         static_cast<std::byte *>(dst) + perThreadParams[threadId].parallelStrideDst +
                         (i0 * broadcastedStridesDst[IDX_0] + i1 * broadcastedStridesDst[IDX_1] +
-                        i2 * broadcastedStridesDst[IDX_2]) * taskExec.dstInfo.GetType().GetSize());
+                         i2 * broadcastedStridesDst[IDX_2]) *
+                            taskExec.dstInfo.GetType().GetSize());
                     const void *biaPtr = bia;
                     if (biaPtr) {
                         biaPtr = static_cast<const void *>(
                             static_cast<const std::byte *>(biaPtr) + perThreadParams[threadId].parallelStrideBia +
                             (i0 * broadcastedStridesBia[IDX_0] + i1 * broadcastedStridesBia[IDX_1] +
-                            i2 * broadcastedStridesBia[IDX_2]) * taskExec.biaInfo.GetType().GetSize());
+                             i2 * broadcastedStridesBia[IDX_2]) *
+                                taskExec.biaInfo.GetType().GetSize());
                     }
                     const void *biaExec = perThreadParams[threadId].biaRW2D.Get(biaPtr);
                     if (dstLayout2D == Layout::AB) {
@@ -445,8 +441,8 @@ protected:
         Service::Deallocate(buffer);
     }
 
-    virtual void RunSequential2D(IntType threadId, const void *src, const void *wei,
-        void *dst, const void *bia, void *buffer, float alpha, float beta) const noexcept(false) = 0;
+    virtual void RunSequential2D(IntType threadId, const void *src, const void *wei, void *dst, const void *bia,
+                                 void *buffer, float alpha, float beta) const noexcept(false) = 0;
 
     bool isInitialized;
     GemmInfo taskExec;
@@ -466,7 +462,7 @@ protected:
     IntType biaNOffset;
 };
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_GEMM_JIT_HPP

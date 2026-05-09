@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
- 
+
 #include "vml_sve_powx_calculations.h"
 
 static void SvePowxaBF16FwdNYP0(const int64_t len, const float alpha, __bf16 *dst)
@@ -123,8 +123,8 @@ static void SvePowxaBF16BwdNYP1(const int64_t len, const float alpha, const __bf
     }
 }
 
-static void SvePowxaBF16BwdNYPN(const int64_t len, const float alpha, const float beta,
-    const __bf16 *src, const __bf16 *dd, __bf16 *ds)
+static void SvePowxaBF16BwdNYPN(const int64_t len, const float alpha, const float beta, const __bf16 *src,
+                                const __bf16 *dd, __bf16 *ds)
 {
     if (unlikely(beta == 0x1.2p3f)) {
         RUN_POWXA_BF16_BWD_N_PARA_MODE(len, alpha, src, dd, ds, SvePowxaF32X8);
@@ -155,8 +155,8 @@ static void SvePowxaBF16BwdNYPN(const int64_t len, const float alpha, const floa
     }
 }
 
-void PowxaLaSveBWDBF16(const int64_t len, const float alpha, const float beta,
-    const __bf16 *src, const __bf16 *dd, __bf16 *ds)
+void PowxaLaSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
+                       __bf16 *ds)
 {
     if (unlikely(beta == 0.0f)) {
         SvePowxaLaBF16BwdZero(len, ds);

@@ -60,15 +60,15 @@ for layout in layout_list:
                                 "{}const ConvKernel<{}>::CompType *src, const ConvKernel<{}>::CompType *wei,\n"
                                 "{}ConvKernel<{}>::CompType *dst, IntType dstStride, "
                                 "IntType dstIdx, IntType icBlock) noexcept\n").format(
-                                    precision_c_name.get(precision), layout, kernel_size, 
-                                    exec_size, sw_size, TABULATION, precision_c_name.get(precision), 
-                                    precision_c_name.get(precision), TABULATION, 
+                                    precision_c_name.get(precision), layout, kernel_size,
+                                    exec_size, sw_size, TABULATION, precision_c_name.get(precision),
+                                    precision_c_name.get(precision), TABULATION,
                                     precision_c_name.get(precision)))
                     function_body = ("{}svbool_t pgTrue = svptrue_b16();\n"
                                     "{}svbool_t pg0;\n"
                                     "{}Vector::WhileLt<CompType>::Do(pg0, NUM_0, dstIdx);\n"
                                     "{}svbool_t pg1;\n"
-                                    "{}Vector::WhileLt<CompType>::Do(pg1, Vector::Length<CompType>(), dstIdx);\n" 
+                                    "{}Vector::WhileLt<CompType>::Do(pg1, Vector::Length<CompType>(), dstIdx);\n"
                                     "{}svbool_t pg2;\n"
                                     "{}Vector::WhileLt<CompType>::Do(pg2, "
                                     "NUM_2 * Vector::Length<CompType>(), dstIdx);\n\n").format(
@@ -93,7 +93,7 @@ for layout in layout_list:
                             function_body += f"{TABULATION}dst{es}0 = svld1(pg0, dst + NUM_{es} * dstStride + NUM_0 * Vector::Length<CompType>());\n"
                             function_body += f"{TABULATION}dst{es}1 = svld1(pg1, dst + NUM_{es} * dstStride + NUM_1 * Vector::Length<CompType>());\n"
                             function_body += f"{TABULATION}dst{es}2 = svld1(pg2, dst + NUM_{es} * dstStride + NUM_2 * Vector::Length<CompType>());\n\n"
-                    
+
                     function_body += ("{}for (IntType ic = 0; ic < icBlock; ++ic) {{\n"
                                     "{}{}for (IntType kh = 0; kh < NUM_{}; ++kh) {{\n"
                                     "{}{}{}typename Vector::Vec<CompType>::Type wei0, wei1, wei2;\n".format(TABULATION, TABULATION, TABULATION, \

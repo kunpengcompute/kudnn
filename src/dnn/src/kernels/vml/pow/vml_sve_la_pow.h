@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,22 +16,22 @@
 #include "kernels/vml/vml_sve_base.h"
 #include "vml_pow.h"
 
-#define VectorComputation_VSPOW_SHIFT         svdup_n_f32(+0x1.803f8000p+0017f)
-#define VectorComputation_VSPOW_LN2           svdup_n_f32(+0x1.62e43000p-0001f)
-#define VectorComputation_VSPOW_LN2_LO        svdup_n_f32(-0x1.05c61000p-0029f)
-#define VectorComputation_VSPOW_EXP_C0        svdup_f32(1.0f)
-#define VectorComputation_VSPOW_EXP_C1        svdup_f32(0x1.62e584p-1f)
-#define VectorComputation_VSPOW_EXP_C2        svdup_f32(0x1.ebfc28p-3f)
-#define VectorComputation_VSPOW_LOG_C0        svdup_f32(0x1.715476p0f)
-#define VectorComputation_VSPOW_LOG_C0_LO     svdup_f32(0x1.4ae198p-26f)
-#define VectorComputation_VSPOW_LOG_C1        svdup_f32(-0x1.715476p-1f)
-#define VectorComputation_VSPOW_LOG_C2        svdup_f32(0x1.ec709ep-2f)
-#define VectorComputation_VSPOW_LOG_C3        svdup_f32(-0x1.7167dap-2f)
-#define VectorComputation_VSPOW_LOG_C4        svdup_f32(0x1.278e0ap-2f)
-#define VSPOW_EXP_MAX           0x42fc0000U
-#define VSPOW_SP_TH_MASK        (0x7e800000U - POWF_X_TH_LO)
-#define VSPOW_LOG_IDX_MASK      0x1fU
-#define VSPOW_LOG_TAB_SIZE      32
+#define VectorComputation_VSPOW_SHIFT svdup_n_f32(+0x1.803f8000p+0017f)
+#define VectorComputation_VSPOW_LN2 svdup_n_f32(+0x1.62e43000p-0001f)
+#define VectorComputation_VSPOW_LN2_LO svdup_n_f32(-0x1.05c61000p-0029f)
+#define VectorComputation_VSPOW_EXP_C0 svdup_f32(1.0f)
+#define VectorComputation_VSPOW_EXP_C1 svdup_f32(0x1.62e584p-1f)
+#define VectorComputation_VSPOW_EXP_C2 svdup_f32(0x1.ebfc28p-3f)
+#define VectorComputation_VSPOW_LOG_C0 svdup_f32(0x1.715476p0f)
+#define VectorComputation_VSPOW_LOG_C0_LO svdup_f32(0x1.4ae198p-26f)
+#define VectorComputation_VSPOW_LOG_C1 svdup_f32(-0x1.715476p-1f)
+#define VectorComputation_VSPOW_LOG_C2 svdup_f32(0x1.ec709ep-2f)
+#define VectorComputation_VSPOW_LOG_C3 svdup_f32(-0x1.7167dap-2f)
+#define VectorComputation_VSPOW_LOG_C4 svdup_f32(0x1.278e0ap-2f)
+#define VSPOW_EXP_MAX 0x42fc0000U
+#define VSPOW_SP_TH_MASK (0x7e800000U - POWF_X_TH_LO)
+#define VSPOW_LOG_IDX_MASK 0x1fU
+#define VSPOW_LOG_TAB_SIZE 32
 
 inline svfloat32_t VsPowLnGetPartSve(svbool_t pg, svfloat32_t x, svfloat32_t *n, svuint32_t *idx)
 {
@@ -64,7 +64,8 @@ inline svfloat32_t VsPowLnGetResSve(svbool_t pg, svfloat32_t x, svfloat32_t *lo)
     svuint32_t idx;
     svfloat32_t r = VsPowLnGetPartSve(pg, x, &n, &idx);
     svfloat32_t p3 = svadd_f32_x(pg, n, svld1_gather_u32index_f32(pg, G_VML_VSPOW_LOG2_TAB_VectorComputation, idx));
-    svfloat32_t poly = VsPowLnTaylorSve(pg, r, svld1_gather_u32index_f32(pg, G_VML_VSPOW_LOG2_POLY_LOW_TAB_VectorComputation, idx));
+    svfloat32_t poly =
+        VsPowLnTaylorSve(pg, r, svld1_gather_u32index_f32(pg, G_VML_VSPOW_LOG2_POLY_LOW_TAB_VectorComputation, idx));
 
     svfloat32_t p4 = svmla_f32_x(pg, p3, r, VectorComputation_VSPOW_LOG_C0);
     svfloat32_t p4Lo = svmla_f32_x(pg, svsub_f32_x(pg, p3, p4), r, VectorComputation_VSPOW_LOG_C0);

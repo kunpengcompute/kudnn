@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -49,7 +49,8 @@ __attribute__((always_inline)) static inline svfloat16_t VhExpm1InlineSveF16(svb
     svfloat16_t z = svmla_f16_x(pg, VectorComputation_VHTANH_SHIFT, x, VectorComputation_VHTANH_INVLN2);
     svfloat16_t exp2n = svreinterpret_f16_u16(svlsl_n_u16_x(pg, svreinterpret_u16_f16(z), FP16_MANTISSA_BIT_LEN));
     svfloat16_t n = svsub_f16_x(pg, z, VectorComputation_VHTANH_SHIFT);
-    svfloat16_t r = svmls_f16_x(pg, svmls_f16_x(pg, x, n, VectorComputation_VHTANH_LN2HI), n, VectorComputation_VHTANH_LN2LO);
+    svfloat16_t r =
+        svmls_f16_x(pg, svmls_f16_x(pg, x, n, VectorComputation_VHTANH_LN2HI), n, VectorComputation_VHTANH_LN2LO);
     svfloat16_t p = VhExpm1PolySveF16(pg, r);
 
     svfloat16_t t = svsub_f16_x(pg, exp2n, VML_VectorComputation_F16_ONE);

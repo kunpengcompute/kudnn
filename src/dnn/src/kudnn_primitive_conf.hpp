@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -63,11 +63,11 @@ enum class KudnnConvFlag : unsigned {
     KUDNN_FLAG_SP_LAST = 1 << 7,
     KUDNN_FLAG_REDUCE_FIRST = 1 << 8,
     KUDNN_FLAG_REDUCE_LAST = 1 << 9,
-    KUDNN_FLAG_ZERO_FILTER = 1 << 0, /* Controls whether the inner kernel skips
+    KUDNN_FLAG_ZERO_FILTER = 1 << 0,  /* Controls whether the inner kernel skips
                                    loading weights-data from memory; this
                                    needs to happen on the first Group/16
                                    iteration. */
-    KUDNN_FLAG_ZERO_BIAS = 1 << 1, /* Controls whether the inner kernel skip
+    KUDNN_FLAG_ZERO_BIAS = 1 << 1,    /* Controls whether the inner kernel skip
                                loading bias data from memory */
     KUDNN_FLAG_COMPUTE_BIAS = 1 << 2, /* Controls bias computation during execution
                                     pass */
@@ -105,9 +105,9 @@ struct KudnnConvJitConfT {
     IntType nbOc, ocBlock;
     IntType nbIw, iwBlock;
     IntType nbOw, owBlock;
-    IntType nbOcBlocking; /* used in jit kernels for nbOc work blocking taking
+    IntType nbOcBlocking;                  /* used in jit kernels for nbOc work blocking taking
                            into account vector registers distribution */
-    IntType nbOcBlockingThrChunk; /* used for distribution of nbOc work
+    IntType nbOcBlockingThrChunk;          /* used for distribution of nbOc work
                                       within threads */
     IntType nbIcBlocking, nbIcBlockingMax; // blocking of nbIc work
     IntType nbIcL2;
@@ -180,8 +180,8 @@ struct KudnnConvJitConfT {
 };
 
 struct KudnnConvJitCallS {
-    const void *src; /* hack, non-const for backward_data */
-    const void *dst; /* hack, non-const for forward */
+    const void *src;  /* hack, non-const for backward_data */
+    const void *dst;  /* hack, non-const for forward */
     const void *filt; /* hack, non-const for backward_weights */
     const void *bias; /* hack, non-const for backward_bias */
     const void *srcPrf;
@@ -249,7 +249,6 @@ struct KudnnConvJitCallS {
     IntType ocFlag;
 };
 
-} // KuDNN
+} // namespace KuDNN
 
 #endif // KUDNN_PRIMITIVE_CONF_HPP
-

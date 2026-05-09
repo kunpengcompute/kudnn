@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -22,7 +22,7 @@ namespace Detail {
 
 struct ReorderWrapper;
 
-template<typename CodeGenKind>
+template <typename CodeGenKind>
 struct CodeGenWrapper;
 
 template <typename T>
@@ -50,8 +50,8 @@ struct Wrapper {
         obj = other.obj;
         other.obj = nullptr;
     }
-    Wrapper& operator=(const Wrapper &other) = delete;
-    Wrapper& operator=(Wrapper &&other) noexcept
+    Wrapper &operator=(const Wrapper &other) = delete;
+    Wrapper &operator=(Wrapper &&other) noexcept
     {
         if (this != &other) {
             obj = other.obj;
@@ -59,8 +59,8 @@ struct Wrapper {
         }
         return *this;
     }
-    template <typename ... Args>
-    void Initialize(Args&& ... args)
+    template <typename... Args>
+    void Initialize(Args &&...args)
     {
         obj = new UnderlyingType{std::forward<Args>(args)...};
         static_cast<T *>(this)->InitPostamble(std::forward<Args>(args)...);
@@ -78,19 +78,20 @@ struct Wrapper {
     {
         Deinitialize();
     }
+
 protected:
     UnderlyingType *obj;
 };
 
 struct ReorderWrapper final : Wrapper<ReorderWrapper> {
     ReorderWrapper() noexcept : p(nullptr) {}
-    ReorderWrapper(ReorderWrapper &&other) noexcept : Wrapper<ReorderWrapper>(
-        static_cast<Wrapper<ReorderWrapper>&&>(other))
+    ReorderWrapper(ReorderWrapper &&other) noexcept
+        : Wrapper<ReorderWrapper>(static_cast<Wrapper<ReorderWrapper> &&>(other))
     {
         p = other.p;
         other.p = nullptr;
     }
-    ReorderWrapper& operator=(ReorderWrapper &&other) = delete;
+    ReorderWrapper &operator=(ReorderWrapper &&other) = delete;
     void InitPostamble(const TensorInfo &tensorInfo, const TensorInfo &desiredInfo)
     {
         if (WillReorder(tensorInfo, desiredInfo)) {
@@ -100,8 +101,8 @@ struct ReorderWrapper final : Wrapper<ReorderWrapper> {
     static bool WillReorder(const TensorInfo &tensorInfo, const TensorInfo &desiredInfo) noexcept
     {
         return ((tensorInfo.GetType() != desiredInfo.GetType()) ||
-            ((tensorInfo.GetLayout() != desiredInfo.GetLayout()) &&
-                (tensorInfo.GetStrides() != desiredInfo.GetStrides())));
+                ((tensorInfo.GetLayout() != desiredInfo.GetLayout()) &&
+                 (tensorInfo.GetStrides() != desiredInfo.GetStrides())));
     }
     const void *Get(const void *data) const
     {
@@ -125,6 +126,7 @@ struct ReorderWrapper final : Wrapper<ReorderWrapper> {
     {
         Service::Deallocate(p);
     }
+
 protected:
     void *p;
 };
@@ -135,14 +137,14 @@ struct CodeGenWrapper final : Wrapper<CodeGenWrapper<CodeGenKind>> {
     {
         VERBOSE_PRINT;
     }
-    CodeGenWrapper(CodeGenWrapper &&other) noexcept : Wrapper<CodeGenWrapper>(
-        static_cast<Wrapper<CodeGenWrapper>&&>(other))
+    CodeGenWrapper(CodeGenWrapper &&other) noexcept
+        : Wrapper<CodeGenWrapper>(static_cast<Wrapper<CodeGenWrapper> &&>(other))
     {
         VERBOSE_PRINT;
     }
-    CodeGenWrapper& operator=(CodeGenWrapper &&other) = delete;
-    template <typename ...Args>
-    void InitPostamble(Args&& ... args) const noexcept
+    CodeGenWrapper &operator=(CodeGenWrapper &&other) = delete;
+    template <typename... Args>
+    void InitPostamble(Args &&...args) const noexcept
     {
         VERBOSE_PRINT;
         Service::Unused(std::forward<Args>(args)...);
@@ -160,7 +162,7 @@ struct CodeGenWrapper final : Wrapper<CodeGenWrapper<CodeGenKind>> {
     }
 };
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_WRAPPER_HELPERS_HPP

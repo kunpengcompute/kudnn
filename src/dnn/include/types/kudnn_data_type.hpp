@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -42,7 +42,7 @@ enum class TypeT {
 struct Type final {
 public:
     using SizeType = ::KuDNN::SizeType;
-    Type(const TypeT& t) noexcept(false) : type{t}, size(0)
+    Type(const TypeT &t) noexcept(false) : type{t}, size(0)
     {
         switch (type) {
             case TypeT::F32: {
@@ -69,10 +69,11 @@ public:
                 size = sizeof(std::uint8_t);
                 break;
             }
-            default: {}
+            default: {
+            }
         }
         if (type == TypeT::UNDEFINED) {
-            throw Service::LogicError {"Type: unsupported data type"};
+            throw Service::LogicError{"Type: unsupported data type"};
         }
     }
     SizeType GetSize() const noexcept
@@ -89,9 +90,7 @@ public:
     }
     bool IsFP() const noexcept
     {
-        if ((type == TypeT::F32) ||
-            (type == TypeT::F16) ||
-            (type == TypeT::BF16)) {
+        if ((type == TypeT::F32) || (type == TypeT::F16) || (type == TypeT::BF16)) {
             return true;
         } else {
             return false;
@@ -113,6 +112,7 @@ public:
     {
         return !IsSigned();
     }
+
 private:
     TypeT type;
     SizeType size;
@@ -172,8 +172,7 @@ inline bool operator==(const TypeT &lhs, const Type &rhs) noexcept
 
 inline bool operator==(const Type &lhs, const Type &rhs) noexcept
 {
-    return (lhs.GetSize() == rhs.GetSize()) &&
-           (static_cast<TypeT>(lhs) == (static_cast<TypeT>(rhs)));
+    return (lhs.GetSize() == rhs.GetSize()) && (static_cast<TypeT>(lhs) == (static_cast<TypeT>(rhs)));
 }
 
 inline bool operator!=(const Type &lhs, const TypeT &rhs) noexcept
@@ -189,7 +188,7 @@ inline bool operator!=(const Type &lhs, const Type &rhs) noexcept
     return !(lhs == rhs);
 }
 
-} // Element
-} // KuDNN
+} // namespace Element
+} // namespace KuDNN
 
 #endif // KUDNN_DATATYPE_HPP

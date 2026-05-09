@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -183,7 +183,7 @@ static bool Test_Template_Function(const KuDNN::TensorInfo srcTensor, const KuDN
     linearActivationSimple(batch,m, n, k, src, weight, dstRef, bias, algKind);
 
     linearActivationLayerFwd.Run(src, weight, dst, bias, numThreads);
-    
+
     float maxValue = findMaxValue<T>(src, batch * m * k, weight, batch * n * k);
 
     bool flag = true;

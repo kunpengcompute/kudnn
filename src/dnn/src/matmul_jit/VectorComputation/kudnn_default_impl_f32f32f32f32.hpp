@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,8 +30,8 @@ namespace KuDNN {
 namespace Detail {
 
 template <>
-struct MatMulKernelDefaultCodeGenImpl<ARCH::VectorComputation, float, float, float, float, MatmulDummyType> :
-    MatMulKernelCodeGenBase<ARCH::VectorComputation, float, float, float, float> {
+struct MatMulKernelDefaultCodeGenImpl<ARCH::VectorComputation, float, float, float, float, MatmulDummyType>
+    : MatMulKernelCodeGenBase<ARCH::VectorComputation, float, float, float, float> {
 public:
     constexpr static const std::uint32_t KERNEL_M_SIZE = 6;
     constexpr static const std::uint32_t KERNEL_N_SIZE = 4; // in VL
@@ -67,14 +67,10 @@ public:
     // There are also kernels of smaller sizes to process borders of matrix (5x4VL, 4x4VL, 3x4VL, 2x4VL, 1x4VL).
     // They are very similar to main kernel.
 
-    MatMulKernelDefaultCodeGenImpl(IntType m, IntType n, IntType k,
-        IntType srcOffsetArg,
-        IntType weiOffsetArg,
-        IntType dstOffsetArg,
-        IntType biaOffsetArg);
+    MatMulKernelDefaultCodeGenImpl(IntType m, IntType n, IntType k, IntType srcOffsetArg, IntType weiOffsetArg,
+                                   IntType dstOffsetArg, IntType biaOffsetArg);
 
 protected:
-
     void InitializeDstRegisters(std::uint32_t mLim, std::uint32_t nLim);
 
     void GenerateMLoopBody(std::uint32_t mLim, std::uint32_t nLim, std::uint32_t k);
@@ -125,21 +121,21 @@ protected:
     constexpr static const std::uint32_t K_LOOP_UNROLL = 4;
 
     constexpr static const std::uint32_t DST_Z_REG_OFFSET = 8; // dst Z registers are z8 - z31
-    constexpr static const std::uint32_t NUM_DST_Z_REGS = 24; // dst Z registers are z8 - z31
+    constexpr static const std::uint32_t NUM_DST_Z_REGS = 24;  // dst Z registers are z8 - z31
     constexpr static const std::uint32_t SRC_Z_REG_OFFSET = 7; // src Z registers are z7 - z2
-    constexpr static const std::uint32_t NUM_SRC_Z_REGS = 6; // src Z registers are z7 - z2
+    constexpr static const std::uint32_t NUM_SRC_Z_REGS = 6;   // src Z registers are z7 - z2
     constexpr static const std::uint32_t WEI_Z_REG_OFFSET = 1; // wei Z registers are z0, z1
-    constexpr static const std::uint32_t NUM_WEI_Z_REGS = 2; // wei Z registers are z0, z1
+    constexpr static const std::uint32_t NUM_WEI_Z_REGS = 2;   // wei Z registers are z0, z1
 
     constexpr static const std::uint32_t DST_X_REG_OFFSET = 26; // src X registers are x21-x26
-    constexpr static const std::uint32_t NUM_DST_X_REGS = 6; // src X registers are x21-x26
+    constexpr static const std::uint32_t NUM_DST_X_REGS = 6;    // src X registers are x21-x26
     constexpr static const std::uint32_t SRC_X_REG_OFFSET = 26; // src X registers are x21-x26
-    constexpr static const std::uint32_t NUM_SRC_X_REGS = 6; // src X registers are x21-x26
+    constexpr static const std::uint32_t NUM_SRC_X_REGS = 6;    // src X registers are x21-x26
     constexpr static const std::uint32_t WEI_X_REG_OFFSET = 17; // wei X registers are x17-x20
-    constexpr static const std::uint32_t NUM_WEI_X_REGS = 4; // wei X registers are x17-x20
+    constexpr static const std::uint32_t NUM_WEI_X_REGS = 4;    // wei X registers are x17-x20
 
     constexpr static const std::uint32_t LOAD_STORE_P_REG_OFFSET = 1; // wei X registers are x17-x20
-    constexpr static const std::uint32_t NUM_LOAD_STORE_P_REGS = 4; // wei X registers are x17-x20
+    constexpr static const std::uint32_t NUM_LOAD_STORE_P_REGS = 4;   // wei X registers are x17-x20
 
     // function input arguments
     ARMCG::XReg srcPtr = x0;
@@ -167,17 +163,14 @@ protected:
 };
 
 template <>
-struct MatMulKernelDefaultCodeGen<ARCH::VectorComputation, float, float, float, float> :
-    MatMulKernelDefaultCodeGenImpl<ARCH::VectorComputation, float, float, float, float, MatmulDummyType> {
-    MatMulKernelDefaultCodeGen(IntType m, IntType n, IntType k,
-        IntType srcOffsetArg,
-        IntType weiOffsetArg,
-        IntType dstOffsetArg,
-        IntType biaOffsetArg) : MatMulKernelDefaultCodeGenImpl(m, n, k, srcOffsetArg,
-            weiOffsetArg, dstOffsetArg, biaOffsetArg)
-        {
-            VERBOSE_PRINT;
-        }
+struct MatMulKernelDefaultCodeGen<ARCH::VectorComputation, float, float, float, float>
+    : MatMulKernelDefaultCodeGenImpl<ARCH::VectorComputation, float, float, float, float, MatmulDummyType> {
+    MatMulKernelDefaultCodeGen(IntType m, IntType n, IntType k, IntType srcOffsetArg, IntType weiOffsetArg,
+                               IntType dstOffsetArg, IntType biaOffsetArg)
+        : MatMulKernelDefaultCodeGenImpl(m, n, k, srcOffsetArg, weiOffsetArg, dstOffsetArg, biaOffsetArg)
+    {
+        VERBOSE_PRINT;
+    }
 };
 
 struct PackBRowDefaultSchemeCodegenF32 : public KUDNN_JIT_Generator {
@@ -187,7 +180,7 @@ struct PackBRowDefaultSchemeCodegenF32 : public KUDNN_JIT_Generator {
         IntType svlen = svcntw();
         IntType iterCount = (nBlockExec + svlen - 1) / svlen;
         IntType iterRemainder;
-        
+
         if (iterCount % CodeGen::KERNEL_N_SIZE == 0) {
             iterRemainder = CodeGen::KERNEL_N_SIZE;
         } else {
@@ -197,13 +190,13 @@ struct PackBRowDefaultSchemeCodegenF32 : public KUDNN_JIT_Generator {
         if (hasAlpha) {
             Mov(ARMCG::ZRegS(0), alpha);
         }
-        
+
         Mov(n, nBlockExec);
         Mov(kbOffset, 0);
         Mov(kvlOffset, 0);
         Cntw(storeStride, ARMCG::Pattern::ALL, ARMCG::ExtMod::MUL, sizeof(float));
         Mul(storeStride, storeStride, kCtr);
-        
+
         if (nBlockExec % (CodeGen::KERNEL_N_SIZE * svlen) == 0) {
             nBlockExec = nBlockExec - (CodeGen::KERNEL_N_SIZE * svlen);
         } else {
@@ -214,32 +207,32 @@ struct PackBRowDefaultSchemeCodegenF32 : public KUDNN_JIT_Generator {
 
         L(kLoopHead);
 
-            Add(currLoadPtr, bPtr, kbOffset, ARMCG::ShMod::LSL, NUM_2);
-            Add(currStorePtr, bBuffer, kvlOffset, ARMCG::ShMod::LSL, NUM_2);
+        Add(currLoadPtr, bPtr, kbOffset, ARMCG::ShMod::LSL, NUM_2);
+        Add(currStorePtr, bBuffer, kvlOffset, ARMCG::ShMod::LSL, NUM_2);
 
-            Mov(nCtr, 0);
-            if (iterCount > CodeGen::KERNEL_N_SIZE) {
-                ARMCG::Label nLoopHead;
-                L(nLoopHead);
-                    for (std::uint32_t i = 0; i < CodeGen::KERNEL_N_SIZE; ++i) {
-                        GenerateOneIter(hasAlpha, i);
-                        Add(currStorePtr, currStorePtr, storeStride);
-                        Add(nCtr, nCtr, svlen);
-                    }
-                    Add(currLoadPtr, currLoadPtr, sizeof(float) * CodeGen::KERNEL_N_SIZE * svlen);
-                    Cmp(nCtr, nBlockExec);
-                B(ARMCG::Cond::NE, nLoopHead);
-            }
-
-            for (std::uint32_t i = 0; i < iterRemainder; ++i) {
+        Mov(nCtr, 0);
+        if (iterCount > CodeGen::KERNEL_N_SIZE) {
+            ARMCG::Label nLoopHead;
+            L(nLoopHead);
+            for (std::uint32_t i = 0; i < CodeGen::KERNEL_N_SIZE; ++i) {
                 GenerateOneIter(hasAlpha, i);
                 Add(currStorePtr, currStorePtr, storeStride);
                 Add(nCtr, nCtr, svlen);
             }
+            Add(currLoadPtr, currLoadPtr, sizeof(float) * CodeGen::KERNEL_N_SIZE * svlen);
+            Cmp(nCtr, nBlockExec);
+            B(ARMCG::Cond::NE, nLoopHead);
+        }
 
-            Add(kbOffset, kbOffset, bOffset);
-            Add(kvlOffset, kvlOffset, svlen);
-            Subs(kCtr, kCtr, 1);
+        for (std::uint32_t i = 0; i < iterRemainder; ++i) {
+            GenerateOneIter(hasAlpha, i);
+            Add(currStorePtr, currStorePtr, storeStride);
+            Add(nCtr, nCtr, svlen);
+        }
+
+        Add(kbOffset, kbOffset, bOffset);
+        Add(kvlOffset, kvlOffset, svlen);
+        Subs(kCtr, kCtr, 1);
         B(ARMCG::Cond::NE, kLoopHead);
 
         Ret();
@@ -248,11 +241,9 @@ struct PackBRowDefaultSchemeCodegenF32 : public KUDNN_JIT_Generator {
     void GenerateOneIter(bool hasAlpha, IntType i)
     {
         Whilelt(ARMCG::PRegS(i + 1), nCtr, n);
-        Ld1w(ARMCG::ZRegS(i + 1), ARMCG::PReg(i + 1),
-            Ptr(currLoadPtr, i, ARMCG::ExtMod::MUL_VL));
+        Ld1w(ARMCG::ZRegS(i + 1), ARMCG::PReg(i + 1), Ptr(currLoadPtr, i, ARMCG::ExtMod::MUL_VL));
         if (hasAlpha) {
-            Fmul(ARMCG::ZRegS(i + 1), ARMCG::PReg(i + 1),
-                ARMCG::ZRegS(0));
+            Fmul(ARMCG::ZRegS(i + 1), ARMCG::PReg(i + 1), ARMCG::ZRegS(0));
         }
         St1w(ARMCG::ZRegS(i + 1), ARMCG::PReg(i + 1), Ptr(currStorePtr));
     }
@@ -272,8 +263,9 @@ struct PackBRowDefaultSchemeCodegenF32 : public KUDNN_JIT_Generator {
 };
 
 template <>
-struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::VectorComputation, float, float, float, float>> :
-    MatmulTypeHelper<float, float, float, float>, ImplGenerator<GemmInfo> {
+struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::VectorComputation, float, float, float, float>>
+    : MatmulTypeHelper<float, float, float, float>
+    , ImplGenerator<GemmInfo> {
     using CodeGen = MatMulKernelDefaultCodeGen<ARCH::VectorComputation, float, float, float, float>;
     struct DefaultImpl : MatMulImplBase {
         DefaultImpl(const GemmInfo &task, IntType nThreads);
@@ -281,10 +273,10 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::VectorComputation, f
         constexpr static std::uint32_t GetKernelMSize() noexcept;
 
         static std::uint32_t GetKernelNSize() noexcept;
+
     protected:
-        void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl,
-            SizeType offsetSrc, SizeType offsetWei, SizeType offsetDst, SizeType offsetBia,
-            bool wereSrcWeiSwapped) override;
+        void InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl, SizeType offsetSrc, SizeType offsetWei,
+                                SizeType offsetDst, SizeType offsetBia, bool wereSrcWeiSwapped) override;
 
         IntType GetThreadBufSize(IntType m, IntType n, IntType k, IntType vl) noexcept override;
 
@@ -293,11 +285,11 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::VectorComputation, f
         std::vector<std::pair<Shape, Shape>> SplitWork() override;
 
         template <bool AlphaMul = false>
-        static void PackBCol(IntType n, IntType k, const WeiType *bPtr, IntType bOffset,
-            WeiType *bBuffer, float alpha = 1.0f);
+        static void PackBCol(IntType n, IntType k, const WeiType *bPtr, IntType bOffset, WeiType *bBuffer,
+                             float alpha = 1.0f);
 
-        void RunSequential2D(IntType threadId, const void *src, const void *wei, void *dst,
-            const void *bia, void *buffer, float alpha, float beta) const noexcept(false) override;
+        void RunSequential2D(IntType threadId, const void *src, const void *wei, void *dst, const void *bia,
+                             void *buffer, float alpha, float beta) const noexcept(false) override;
 
         void UpdateExecParams() noexcept override;
 
@@ -329,7 +321,7 @@ struct MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::VectorComputation, f
     }
 };
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_MATMUL_JIT_VectorComputation_DEFAUT_IMPL_F32F32F32F32_HPP

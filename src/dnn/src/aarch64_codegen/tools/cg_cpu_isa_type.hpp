@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -34,6 +34,6 @@ enum class CPUISAT : unsigned {
     ISA_ALL = ~0u,
 };
 
-} // ARMCG
+} // namespace ARMCG
 
-#endif  // CG_CPU_ISA_TYPE_HPP
+#endif // CG_CPU_ISA_TYPE_HPP

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -281,8 +281,8 @@ static inline void TranspKernelW(const void *src, void *dst, SizeType strideIn, 
     }
 }
 
-} // Reorder
-} // Detail
-} // KuDNN
+} // namespace Reorder
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_FAST_REORDER_VectorComputation512_W_HPP

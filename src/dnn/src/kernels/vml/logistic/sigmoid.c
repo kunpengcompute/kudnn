@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -12,7 +12,6 @@
 
 #include "kernels/vml/vml_sve_la_sigmoid.h"
 #include "kernels/vml/common_macro.h"
-
 
 static void SigmoidMainKernelF32(const float *src, float *dst, int step, const float *diffDst)
 {
@@ -73,7 +72,8 @@ void SigmoidSveFWDF32(const int64_t len, const float *src, float *dst)
 {
     int64_t i;
     int64_t loopSigmoidf = svcntw();
-    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N; i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N;
+         i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
         SigmoidMainKernelF32(src + i, dst + i, loopSigmoidf, NULL);
     }
 
@@ -91,7 +91,8 @@ void SigmoidSveBWDF32(const int64_t len, const float *src, const float *diffDst,
 {
     int64_t i;
     int64_t loopSigmoidf = svcntw();
-    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N; i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N;
+         i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
         SigmoidMainKernelF32(src + i, diffSrc + i, loopSigmoidf, diffDst + i);
     }
 
@@ -256,7 +257,8 @@ void SigmoidSveFWDF16(const int64_t len, const __fp16 *src, __fp16 *dst)
 {
     int64_t i;
     int64_t loopSigmoidf = svcnth();
-    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N; i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N;
+         i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
         SigmoidMainKernelF16(src + i, dst + i, loopSigmoidf, NULL);
     }
 
@@ -285,7 +287,8 @@ void SigmoidSveBWDF16(const int64_t len, const __fp16 *src, const __fp16 *diffDs
 {
     int64_t i;
     int64_t loopSigmoidf = svcnth();
-    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N; i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N;
+         i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
         SigmoidMainKernelF16(src + i, diffSrc + i, loopSigmoidf, diffDst + i);
     }
 
@@ -461,7 +464,8 @@ void SigmoidSveFWDBF16(const int64_t len, const __bf16 *src, __bf16 *dst)
 {
     int64_t i;
     int64_t loopSigmoidf = svcnth();
-    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N; i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N;
+         i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
         SigmoidMainKernelBF16(src + i, dst + i, loopSigmoidf, NULL);
     }
 
@@ -501,7 +505,8 @@ void SigmoidSveBWDBF16(const int64_t len, const __bf16 *src, const __bf16 *diffD
 {
     int64_t i;
     int64_t loopSigmoidf = svcnth();
-    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N; i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopSigmoidf * VML_VectorComputation_UNFOLD_N;
+         i += loopSigmoidf * VML_VectorComputation_UNFOLD_N) {
         SigmoidMainKernelBF16(src + i, diffSrc + i, loopSigmoidf, diffDst + i);
     }
 

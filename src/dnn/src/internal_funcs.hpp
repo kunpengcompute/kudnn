@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -24,7 +24,7 @@
 #define CONSTRUCTOR __attribute__((constructor))
 #define DESTRUCTOR __attribute__((destructor))
 // in case we have template declaration and full specialization CMake option isn't enough to hide names
-#define KUDNN_FORCE_INTERNAL_API __attribute__ ((visibility("hidden")))
+#define KUDNN_FORCE_INTERNAL_API __attribute__((visibility("hidden")))
 #ifndef KUDNN_DEBUG
 #define KUDNN_INLINE __attribute__((always_inline))
 #else
@@ -67,16 +67,15 @@ enum class ARCH {
 };
 
 constexpr SizeType DEFAULT_MAX_NUM_THREADS = 128;
-::std::ostream& operator << (::std::ostream &os, const Shape &shape);
-::std::ostream& operator << (::std::ostream &os, const TensorInfo &info);
-::std::ostream& operator << (::std::ostream &os, const Element::TypeT &type);
-::std::ostream& operator << (::std::ostream &os, const Element::Type &type);
-::std::ostream& operator << (::std::ostream &os, const Layout &layout);
+::std::ostream &operator<<(::std::ostream &os, const Shape &shape);
+::std::ostream &operator<<(::std::ostream &os, const TensorInfo &info);
+::std::ostream &operator<<(::std::ostream &os, const Element::TypeT &type);
+::std::ostream &operator<<(::std::ostream &os, const Element::Type &type);
+::std::ostream &operator<<(::std::ostream &os, const Layout &layout);
 
 struct Parallelizable {
-    Parallelizable() : isInitialized(false)
-    {}
-    Parallelizable& Initialize(SizeType ont, Shape bd)
+    Parallelizable() : isInitialized(false) {}
+    Parallelizable &Initialize(SizeType ont, Shape bd)
     {
         isInitialized = true;
         optNumThreads = ont;
@@ -99,12 +98,14 @@ struct Parallelizable {
             return std::min(optNumThreads, maxThreads);
         }
     }
+
 protected:
-    void ResetDimsThreads(const Shape& dims, SizeType threads) noexcept(false)
+    void ResetDimsThreads(const Shape &dims, SizeType threads) noexcept(false)
     {
         batchedDims = dims;
         optNumThreads = threads;
     }
+
 private:
     bool isInitialized;
     SizeType optNumThreads;
@@ -115,31 +116,27 @@ namespace Service {
 
 template <typename T>
 struct Bridge {};
- 
+
 template <typename T>
 struct Bridge<T *> {
     using VoidType = void *;
     using ByteType = std::byte *;
 };
- 
+
 template <typename T>
 struct Bridge<const T *> {
     using VoidType = const void *;
     using ByteType = const std::byte *;
 };
- 
+
 // offset in bytes
 template <typename TargetType, typename InitialType>
-constexpr std::enable_if_t<std::is_pointer_v<InitialType> && std::is_pointer_v<TargetType>, TargetType> AddOffset(
-    InitialType ptr, int offset) noexcept
+constexpr std::enable_if_t<std::is_pointer_v<InitialType> && std::is_pointer_v<TargetType>, TargetType>
+AddOffset(InitialType ptr, int offset) noexcept
 {
-    return static_cast<TargetType>(
-        static_cast<typename Bridge<InitialType>::VoidType>(
-            static_cast<typename Bridge<InitialType>::ByteType>(
-                static_cast<typename Bridge<InitialType>::VoidType>(ptr)
-            ) + offset
-        )
-    );
+    return static_cast<TargetType>(static_cast<typename Bridge<InitialType>::VoidType>(
+        static_cast<typename Bridge<InitialType>::ByteType>(static_cast<typename Bridge<InitialType>::VoidType>(ptr)) +
+        offset));
 }
 
 template <typename T>
@@ -148,8 +145,8 @@ KUDNN_INLINE inline void Unused(T &&t) noexcept
     static_cast<void>(t);
 }
 
-template <typename T, typename ... Args>
-KUDNN_INLINE constexpr inline void Unused(T &&t, Args && ... args) noexcept
+template <typename T, typename... Args>
+KUDNN_INLINE constexpr inline void Unused(T &&t, Args &&...args) noexcept
 {
     Unused(std::forward<T>(t));
     Unused(std::forward<Args>(args)...);
@@ -157,7 +154,7 @@ KUDNN_INLINE constexpr inline void Unused(T &&t, Args && ... args) noexcept
 
 Shape BroadcastTo5D(const Shape &sh, bool isDims = true) noexcept(false);
 Shape BroadcastToNCDHW(const Shape &sh, bool isDims = true) noexcept(false);
-void ThrowOnStatus(Status s, const std::string& funcName) noexcept(false);
+void ThrowOnStatus(Status s, const std::string &funcName) noexcept(false);
 SizeType ArrayProduct(const Shape &arr, SizeType end, SizeType start) noexcept;
 void ConvertFp16ToFp32(const __fp16 *src, float *dst, SizeType size);
 void ConvertBf16ToFp32(const __bf16 *src, float *dst, SizeType size);
@@ -189,8 +186,8 @@ inline constexpr SizeType UNROLL_7 = 7;
 inline constexpr SizeType MAX_UNROLL = 8;
 
 struct Unroll final {
-    template <SizeType UnrollFactor, typename KernelFunctor, typename ... Args>
-    static void Do(SizeType idx, SizeType loopLim, KernelFunctor &&functor, Args && ... args) noexcept
+    template <SizeType UnrollFactor, typename KernelFunctor, typename... Args>
+    static void Do(SizeType idx, SizeType loopLim, KernelFunctor &&functor, Args &&...args) noexcept
     {
         Unused(functor);
         static_assert((UnrollFactor >= 0) && (UnrollFactor <= MAX_UNROLL), "Unroll factor should be in range [1, 8]");
@@ -202,17 +199,17 @@ struct Unroll final {
                 if constexpr (UnrollFactor > UNROLL_3) {
                     KernelFunctor::Do(idx + UNROLL_3 * KernelFunctor::LoopInc(), loopLim, std::forward<Args>(args)...);
                     if constexpr (UnrollFactor > UNROLL_4) {
-                        KernelFunctor::Do(idx +
-                            UNROLL_4 * KernelFunctor::LoopInc(), loopLim, std::forward<Args>(args)...);
+                        KernelFunctor::Do(idx + UNROLL_4 * KernelFunctor::LoopInc(), loopLim,
+                                          std::forward<Args>(args)...);
                         if constexpr (UnrollFactor > UNROLL_5) {
-                            KernelFunctor::Do(idx +
-                                UNROLL_5 * KernelFunctor::LoopInc(), loopLim, std::forward<Args>(args)...);
+                            KernelFunctor::Do(idx + UNROLL_5 * KernelFunctor::LoopInc(), loopLim,
+                                              std::forward<Args>(args)...);
                             if constexpr (UnrollFactor > UNROLL_6) {
-                                KernelFunctor::Do(idx +
-                                    UNROLL_6 * KernelFunctor::LoopInc(), loopLim, std::forward<Args>(args)...);
+                                KernelFunctor::Do(idx + UNROLL_6 * KernelFunctor::LoopInc(), loopLim,
+                                                  std::forward<Args>(args)...);
                                 if constexpr (UnrollFactor > UNROLL_7) {
-                                    KernelFunctor::Do(idx +
-                                        UNROLL_7 * KernelFunctor::LoopInc(), loopLim, std::forward<Args>(args)...);
+                                    KernelFunctor::Do(idx + UNROLL_7 * KernelFunctor::LoopInc(), loopLim,
+                                                      std::forward<Args>(args)...);
                                 }
                             }
                         }
@@ -224,20 +221,20 @@ struct Unroll final {
 };
 
 struct UnrollFor final {
-    template <SizeType UnrollFactor, typename KernelFunctor, typename ... Args>
-    static void Do(SizeType loopStart, SizeType loopLim, KernelFunctor &&functor, Args && ... args) noexcept
+    template <SizeType UnrollFactor, typename KernelFunctor, typename... Args>
+    static void Do(SizeType loopStart, SizeType loopLim, KernelFunctor &&functor, Args &&...args) noexcept
     {
         SizeType i = loopStart;
         for (i = loopStart; (i + UnrollFactor * KernelFunctor::LoopInc()) <= loopLim;
-            i += UnrollFactor * KernelFunctor::LoopInc()) {
+             i += UnrollFactor * KernelFunctor::LoopInc()) {
             Unroll::Do<UnrollFactor>(i, loopLim, std::forward<KernelFunctor>(functor), std::forward<Args>(args)...);
         }
         for (; i < loopLim; i += KernelFunctor::LoopInc()) {
             KernelFunctor::Do(i, loopLim, std::forward<Args>(args)...);
         }
     }
-    template <SizeType UnrollFactor, typename KernelFunctor, typename ... Args>
-    static void Do(SizeType loopLim, KernelFunctor &&functor, Args && ... args) noexcept
+    template <SizeType UnrollFactor, typename KernelFunctor, typename... Args>
+    static void Do(SizeType loopLim, KernelFunctor &&functor, Args &&...args) noexcept
     {
         Do<UnrollFactor>(0, loopLim, std::forward<KernelFunctor>(functor), std::forward<Args>(args)...);
     }
@@ -247,7 +244,7 @@ template <SizeType N>
 struct Forer {
     static_assert((N > 0) && (N <= MAX_DIMS), "N should be in range [1, MAX_DIMS]");
     template <typename KernelFunctor, typename... Args>
-    static void Do(const Shape &loopEnd, SizeType multiDimLoopCounter[], KernelFunctor &&func, Args &&... args)
+    static void Do(const Shape &loopEnd, SizeType multiDimLoopCounter[], KernelFunctor &&func, Args &&...args)
     {
         if constexpr (N == 1) {
             for (SizeType i = 0; i < loopEnd[loopEnd.GetNumDims() - N]; ++i) {
@@ -257,8 +254,8 @@ struct Forer {
         } else {
             for (SizeType i = 0; i < loopEnd[loopEnd.GetNumDims() - N]; ++i) {
                 multiDimLoopCounter[loopEnd.GetNumDims() - N] = i;
-                Forer<N - 1>::Do(loopEnd, multiDimLoopCounter,
-                    std::forward<KernelFunctor>(func), std::forward<Args>(args)...);
+                Forer<N - 1>::Do(loopEnd, multiDimLoopCounter, std::forward<KernelFunctor>(func),
+                                 std::forward<Args>(args)...);
             }
         }
     }
@@ -266,142 +263,143 @@ struct Forer {
 
 struct ForCaller {
     template <typename KernelFunctor, typename... Args>
-    static void Do(const Shape &loopEnd, KernelFunctor &&func, Args &&... args) noexcept
+    static void Do(const Shape &loopEnd, KernelFunctor &&func, Args &&...args) noexcept
     {
-        SizeType  multiDimLoopCounter[MAX_DIMS] = {0, 0, 0, 0, 0};
+        SizeType multiDimLoopCounter[MAX_DIMS] = {0, 0, 0, 0, 0};
         switch (loopEnd.GetNumDims()) {
-            case NUM_1: Forer<NUM_1>::Do(loopEnd, multiDimLoopCounter,
-                std::forward<KernelFunctor>(func), std::forward<Args>(args)...); break;
-            case NUM_2: Forer<NUM_2>::Do(loopEnd, multiDimLoopCounter,
-                std::forward<KernelFunctor>(func), std::forward<Args>(args)...); break;
-            case NUM_3: Forer<NUM_3>::Do(loopEnd, multiDimLoopCounter,
-                std::forward<KernelFunctor>(func), std::forward<Args>(args)...); break;
-            case NUM_4: Forer<NUM_4>::Do(loopEnd, multiDimLoopCounter,
-                std::forward<KernelFunctor>(func), std::forward<Args>(args)...); break;
-            case NUM_5: Forer<NUM_5>::Do(loopEnd, multiDimLoopCounter,
-                std::forward<KernelFunctor>(func), std::forward<Args>(args)...); break;
-            default: break;
+            case NUM_1:
+                Forer<NUM_1>::Do(loopEnd, multiDimLoopCounter, std::forward<KernelFunctor>(func),
+                                 std::forward<Args>(args)...);
+                break;
+            case NUM_2:
+                Forer<NUM_2>::Do(loopEnd, multiDimLoopCounter, std::forward<KernelFunctor>(func),
+                                 std::forward<Args>(args)...);
+                break;
+            case NUM_3:
+                Forer<NUM_3>::Do(loopEnd, multiDimLoopCounter, std::forward<KernelFunctor>(func),
+                                 std::forward<Args>(args)...);
+                break;
+            case NUM_4:
+                Forer<NUM_4>::Do(loopEnd, multiDimLoopCounter, std::forward<KernelFunctor>(func),
+                                 std::forward<Args>(args)...);
+                break;
+            case NUM_5:
+                Forer<NUM_5>::Do(loopEnd, multiDimLoopCounter, std::forward<KernelFunctor>(func),
+                                 std::forward<Args>(args)...);
+                break;
+            default:
+                break;
         }
     }
 };
 
-template <typename CompType, typename SecondType, typename ThirdType, typename Runnable, typename ... Args>
-inline void ParseType(Runnable &&runnable, Args && ... args)
-    noexcept(noexcept(std::declval<Runnable>().template Evaluate<CompType, SecondType, ThirdType>(args ...)))
+template <typename CompType, typename SecondType, typename ThirdType, typename Runnable, typename... Args>
+inline void ParseType(Runnable &&runnable, Args &&...args) noexcept(
+    noexcept(std::declval<Runnable>().template Evaluate<CompType, SecondType, ThirdType>(args...)))
 {
-    runnable.template Evaluate<CompType, SecondType, ThirdType>(args ...);
+    runnable.template Evaluate<CompType, SecondType, ThirdType>(args...);
 }
 
-template <bool IsSupportedInt, bool HasFP16CompType, typename Runnable, typename ... Args>
-inline void ParseType(Element::TypeT compType, Element::TypeT secondType, Element::TypeT thirdType,
-    Runnable &&runnable, Args && ... args) noexcept(false)
+template <bool IsSupportedInt, bool HasFP16CompType, typename Runnable, typename... Args>
+inline void ParseType(Element::TypeT compType, Element::TypeT secondType, Element::TypeT thirdType, Runnable &&runnable,
+                      Args &&...args) noexcept(false)
 {
     Unused(compType, secondType);
     using CompType = float;
     if constexpr (IsSupportedInt) {
         if (thirdType == Element::TypeT::F32) {
-            ParseType<CompType, float, float>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+            ParseType<CompType, float, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
         } else if (thirdType == Element::TypeT::F16) {
             if constexpr (HasFP16CompType) {
-                ParseType<__fp16, __fp16, __fp16>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ParseType<__fp16, __fp16, __fp16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             } else {
-                ParseType<CompType, __fp16, __fp16>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ParseType<CompType, __fp16, __fp16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             }
         } else if (thirdType == Element::TypeT::BF16) {
-            ParseType<CompType, __bf16, __bf16>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
-        }  else if (thirdType == Element::TypeT::S8) {
+            ParseType<CompType, __bf16, __bf16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
+        } else if (thirdType == Element::TypeT::S8) {
             ParseType<CompType, std::int8_t, std::int8_t>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                          std::forward<Args>(args)...);
         } else if (thirdType == Element::TypeT::U8) {
             ParseType<CompType, std::uint8_t, std::uint8_t>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                            std::forward<Args>(args)...);
         } else if (thirdType == Element::TypeT::S32) {
             ParseType<CompType, std::int32_t, std::int32_t>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                            std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported data type"};
+            throw Service::Unsupported{"Unsupported data type"};
         }
     } else {
         if (thirdType == Element::TypeT::F32) {
-            ParseType<CompType, float, float>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+            ParseType<CompType, float, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
         } else if (thirdType == Element::TypeT::F16) {
             if constexpr (HasFP16CompType) {
-                ParseType<__fp16, __fp16, __fp16>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ParseType<__fp16, __fp16, __fp16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             } else {
-                ParseType<CompType, __fp16, __fp16>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ParseType<CompType, __fp16, __fp16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             }
         } else if (thirdType == Element::TypeT::BF16) {
-            ParseType<CompType, __bf16, __bf16>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+            ParseType<CompType, __bf16, __bf16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported data type"};
+            throw Service::Unsupported{"Unsupported data type"};
         }
     }
 }
 
-template <typename CompType, typename SecondType, typename ThirdType, typename ForthType,
-    typename Runnable, typename ... Args>
-inline void ParseTypeAdvanced(Runnable &&runnable, Args && ... args)
-    noexcept(noexcept(std::declval<Runnable>().template Evaluate<CompType, SecondType,
-        ThirdType, ForthType>(args ...)))
+template <typename CompType, typename SecondType, typename ThirdType, typename ForthType, typename Runnable,
+          typename... Args>
+inline void ParseTypeAdvanced(Runnable &&runnable, Args &&...args) noexcept(
+    noexcept(std::declval<Runnable>().template Evaluate<CompType, SecondType, ThirdType, ForthType>(args...)))
 {
-    runnable.template Evaluate<CompType, SecondType, ThirdType, ForthType>(args ...);
+    runnable.template Evaluate<CompType, SecondType, ThirdType, ForthType>(args...);
 }
 
-template <bool HasFP16CompType, typename Runnable, typename ... Args>
+template <bool HasFP16CompType, typename Runnable, typename... Args>
 inline void ParseTypeAdvanced(Element::TypeT compType, Element::TypeT secondType, Element::TypeT thirdType,
-    Element::TypeT forthType, Runnable &&runnable, Args && ... args) noexcept(false)
+                              Element::TypeT forthType, Runnable &&runnable, Args &&...args) noexcept(false)
 {
     Unused(compType, secondType, thirdType);
     using CompType = float;
     if (forthType == Element::TypeT::F32) {
-        ParseTypeAdvanced<CompType, float, float, float>(std::forward<Runnable>(runnable),
-            std::forward<Args>(args) ...);
+        ParseTypeAdvanced<CompType, float, float, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
     } else if (forthType == Element::TypeT::F16) {
         if constexpr (HasFP16CompType) {
             ParseTypeAdvanced<__fp16, __fp16, __fp16, __fp16>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                              std::forward<Args>(args)...);
         } else {
             ParseTypeAdvanced<CompType, __fp16, __fp16, __fp16>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                                std::forward<Args>(args)...);
         }
     } else if (forthType == Element::TypeT::BF16) {
         ParseTypeAdvanced<CompType, __bf16, __bf16, __bf16>(std::forward<Runnable>(runnable),
-            std::forward<Args>(args) ...);
+                                                            std::forward<Args>(args)...);
     } else if (forthType == Element::TypeT::S8) {
         ParseTypeAdvanced<CompType, std::int8_t, std::int8_t, std::int8_t>(std::forward<Runnable>(runnable),
-            std::forward<Args>(args) ...);
+                                                                           std::forward<Args>(args)...);
     } else if (forthType == Element::TypeT::U8) {
         ParseTypeAdvanced<CompType, std::uint8_t, std::uint8_t, std::uint8_t>(std::forward<Runnable>(runnable),
-            std::forward<Args>(args) ...);
+                                                                              std::forward<Args>(args)...);
     } else if (forthType == Element::TypeT::S32) {
         ParseTypeAdvanced<CompType, std::int32_t, std::int32_t, std::int32_t>(std::forward<Runnable>(runnable),
-            std::forward<Args>(args) ...);
+                                                                              std::forward<Args>(args)...);
     } else {
-        throw Service::Unsupported {"Unsupported data type"};
+        throw Service::Unsupported{"Unsupported data type"};
     }
 }
 
 template <typename T, typename P>
-constexpr bool OneOf(const T& val, const P& item)
+constexpr bool OneOf(const T &val, const P &item)
 {
     return val == item;
 }
 template <typename T, typename P, typename... Args>
-constexpr bool OneOf(const T& val, const P& item, const Args& ... itemOthers)
+constexpr bool OneOf(const T &val, const P &item, const Args &...itemOthers)
 {
     return val == item || OneOf(val, itemOthers...);
 }
 
-} // Service
+} // namespace Service
 
-} // KuDNN
+} // namespace KuDNN
 
 #endif // KUDNN_INTERNAL_FUNCS

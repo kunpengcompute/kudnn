@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -27,13 +27,15 @@ uint32_t CodeGenerator::PCrelAddrEnc(uint32_t op, const XReg &rd, int64_t labelO
     uint32_t immhi = Field(imm, BITFIELD_20, 2);
     VerifyIncRange(rd.GetIdx(), 0, SP_IDX - 1, Err::ILLEGAL_REG_IDX);
     VerifyIncRange(imm, -1 * (1 << BITFIELD_20), Ones(BITFIELD_20), Err::ILLEGAL_IMM_RANGE, true);
-    return Concat({LeftShift(op, BITFIELD_31), LeftShift(immlo, BITFIELD_29),
-        LeftShift(0x10, BITFIELD_24), LeftShift(immhi, BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
+    return Concat({LeftShift(op, BITFIELD_31), LeftShift(immlo, BITFIELD_29), LeftShift(0x10, BITFIELD_24),
+                   LeftShift(immhi, BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
 }
 
 void CodeGenerator::PCrelAddr(uint32_t op, const XReg &rd, const Label &label)
 {
-    auto encFunc = [this, op, rd](int64_t labelOffset) { return PCrelAddrEnc(op, rd, labelOffset); };
+    auto encFunc = [this, op, rd](int64_t labelOffset) {
+        return PCrelAddrEnc(op, rd, labelOffset);
+    };
     JmpLabel jmpL = JmpLabel(encFunc, size_);
     uint32_t code = PCrelAddrEnc(op, rd, GenLabelOffset(label, jmpL));
     WriteData(code);
@@ -50,8 +52,8 @@ void CodeGenerator::AddSubImm(uint32_t op, uint32_t s, const RReg &rd, const RRe
     VerifyIncList(sh, {0, BITFIELD_12}, Err::ILLEGAL_CONST_VALUE);
 
     uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(op, BITFIELD_30), LeftShift(s, BITFIELD_29),
-        LeftShift(0x11, BITFIELD_24), LeftShift(shF, BITFIELD_22),
-        LeftShift(imm12, BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
+                            LeftShift(0x11, BITFIELD_24), LeftShift(shF, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -68,8 +70,9 @@ void CodeGenerator::LogicalImm(uint32_t opc, const RReg &rd, const RReg &rn, uin
         VerifyIncRange(rn.GetIdx(), 0, SP_IDX - 1, Err::ILLEGAL_REG_IDX);
     }
 
-    uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_29), LeftShift(0x24, BITFIELD_23),
-        LeftShift(nImmrImms, BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
+    uint32_t code =
+        Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_29), LeftShift(0x24, BITFIELD_23),
+                LeftShift(nImmrImms, BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -89,7 +92,7 @@ void CodeGenerator::MvWideImm(uint32_t opc, const RReg &rd, uint32_t imm, uint32
     VerifyIncRange(rd.GetIdx(), 0, SP_IDX - 1, Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_29), LeftShift(0x25, BITFIELD_23),
-        LeftShift(hw, BITFIELD_21), LeftShift(imm16, BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
+                            LeftShift(hw, BITFIELD_21), LeftShift(imm16, BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -110,8 +113,8 @@ void CodeGenerator::MvImm(const RReg &rd, uint64_t imm)
 
     if (imm == 0) {
         MvWideImm(BITFIELD_2, rd, 0, 0);
-    } else if ((rdBit == BITFIELD_64 && imm == ~uint64_t(0)) || (rdBit == BITFIELD_32 &&
-        ((imm & uint64_t(0xffffffff)) == uint64_t(0xffffffff)))) {
+    } else if ((rdBit == BITFIELD_64 && imm == ~uint64_t(0)) ||
+               (rdBit == BITFIELD_32 && ((imm & uint64_t(0xffffffff)) == uint64_t(0xffffffff)))) {
         MvWideImm(0, rd, 0, 0);
     } else if (CheckMovAliasMovz(imm, rdBit, hw, fieldCount, imm16, validField)) {
         MvWideImm(BITFIELD_2, rd, imm16, hw << BITFIELD_4);
@@ -125,7 +128,7 @@ void CodeGenerator::MvImm(const RReg &rd, uint64_t imm)
 }
 
 bool CodeGenerator::CheckMovAliasMovz(uint64_t imm, uint32_t rdBit, uint32_t &hw, uint32_t &fieldCount, uint32_t &imm16,
-    uint32_t (&validField)[VAL_4])
+                                      uint32_t (&validField)[VAL_4])
 {
     for (uint32_t i = 0; i < rdBit / BITFIELD_16; ++i) {
         if (Field(imm, BITFIELD_15 + i * BITFIELD_16, i * BITFIELD_16)) {
@@ -138,8 +141,8 @@ bool CodeGenerator::CheckMovAliasMovz(uint64_t imm, uint32_t rdBit, uint32_t &hw
     return fieldCount < VAL_2 && !(imm16 == 0 && hw != 0);
 }
 
-bool CodeGenerator::CheckMovAliasMovn(uint64_t invImm, uint32_t rdBit, uint32_t &invHw,
-    uint32_t &invFieldCount, uint32_t &invImm16)
+bool CodeGenerator::CheckMovAliasMovn(uint64_t invImm, uint32_t rdBit, uint32_t &invHw, uint32_t &invFieldCount,
+                                      uint32_t &invImm16)
 {
     for (uint32_t i = 0; i < rdBit / BITFIELD_16; ++i) {
         if (Field(invImm, BITFIELD_15 + i * BITFIELD_16, i * BITFIELD_16)) {
@@ -149,8 +152,8 @@ bool CodeGenerator::CheckMovAliasMovn(uint64_t invImm, uint32_t rdBit, uint32_t 
         }
     }
     return invFieldCount == 1 &&
-        ((!(invImm16 == 0 && invHw != 0) && invImm16 != Ones(BITFIELD_16) && rdBit == BITFIELD_32) ||
-        (!(invImm16 == 0 && invHw != 0) && rdBit == BITFIELD_64));
+           ((!(invImm16 == 0 && invHw != 0) && invImm16 != Ones(BITFIELD_16) && rdBit == BITFIELD_32) ||
+            (!(invImm16 == 0 && invHw != 0) && rdBit == BITFIELD_64));
 }
 
 bool CodeGenerator::CheckMovAliasOrr(uint64_t imm, uint32_t rdBit)
@@ -193,8 +196,8 @@ void CodeGenerator::Bitfield(uint32_t opc, const RReg &rd, const RReg &rn, uint3
     VerifyIncRange(imms, 0, rd.GetBit() - 1, Err::ILLEGAL_IMM_RANGE);
 
     uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_29), LeftShift(0x26, BITFIELD_23),
-        LeftShift(n, BITFIELD_22), LeftShift(immr, BITFIELD_16), LeftShift(imms, BITFIELD_10),
-        LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
+                            LeftShift(n, BITFIELD_22), LeftShift(immr, BITFIELD_16), LeftShift(imms, BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -219,8 +222,8 @@ void CodeGenerator::CondBrImm(Cond cond, const Label &label)
 // Hints
 void CodeGenerator::Hints(uint32_t crm, uint32_t op2)
 {
-    uint32_t code = Concat({LeftShift(0xd5032, BITFIELD_12), LeftShift(crm, BITFIELD_8), LeftShift(op2, BITFIELD_5),
-        LeftShift(0x1f, 0)});
+    uint32_t code = Concat(
+        {LeftShift(0xd5032, BITFIELD_12), LeftShift(crm, BITFIELD_8), LeftShift(op2, BITFIELD_5), LeftShift(0x1f, 0)});
     WriteData(code);
 }
 
@@ -231,8 +234,8 @@ void CodeGenerator::BarriersOpt(uint32_t op2, BarOpt opt, uint32_t rt)
         VerifyIncList(static_cast<uint64_t>(opt), {static_cast<uint64_t>(BarOpt::SY)}, Err::ILLEGAL_BARRIER_OPT);
     }
 
-    uint32_t code = Concat({LeftShift(0xd5033, BITFIELD_12),
-        LeftShift(static_cast<uint32_t>(opt), BITFIELD_8), LeftShift(op2, BITFIELD_5), LeftShift(rt, 0)});
+    uint32_t code = Concat({LeftShift(0xd5033, BITFIELD_12), LeftShift(static_cast<uint32_t>(opt), BITFIELD_8),
+                            LeftShift(op2, BITFIELD_5), LeftShift(rt, 0)});
     WriteData(code);
 }
 
@@ -240,14 +243,14 @@ void CodeGenerator::BarriersOpt(uint32_t op2, BarOpt opt, uint32_t rt)
 void CodeGenerator::UncondBrNoReg(uint32_t opc, uint32_t op2, uint32_t op3, uint32_t rn, uint32_t op4)
 {
     uint32_t code = Concat({LeftShift(0x6b, BITFIELD_25), LeftShift(opc, BITFIELD_21), LeftShift(op2, BITFIELD_16),
-        LeftShift(op3, BITFIELD_10), LeftShift(rn, BITFIELD_5), LeftShift(op4, 0)});
+                            LeftShift(op3, BITFIELD_10), LeftShift(rn, BITFIELD_5), LeftShift(op4, 0)});
     WriteData(code);
 }
 
 void CodeGenerator::UncondBr1Reg(uint32_t opc, uint32_t op2, uint32_t op3, const RReg &rn, uint32_t op4)
 {
     uint32_t code = Concat({LeftShift(0x6b, BITFIELD_25), LeftShift(opc, BITFIELD_21), LeftShift(op2, BITFIELD_16),
-        LeftShift(op3, BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(op4, 0)});
+                            LeftShift(op3, BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(op4, 0)});
     WriteData(code);
 }
 
@@ -276,12 +279,14 @@ uint32_t CodeGenerator::CompareBrEnc(uint32_t op, const RReg &rt, int64_t labelO
     uint32_t sf = GenSf(rt);
     uint32_t imm19 = (static_cast<uint64_t>(labelOffset) >> BITFIELD_2) & Ones(BITFIELD_19);
     return Concat({LeftShift(sf, BITFIELD_31), LeftShift(0x1a, BITFIELD_25), LeftShift(op, BITFIELD_24),
-        LeftShift(imm19, BITFIELD_5), LeftShift(rt.GetIdx(), 0)});
+                   LeftShift(imm19, BITFIELD_5), LeftShift(rt.GetIdx(), 0)});
 }
 
 void CodeGenerator::CompareBr(uint32_t op, const RReg &rt, const Label &label)
 {
-    auto encFunc = [this, op, rt](int64_t labelOffset) {return CompareBrEnc(op, rt, labelOffset);};
+    auto encFunc = [this, op, rt](int64_t labelOffset) {
+        return CompareBrEnc(op, rt, labelOffset);
+    };
     JmpLabel jmpL = JmpLabel(encFunc, size_);
     uint32_t code = CompareBrEnc(op, rt, GenLabelOffset(label, jmpL));
     WriteData(code);
@@ -303,9 +308,9 @@ void CodeGenerator::StExclusive(uint32_t size, uint32_t o0, const WReg ws, const
     VerifyIncRange(rt.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
     VerifyIncRange(ws.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x8, BITFIELD_24), LeftShift(o2, BITFIELD_23),
-        LeftShift(l, BITFIELD_22), LeftShift(o1, BITFIELD_21), LeftShift(ws.GetIdx(), BITFIELD_16),
-        LeftShift(o0, BITFIELD_15), LeftShift(0x1f, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(rt.GetIdx(), 0)});
+                            LeftShift(l, BITFIELD_22), LeftShift(o1, BITFIELD_21), LeftShift(ws.GetIdx(), BITFIELD_16),
+                            LeftShift(o0, BITFIELD_15), LeftShift(0x1f, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -320,20 +325,21 @@ void CodeGenerator::LdExclusive(uint32_t size, uint32_t o0, const RReg &rt, cons
     VerifyIncList(adr.GetImm(), {0}, Err::ILLEGAL_IMM_VALUE);
 
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x8, BITFIELD_24), LeftShift(o2, BITFIELD_23),
-        LeftShift(l, BITFIELD_22), LeftShift(o1, BITFIELD_21), LeftShift(0x1f, BITFIELD_16), LeftShift(o0, BITFIELD_15),
-        LeftShift(0x1f, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), 0)});
+                            LeftShift(l, BITFIELD_22), LeftShift(o1, BITFIELD_21), LeftShift(0x1f, BITFIELD_16),
+                            LeftShift(o0, BITFIELD_15), LeftShift(0x1f, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), 0)});
     WriteData(code);
 }
 
 // Load/store pair (post-indexed)
-void CodeGenerator::LdStRegPairPostImm(
-    uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrPostImm &adr)
+void CodeGenerator::LdStRegPairPostImm(uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2,
+                                       const AdrPostImm &adr)
 {
     int32_t imm = adr.GetImm();
     int32_t times = (opc == 0x2) ? OFFSET_TWO : OFFSET_ONE;
 
     VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
+                   Err::ILLEGAL_IMM_RANGE, true);
     VerifyCond(imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t imm7 = (static_cast<uint32_t>(imm) >> (times + OFFSET_ONE)) & Ones(IMM7_BIT_LENGTH);
@@ -343,9 +349,9 @@ void CodeGenerator::LdStRegPairPostImm(
     VerifyIncRange(rt2.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(opc, BITFIELD_30), LeftShift(0x5, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(0x1, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
-        LeftShift(rt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(rt1.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x1, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
+                            LeftShift(rt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
+                            LeftShift(rt1.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -356,8 +362,8 @@ void CodeGenerator::LdStRegPair(uint32_t opc, uint32_t l, const RReg &rt1, const
     int32_t times = (opc == 0x2) ? OFFSET_TWO : OFFSET_ONE;
 
     VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
-    VerifyCond(imm, [=](uint64_t x) {return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
+                   Err::ILLEGAL_IMM_RANGE, true);
+    VerifyCond(imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t imm7 = (static_cast<uint32_t>(imm) >> (times + OFFSET_ONE)) & Ones(IMM7_BIT_LENGTH);
     uint32_t v = 0x0;
@@ -366,9 +372,9 @@ void CodeGenerator::LdStRegPair(uint32_t opc, uint32_t l, const RReg &rt1, const
     VerifyIncRange(rt2.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(opc, BITFIELD_30), LeftShift(0x5, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(0x2, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
-        LeftShift(rt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(rt1.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x2, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
+                            LeftShift(rt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
+                            LeftShift(rt1.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -379,7 +385,7 @@ void CodeGenerator::LdStRegPairPre(uint32_t opc, uint32_t l, const RReg &rt1, co
     int32_t times = (opc == 0x2) ? OFFSET_TWO : OFFSET_ONE;
 
     VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
+                   Err::ILLEGAL_IMM_RANGE, true);
     VerifyCond(imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t imm7 = (static_cast<uint32_t>(imm) >> (times + OFFSET_ONE)) & Ones(IMM7_BIT_LENGTH);
@@ -389,9 +395,9 @@ void CodeGenerator::LdStRegPairPre(uint32_t opc, uint32_t l, const RReg &rt1, co
     VerifyIncRange(rt2.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(opc, BITFIELD_30), LeftShift(0x5, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(0x3, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
-        LeftShift(rt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(rt1.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x3, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
+                            LeftShift(rt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
+                            LeftShift(rt1.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -406,8 +412,8 @@ void CodeGenerator::LdStRegUnsImm(uint32_t size, uint32_t opc, const RReg &rt, c
 
     uint32_t v = 0x0;
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(opc, BITFIELD_22), LeftShift(imm9, BITFIELD_12), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(rt.GetIdx(), BITFIELD_0)});
+                            LeftShift(opc, BITFIELD_22), LeftShift(imm9, BITFIELD_12),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -422,8 +428,8 @@ void CodeGenerator::LdStRegPostImm(uint32_t size, uint32_t opc, const RReg &rt, 
 
     uint32_t v = 0x0;
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(opc, BITFIELD_22), LeftShift(imm9, BITFIELD_12), LeftShift(0x1, BITFIELD_10),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
+                            LeftShift(opc, BITFIELD_22), LeftShift(imm9, BITFIELD_12), LeftShift(0x1, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -438,18 +444,19 @@ void CodeGenerator::LdStRegPre(uint32_t size, uint32_t opc, const RReg &rt, cons
 
     uint32_t v = 0x0;
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(opc, BITFIELD_22), LeftShift(imm9, BITFIELD_12), LeftShift(0x3, BITFIELD_10),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
+                            LeftShift(opc, BITFIELD_22), LeftShift(imm9, BITFIELD_12), LeftShift(0x3, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 void CodeGenerator::AtomicMemOp(uint32_t size, uint32_t v, uint32_t a, uint32_t r, uint32_t o3, uint32_t opc,
-    const RReg &rs, const RReg &rt, const AdrNoOfs &adr)
+                                const RReg &rs, const RReg &rt, const AdrNoOfs &adr)
 {
-    uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(a, BITFIELD_23), LeftShift(r, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
-        LeftShift(rs.GetIdx(), BITFIELD_16), LeftShift(o3, BITFIELD_15), LeftShift(opc, BITFIELD_12),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(v, BITFIELD_26),
+                LeftShift(a, BITFIELD_23), LeftShift(r, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
+                LeftShift(rs.GetIdx(), BITFIELD_16), LeftShift(o3, BITFIELD_15), LeftShift(opc, BITFIELD_12),
+                LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -461,12 +468,12 @@ void CodeGenerator::LdStRegUnImm(uint32_t size, uint32_t opc, const RReg &rt, co
     uint32_t imm12 = (imm >> size) & Ones(IMM12_BIT_LENGTH);
 
     VerifyIncRange(imm, 0, IMM13_RANGE_HIGH * times, Err::ILLEGAL_IMM_RANGE);
-    VerifyCond(imm, [=](uint64_t x) {return ((x & Ones(size)) == 0);}, Err::ILLEGAL_IMM_COND);
+    VerifyCond(imm, [=](uint64_t x) { return ((x & Ones(size)) == 0); }, Err::ILLEGAL_IMM_COND);
     VerifyIncRange(rt.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(0x0, BITFIELD_26),
-        LeftShift(0x1, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x1, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(rt.GetIdx(), BITFIELD_0)});
 
     WriteData(code);
 }
@@ -479,11 +486,12 @@ void CodeGenerator::PfRegImm(Prfop prfop, const AdrUimm &adr)
     uint32_t imm12 = (imm >> OFFSET_THREE) & Ones(IMM12_BIT_LENGTH);
 
     VerifyIncRange(imm, 0, IMM13_RANGE_HIGH * times, Err::ILLEGAL_IMM_RANGE);
-    VerifyCond(imm, [=](uint64_t x) {return ((x & Ones(IMM3_BIT_LENGTH)) == 0);}, Err::ILLEGAL_IMM_COND);
+    VerifyCond(imm, [=](uint64_t x) { return ((x & Ones(IMM3_BIT_LENGTH)) == 0); }, Err::ILLEGAL_IMM_COND);
 
-    uint32_t code = Concat({LeftShift(0x3, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(0x0, BITFIELD_26),
-        LeftShift(0x1, BITFIELD_24), LeftShift(0x2, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(static_cast<uint32_t>(prfop), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(0x3, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(0x0, BITFIELD_26),
+                LeftShift(0x1, BITFIELD_24), LeftShift(0x2, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
+                LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(static_cast<uint32_t>(prfop), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -493,33 +501,32 @@ void CodeGenerator::DataProc2Src(uint32_t opcode, const RReg &rd, const RReg &rn
     uint32_t sf = GenSf(rm);
     uint32_t s = 0;
 
-    VerifyCond(SP_IDX,
-        [=](uint64_t x) {
-            return rd.GetIdx() < x || rn.GetIdx() < x || rm.GetIdx() < x;
-        },
+    VerifyCond(
+        SP_IDX, [=](uint64_t x) { return rd.GetIdx() < x || rn.GetIdx() < x || rm.GetIdx() < x; },
         Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(s, BITFIELD_29), LeftShift(0xd6, BITFIELD_21),
-        LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(opcode, BITFIELD_10),
-        LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
+                            LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(opcode, BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Logical (shifted register)
-void CodeGenerator::LogicalShiftReg(
-    uint32_t opc, uint32_t n, const RReg &rd, const RReg &rn, const RReg &rm, ShMod shmod, uint32_t sh)
+void CodeGenerator::LogicalShiftReg(uint32_t opc, uint32_t n, const RReg &rd, const RReg &rn, const RReg &rm,
+                                    ShMod shmod, uint32_t sh)
 {
     uint32_t sf = GenSf(rd);
     uint32_t imm6 = sh & Ones(IMM6_BIT_LENGTH);
 
     VerifyIncRange(sh, 0, (VectorComputation_ELT_BITLEN_S << sf) - OFFSET_ONE, Err::ILLEGAL_CONST_RANGE);
-    VerifyCond(SP_IDX, [=](uint64_t x) {return rd.GetIdx() < x || rn.GetIdx() < x || rm.GetIdx() < x;},
+    VerifyCond(
+        SP_IDX, [=](uint64_t x) { return rd.GetIdx() < x || rn.GetIdx() < x || rm.GetIdx() < x; },
         Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_29), LeftShift(0xa, BITFIELD_24),
-        LeftShift(static_cast<uint32_t>(shmod), BITFIELD_22), LeftShift(n, BITFIELD_21),
-        LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(imm6, BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5),
-        LeftShift(rd.GetIdx(), BITFIELD_0)});
+                            LeftShift(static_cast<uint32_t>(shmod), BITFIELD_22), LeftShift(n, BITFIELD_21),
+                            LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(imm6, BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -536,8 +543,8 @@ void CodeGenerator::MvReg(const RReg &rd, const RReg &rn)
 }
 
 // Add/subtract (shifted register)
-void CodeGenerator::AddSubShiftReg(
-    uint32_t opc, uint32_t s, const RReg &rd, const RReg &rn, const RReg &rm, ShMod shmod, uint32_t sh, bool alias)
+void CodeGenerator::AddSubShiftReg(uint32_t opc, uint32_t s, const RReg &rd, const RReg &rn, const RReg &rm,
+                                   ShMod shmod, uint32_t sh, bool alias)
 {
     uint32_t rdSp = (rd.GetIdx() == SP_IDX);
     uint32_t rnSp = (rn.GetIdx() == SP_IDX);
@@ -560,18 +567,18 @@ void CodeGenerator::AddSubShiftReg(
     if (!(alias && opc == 0x1)) {
         VerifyIncRange(rn.GetIdx(), 0, SP_IDX - OFFSET_ONE, Err::ILLEGAL_REG_IDX);
     }
-    
+
     VerifyIncRange(rm.GetIdx(), 0, SP_IDX - OFFSET_ONE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_30), LeftShift(s, BITFIELD_29),
-        LeftShift(0xb, BITFIELD_24), LeftShift(static_cast<uint32_t>(shmod), BITFIELD_22),
-        LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(imm6, BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5),
-        LeftShift(rd.GetIdx(), BITFIELD_0)});
+                            LeftShift(0xb, BITFIELD_24), LeftShift(static_cast<uint32_t>(shmod), BITFIELD_22),
+                            LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(imm6, BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Add/subtract (extended register)
-void CodeGenerator::AddSubExtReg(
-    uint32_t opc, uint32_t s, const RReg &rd, const RReg &rn, const RReg &rm, ExtMod extmod, uint32_t sh)
+void CodeGenerator::AddSubExtReg(uint32_t opc, uint32_t s, const RReg &rd, const RReg &rn, const RReg &rm,
+                                 ExtMod extmod, uint32_t sh)
 {
     uint32_t sf = GenSf(rd);
     uint32_t opt = 0;
@@ -580,28 +587,29 @@ void CodeGenerator::AddSubExtReg(
     VerifyIncRange(sh, 0, UIMM2_RANGE_HIGH, Err::ILLEGAL_CONST_RANGE);
 
     uint32_t option = (extmod == ExtMod::EXT_LSL && sf == 0) ? 2 :
-        (extmod == ExtMod::EXT_LSL && sf == 1) ? 3 : static_cast<int>(extmod);
-    uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_30), LeftShift(s, BITFIELD_29),
-        LeftShift(0xb, BITFIELD_24), LeftShift(opt, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
-        LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(option, BITFIELD_13), LeftShift(imm3, BITFIELD_10),
-        LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
+                      (extmod == ExtMod::EXT_LSL && sf == 1) ? 3 :
+                                                               static_cast<int>(extmod);
+    uint32_t code =
+        Concat({LeftShift(sf, BITFIELD_31), LeftShift(opc, BITFIELD_30), LeftShift(s, BITFIELD_29),
+                LeftShift(0xb, BITFIELD_24), LeftShift(opt, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
+                LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(option, BITFIELD_13), LeftShift(imm3, BITFIELD_10),
+                LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Conditional select
-void CodeGenerator::DataProc3Reg(
-    uint32_t op54, uint32_t op31, uint32_t o0, const RReg &rd, const RReg &rn, const RReg &rm, const RReg &ra)
+void CodeGenerator::DataProc3Reg(uint32_t op54, uint32_t op31, uint32_t o0, const RReg &rd, const RReg &rn,
+                                 const RReg &rm, const RReg &ra)
 {
     uint32_t sf = GenSf(rd);
-    VerifyCond(SP_IDX,
-        [=](uint64_t x) {
-            return rd.GetIdx() < x || rn.GetIdx() < x || rm.GetIdx() < x || ra.GetIdx() < x;
-        },
+    VerifyCond(
+        SP_IDX, [=](uint64_t x) { return rd.GetIdx() < x || rn.GetIdx() < x || rm.GetIdx() < x || ra.GetIdx() < x; },
         Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(sf, BITFIELD_31), LeftShift(op54, BITFIELD_29), LeftShift(0x1b, BITFIELD_24),
-        LeftShift(op31, BITFIELD_21), LeftShift(rm.GetIdx(), BITFIELD_16), LeftShift(o0, BITFIELD_15),
-        LeftShift(ra.GetIdx(), BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
+                            LeftShift(op31, BITFIELD_21), LeftShift(rm.GetIdx(), BITFIELD_16),
+                            LeftShift(o0, BITFIELD_15), LeftShift(ra.GetIdx(), BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -1015,4 +1023,4 @@ void CodeGenerator::BFirst(const Label &label)
     Bmi(label);
 }
 
-} // ARMCG
+} // namespace ARMCG
