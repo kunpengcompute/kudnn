@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,21 +16,16 @@ namespace KuDNN {
 namespace Detail {
 namespace LNorm {
 
-template
-void EvaluateScaleShiftCrossAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
-    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance,
-    const OUT_TYPE *diffDst, SCALE_SHIFT_TYPE *diffScale,
-    SCALE_SHIFT_TYPE *diffShift, float *bufScale, float *bufShift,  float eps, NormalizationFlags flags,
-    SizeType axisSizeConst, SizeType innerSize) noexcept;
+template void EvaluateScaleShiftCrossAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance, const OUT_TYPE *diffDst,
+    SCALE_SHIFT_TYPE *diffScale, SCALE_SHIFT_TYPE *diffShift, float *bufScale, float *bufShift, float eps,
+    NormalizationFlags flags, SizeType axisSizeConst, SizeType innerSize) noexcept;
 
+template void EvaluateCrossAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance, const OUT_TYPE *diffDst,
+    const SCALE_SHIFT_TYPE *scale, IN_TYPE *diffSrc, float eps, NormalizationFlags flags, SizeType axisSize,
+    SizeType innerSize) noexcept;
 
-template
-void EvaluateCrossAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
-    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance,
-    const OUT_TYPE *diffDst, const SCALE_SHIFT_TYPE *scale, IN_TYPE *diffSrc,
-    float eps, NormalizationFlags flags,
-    SizeType axisSize, SizeType innerSize) noexcept;
-
-} // LNorm
-} // Detail
-} // KuDNN
+} // namespace LNorm
+} // namespace Detail
+} // namespace KuDNN

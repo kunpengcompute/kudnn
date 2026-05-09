@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
- 
+
 #include "kernels/vml/vml_sve_base.h"
 #define VML_VectorComputation_UNFOLD_N 4
 #include "kernels/vml/common_macro.h"
@@ -46,7 +46,8 @@ void ReluDstSveBWDF16(const int64_t len, const float alpha, const __fp16 *src, c
     int64_t loopReluDsth = svcnth();
     svfloat32_t va = svdup_n_f32(alpha);
 
-    for (; i <= len - loopReluDsth * VML_VectorComputation_UNFOLD_N; i += loopReluDsth * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopReluDsth * VML_VectorComputation_UNFOLD_N;
+         i += loopReluDsth * VML_VectorComputation_UNFOLD_N) {
         ReluMainKernelBwdF16(va, src + i, dd + i, ds + i, loopReluDsth);
     }
     for (; i < len; i += loopReluDsth) {

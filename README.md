@@ -198,7 +198,7 @@ kuDNN/
 │  ├── build_kudnn.sh              # kudnn编译脚本
 │  ├── pre_env_kudnn_compile.sh    # 测试程序依赖库Googletest编译脚本
 |  └── pre_env_kudnn.sh            # 测试程序依赖库Googletest下载和编译脚本
-├── src/dnn/                        
+├── src/dnn/
 │  ├── include/                  # 头文件
 │  └── src/                      # kudnn库源码
 └── test/dnn/llt/gtest

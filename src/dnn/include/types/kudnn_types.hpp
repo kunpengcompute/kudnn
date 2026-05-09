@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,7 +10,6 @@
  * See the Mulan PSL v2 for more details.
  */
 
-
 #ifndef KUDNN_TYPES_HPP
 #define KUDNN_TYPES_HPP
 
@@ -20,6 +19,6 @@ struct Type;
 struct Shape;
 struct TensorInfo;
 
-} // KuDNN
+} // namespace KuDNN
 
 #endif // KUDNN_TYPES_HPP

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -118,7 +118,8 @@ static void KplVmlVhLnLaSveMainN(const __fp16 *src, __fp16 *dst, int step)
     VML_VectorComputation_DECLARE(svfloat16_t, xAbsScale);
     VML_VectorComputation_DECLARE(svfloat16_t, r);
     VML_VectorComputation_FUNC_PG_N2_2PARA(uxSubLnfOffsetMant, svand_n_u16_x, pg, uxSubLnfOffset, FP16_MANTISSA_MASK);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(uxAbsScale, svadd_u16_x, pg, uxSubLnfOffsetMant, VectorComputation_VHLN_OFFSET);
+    VML_VectorComputation_FUNC_PG_N2_2PARA(uxAbsScale, svadd_u16_x, pg, uxSubLnfOffsetMant,
+                                           VectorComputation_VHLN_OFFSET);
     VML_VectorComputation_FUNC_NOPG_1PARA(xAbsScale, svreinterpret_f16_u16, uxAbsScale);
     VML_VectorComputation_FUNC_PG_N2_2PARA(r, svsub_f16_x, pg, xAbsScale, VML_VectorComputation_F16_ONE);
 
@@ -126,15 +127,19 @@ static void KplVmlVhLnLaSveMainN(const __fp16 *src, __fp16 *dst, int step)
     VML_VectorComputation_DECLARE(svfloat16_t, poly);
     VML_VectorComputation_DECLARE(svfloat16_t, res);
     VML_VectorComputation_FUNC_PG_2PARA(r2, svmul_f16_x, pg, r, r);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f16_x, pg, VectorComputation_VHLN_C3, r, VectorComputation_VHLN_C4);
+    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f16_x, pg, VectorComputation_VHLN_C3, r,
+                                            VectorComputation_VHLN_C4);
     VML_VectorComputation_FUNC_PG_N1_3PARA(poly, svmla_f16_x, pg, VectorComputation_VHLN_C2, r, poly);
     VML_VectorComputation_FUNC_PG_3PARA(poly, svmla_f16_x, pg, r, r2, poly);
     VML_VectorComputation_FUNC_PG_N3_3PARA(res, svmla_f16_x, pg, poly, n, VectorComputation_VHLN_LN2LOW);
     VML_VectorComputation_FUNC_PG_N3_3PARA(res, svmla_f16_x, pg, res, n, VectorComputation_VHLN_LN2);
 
-    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f16, pgRetNan, svreinterpret_f16_u16(svdup_n_u16(F16_NAN_BIT)), res);
-    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f16, pgRetNegInf, svreinterpret_f16_u16(svdup_n_u16(F16_NEG_INF_BIT)), res);
-    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f16, pgRetInf, svreinterpret_f16_u16(svdup_n_u16(F16_INF_BIT)), res);
+    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f16, pgRetNan, svreinterpret_f16_u16(svdup_n_u16(F16_NAN_BIT)),
+                                             res);
+    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f16, pgRetNegInf,
+                                             svreinterpret_f16_u16(svdup_n_u16(F16_NEG_INF_BIT)), res);
+    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f16, pgRetInf, svreinterpret_f16_u16(svdup_n_u16(F16_INF_BIT)),
+                                             res);
     if (unlikely(svptest_any(pg, pgSp))) {
         for (int j = 0; j < step * VML_VectorComputation_UNFOLD_N; j++) {
             dst[j] = Logh(src[j]);
@@ -174,7 +179,6 @@ static void LnMainKernelBwdF16(const __fp16 *src, const __fp16 *dd, __fp16 *ds, 
     VML_VectorComputation_FUNC_PG_2PARA(ddX, svdiv_f16_x, pg, ddX, x);
     VML_VectorComputation_ST_STEP(svst1_f16, pg, ds, step, ddX);
 }
-
 
 void LnLaSveBWDF16(const int64_t len, const __fp16 *src, const __fp16 *dd, __fp16 *ds)
 {

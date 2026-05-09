@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -60,7 +60,7 @@ MatMul2DPartition GetMatMul2DPartitionBalanced(IntType m, IntType n, IntType nTh
     // minimize  work per thread in scope of available threads
     IntType maxTh = INT_MAX;
     for (IntType i = 1; i <= nThreads; ++i) {
-        IntType j =  nThreads / i;
+        IntType j = nThreads / i;
         IntType activeTh = CalculateThreadWorkSize(m, n, i, j);
         if (activeTh < maxTh) {
             maxTh = activeTh;
@@ -70,5 +70,5 @@ MatMul2DPartition GetMatMul2DPartitionBalanced(IntType m, IntType n, IntType nTh
     return tp;
 }
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN

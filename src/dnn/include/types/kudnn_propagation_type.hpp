@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_PROPAGATION_TYPE_HPP
 #define KUDNN_PROPAGATION_TYPE_HPP
@@ -28,6 +27,6 @@ enum class Propagation {
     FORWARD = FORWARD_TRAINING,
 };
 
-} // KuDNN
+} // namespace KuDNN
 
 #endif // KUDNN_PROPAGATION_TYPE_HPP

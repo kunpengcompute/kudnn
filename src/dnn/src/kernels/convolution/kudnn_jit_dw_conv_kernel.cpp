@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,13 +20,12 @@ inline int CalculateExtendedFilterSize(int filterSize, int dilation)
     return (filterSize - 1) * (dilation + 1) + 1;
 }
 
-inline int CalculateEndPadding(int startPadding, int dstSize, int srcSize,
-    int spatialStride, int dilatedFilterSize)
+inline int CalculateEndPadding(int startPadding, int dstSize, int srcSize, int spatialStride, int dilatedFilterSize)
 {
     return (dstSize - 1) * spatialStride + dilatedFilterSize - (srcSize + startPadding);
 }
 
-template<CPUISAT isa>
+template <CPUISAT isa>
 void KudnnJitDwConvFwdKernel<isa>::LoadSrc(int urChBlock, int urW)
 {
     const auto isDstLayoutNXC = IsDstLayoutNXC();
@@ -56,7 +55,7 @@ void KudnnJitDwConvFwdKernel<isa>::LoadSrc(int urChBlock, int urW)
     }
 }
 
-template<CPUISAT isa>
+template <CPUISAT isa>
 void KudnnJitDwConvFwdKernel<isa>::ApplyFilterUnrolled(int urChBlock, int urW, int padL, int padR)
 {
     int chBlock = jcp.chBlock;
@@ -115,7 +114,7 @@ void KudnnJitDwConvFwdKernel<isa>::ApplyFilterUnrolled(int urChBlock, int urW, i
     L(iterExitLabel);
 }
 
-template<CPUISAT isa>
+template <CPUISAT isa>
 void KudnnJitDwConvFwdKernel<isa>::StoreDst(int urChBlock, int urW)
 {
     const auto isDstLayoutNXC = IsDstLayoutNXC();
@@ -133,18 +132,15 @@ void KudnnJitDwConvFwdKernel<isa>::StoreDst(int urChBlock, int urW)
     }
 }
 
-template<CPUISAT isa>
+template <CPUISAT isa>
 void KudnnJitDwConvFwdKernel<isa>::ComputeLoop(int urW, int urChBlock, int padL, int padR)
 {
     const bool chLoop = urChBlock >= jcp.nbChBlocking;
-    const SizeType inpChStride =
-        static_cast<SizeType>(jcp.nbChBlocking) * jcp.chBlock * jcp.typeSizeIn;
+    const SizeType inpChStride = static_cast<SizeType>(jcp.nbChBlocking) * jcp.chBlock * jcp.typeSizeIn;
     const SizeType weiChStride =
         static_cast<SizeType>(jcp.nbChBlocking) * jcp.kh * jcp.kw * jcp.chBlock * jcp.typeSizeIn;
-    const SizeType outChStride =
-        static_cast<SizeType>(jcp.nbChBlocking) * jcp.chBlock * jcp.typeSizeOut;
-    const SizeType biaStride =
-        static_cast<SizeType>(jcp.nbChBlocking) * jcp.chBlock * jcp.typeSizeBia;
+    const SizeType outChStride = static_cast<SizeType>(jcp.nbChBlocking) * jcp.chBlock * jcp.typeSizeOut;
+    const SizeType biaStride = static_cast<SizeType>(jcp.nbChBlocking) * jcp.chBlock * jcp.typeSizeBia;
 
     auto compute = [&](int urCB) {
         if (jcp.isFusedConv) {
@@ -161,7 +157,7 @@ void KudnnJitDwConvFwdKernel<isa>::ComputeLoop(int urW, int urChBlock, int padL,
 
     if (chLoop) {
         const int chTail = jcp.nbCh % jcp.nbChBlocking;
-    
+
         Mov(regChBlockAux, regChBlock);
         Mov(regInpStack, regInp);
         Mov(regKerStack, regKer);

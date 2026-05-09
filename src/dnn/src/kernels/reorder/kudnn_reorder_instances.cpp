@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,11 +16,11 @@ namespace KuDNN {
 namespace Detail {
 namespace Reorder {
 
-template
-void EvaluateReorder<IN_TYPE, OUT_TYPE>(const Shape &start, const Shape &end, const IN_TYPE *typedSrc,
-    OUT_TYPE *typedDst, const Shape &reorderedStridesSrc, const Shape &reorderedStridesDst,
-    bool fastReorder, SizeType strideIn, SizeType strideOut) noexcept;
+template void EvaluateReorder<IN_TYPE, OUT_TYPE>(const Shape &start, const Shape &end, const IN_TYPE *typedSrc,
+                                                 OUT_TYPE *typedDst, const Shape &reorderedStridesSrc,
+                                                 const Shape &reorderedStridesDst, bool fastReorder, SizeType strideIn,
+                                                 SizeType strideOut) noexcept;
 
-} // Reorder
-} // Detail
-} // KuDNN
+} // namespace Reorder
+} // namespace Detail
+} // namespace KuDNN

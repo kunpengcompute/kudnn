@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -27,33 +27,32 @@
 #include "matmul_jit/MatrixComputation/kudnn_default_impl_fp16fp16f32f32.hpp"
 #endif // KUDNNL_920Pro
 
-
 namespace KuDNN {
 namespace Detail {
 
 static thread_local std::vector<std::shared_ptr<ImplGenerator<GemmInfo>>> g_implKinds = {
-    std::make_shared<MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::VectorComputation,
-        float, float, float, float>>>(),
+    std::make_shared<
+        MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::VectorComputation, float, float, float, float>>>(),
 #ifdef KUDNNL_920Pro
-    std::make_shared<MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation,
-        float, float, float, float>>>(),
-    std::make_shared<MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation,
-        std::int8_t, std::int8_t, std::int32_t, std::int32_t>>>(),
-    std::make_shared<MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation,
-        std::int8_t, std::uint8_t, std::int32_t, std::int32_t>>>(),
-    std::make_shared<MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation,
-        std::uint8_t, std::int8_t, std::int32_t, std::int32_t>>>(),
-    std::make_shared<MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation,
-        std::uint8_t, std::uint8_t, std::int32_t, std::int32_t>>>(),
-    std::make_shared<MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation,
-        __fp16, __fp16, float, float>>>()
+    std::make_shared<
+        MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, float, float, float, float>>>(),
+    std::make_shared<MatMulImplGenerator<
+        MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, std::int8_t, std::int8_t, std::int32_t, std::int32_t>>>(),
+    std::make_shared<MatMulImplGenerator<
+        MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, std::int8_t, std::uint8_t, std::int32_t, std::int32_t>>>(),
+    std::make_shared<MatMulImplGenerator<
+        MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, std::uint8_t, std::int8_t, std::int32_t, std::int32_t>>>(),
+    std::make_shared<MatMulImplGenerator<
+        MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, std::uint8_t, std::uint8_t, std::int32_t, std::int32_t>>>(),
+    std::make_shared<
+        MatMulImplGenerator<MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, __fp16, __fp16, float, float>>>()
 #endif // KUDNNL_920Pro
 };
 
 static thread_local SolutionHandler<GemmInfo> g_solutionHandler;
 
 template <>
-std::vector<std::shared_ptr<ImplGenerator<GemmInfo>>>& GetImplGeneratorList() noexcept
+std::vector<std::shared_ptr<ImplGenerator<GemmInfo>>> &GetImplGeneratorList() noexcept
 {
     VERBOSE_PRINT;
     return g_implKinds;
@@ -65,5 +64,5 @@ std::shared_ptr<ImplBase<GemmInfo>> FindSolution(const GemmInfo &task, IntType n
     return g_solutionHandler.Find(task, nThreads);
 }
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -28,8 +28,8 @@ void HardSigmoidLaSveFWDF32(const int64_t len, const float alpha, const float be
     }
 }
 
-void HardSigmoidLaSveBWDF32(const int64_t len, const float alpha, const float beta,
-    const float *src, const float *dd, float *ds)
+void HardSigmoidLaSveBWDF32(const int64_t len, const float alpha, const float beta, const float *src, const float *dd,
+                            float *ds)
 {
     int64_t i;
     int loopHardSigmoidf = svcntw();

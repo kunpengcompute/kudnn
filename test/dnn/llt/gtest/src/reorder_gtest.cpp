@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -40,7 +40,7 @@ static bool reorderFunc(const KuDNN::TensorInfo &srcTensor, const KuDNN::TensorI
     KuDNN::ReorderLayer reorderLayer(srcTensor, dstTensor);
 
     reorderLayer.Run(src, dst);
-    
+
     return true;
 }
 

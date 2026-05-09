@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -41,9 +41,9 @@ constexpr IntType UR_W_3 = 3;
 constexpr IntType UR_W_4 = 4;
 constexpr IntType UR_W_6 = 6;
 
-inline void KudnnJitConvKerPipeline(KudnnConvJitKerT ker, KuDNN::KudnnConvJitCallS &p,
-    const void *src, const void *dst, const void *filt, const void *bias,
-    int channel, int khPadding, int reduceWork, int loadWork)
+inline void KudnnJitConvKerPipeline(KudnnConvJitKerT ker, KuDNN::KudnnConvJitCallS &p, const void *src, const void *dst,
+                                    const void *filt, const void *bias, int channel, int khPadding, int reduceWork,
+                                    int loadWork)
 {
     p.src = p.srcPrf;
     p.srcPrf = src;
@@ -68,56 +68,49 @@ inline void KudnnJitConvKerPipeline(KudnnConvJitKerT ker, KuDNN::KudnnConvJitCal
     }
 }
 
-inline void KudnnJitConvKerPipelineOwThr(KudnnConvJitKerT ker,
-    KuDNN::KudnnConvJitCallS &p, const void *src, const void *dst,
-    const void *filt, const void *bias, int channel, int khPadding,
-    int owb, int reduceWork, int loadWork, int flags)
+inline void KudnnJitConvKerPipelineOwThr(KudnnConvJitKerT ker, KuDNN::KudnnConvJitCallS &p, const void *src,
+                                         const void *dst, const void *filt, const void *bias, int channel,
+                                         int khPadding, int owb, int reduceWork, int loadWork, int flags)
 {
     p.owb = p.owbPrf;
     p.owbPrf = owb;
     p.flags = p.flagsPrf;
     p.flagsPrf = flags;
-    KudnnJitConvKerPipeline(ker, p, src, dst, filt, bias, channel, khPadding,
-        reduceWork, loadWork);
+    KudnnJitConvKerPipeline(ker, p, src, dst, filt, bias, channel, khPadding, reduceWork, loadWork);
 }
 
-inline void KudnnJitSveConv3dKerPipeline(KudnnConvJitKerT ker,
-    KuDNN::KudnnConvJitCallS &p, const void *src, const void *dst, const void *filt,
-    const void *bias, int channel, int khPadding, int kdPadding, int reduceWork,
-    int loadWork)
+inline void KudnnJitSveConv3dKerPipeline(KudnnConvJitKerT ker, KuDNN::KudnnConvJitCallS &p, const void *src,
+                                         const void *dst, const void *filt, const void *bias, int channel,
+                                         int khPadding, int kdPadding, int reduceWork, int loadWork)
 {
     p.kdPadding = p.kdPaddingPrf;
     p.kdPaddingPrf = kdPadding;
-    KudnnJitConvKerPipeline(ker, p, src, dst, filt, bias, channel, khPadding,
-        reduceWork, loadWork);
+    KudnnJitConvKerPipeline(ker, p, src, dst, filt, bias, channel, khPadding, reduceWork, loadWork);
 }
 
 // The special case for the driver with ow-parallelization (FWD)
-inline void KudnnJitSveConv3dKerPipelineOwThr(KudnnConvJitKerT ker,
-    KuDNN::KudnnConvJitCallS &p, const void *src, const void *dst, const void *filt,
-    const void *bias, int channel, int khPadding, int kdPadding, int owb,
-    int reduceWork, int loadWork, int flags)
+inline void KudnnJitSveConv3dKerPipelineOwThr(KudnnConvJitKerT ker, KuDNN::KudnnConvJitCallS &p, const void *src,
+                                              const void *dst, const void *filt, const void *bias, int channel,
+                                              int khPadding, int kdPadding, int owb, int reduceWork, int loadWork,
+                                              int flags)
 {
     p.owb = p.owbPrf;
     p.owbPrf = owb;
     p.flags = p.flagsPrf;
     p.flagsPrf = flags;
-    KudnnJitSveConv3dKerPipeline(ker, p, src, dst, filt, bias, channel,
-        khPadding, kdPadding, reduceWork, loadWork);
+    KudnnJitSveConv3dKerPipeline(ker, p, src, dst, filt, bias, channel, khPadding, kdPadding, reduceWork, loadWork);
 }
 
-inline bool CheckDwConv(const TensorInfo &src, const TensorInfo &wei,
-    const TensorInfo &dst, int kCpuIsa)
+inline bool CheckDwConv(const TensorInfo &src, const TensorInfo &wei, const TensorInfo &dst, int kCpuIsa)
 {
-    if (src.GetType() != KuDNN::Element::TypeT::F32 || wei.GetType() != KuDNN::Element::TypeT::F32
-        || dst.GetType() != KuDNN::Element::TypeT::F32) {
+    if (src.GetType() != KuDNN::Element::TypeT::F32 || wei.GetType() != KuDNN::Element::TypeT::F32 ||
+        dst.GetType() != KuDNN::Element::TypeT::F32) {
         return false;
     }
     if (src.GetNumDims() != wei.GetNumDims() - 1) {
         return false;
     }
-    if (src.GetDims()[1] != wei.GetDims()[0] ||
-        dst.GetDims()[1] != wei.GetDims()[0]) {
+    if (src.GetDims()[1] != wei.GetDims()[0] || dst.GetDims()[1] != wei.GetDims()[0]) {
         return false;
     }
     // only support 2D case
@@ -213,8 +206,7 @@ constexpr T Pick(SizeType i, const T &x0, Args &&...args)
 }
 
 template <typename T, typename U, typename V>
-inline typename RemoveReference<U>::type ThisBlockSize(
-    const T offset, const U max, const V block_size)
+inline typename RemoveReference<U>::type ThisBlockSize(const T offset, const U max, const V block_size)
 {
     assert(offset < max);
     const T block_boundary = offset + block_size;
@@ -357,11 +349,9 @@ inline int CalculateExtendedFilterSize(int filterSize, int dilation)
     return (filterSize - 1) * (dilation + 1) + 1;
 }
 
-inline int CalculateEndPadding(int startPadding, int dstSize, int srcSize,
-    int spatialStride, int dilatedFilterSize)
+inline int CalculateEndPadding(int startPadding, int dstSize, int srcSize, int spatialStride, int dilatedFilterSize)
 {
-    return (dstSize - 1) * spatialStride + dilatedFilterSize
-            - (srcSize + startPadding);
+    return (dstSize - 1) * spatialStride + dilatedFilterSize - (srcSize + startPadding);
 }
 
 inline void PickLoopOrder(KuDNN::KudnnConvJitConfT &jcp)
@@ -369,72 +359,70 @@ inline void PickLoopOrder(KuDNN::KudnnConvJitConfT &jcp)
     auto w = (jcp.propKind == KuDNN::Propagation::BACKWARD_DATA) ? jcp.iw : jcp.ow;
     auto h = (jcp.propKind == KuDNN::Propagation::BACKWARD_DATA) ? jcp.ih : jcp.oh;
 
-    jcp.loopOrder = (w <= SMALL_SPATIAL && h <= SMALL_SPATIAL)
-                     ? KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN
-                     : KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW;
+    jcp.loopOrder = (w <= SMALL_SPATIAL && h <= SMALL_SPATIAL) ? KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN :
+                                                                 KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW;
 }
-}
+} // namespace
 
 namespace Detail {
 class ConvolutionJITFWDImpl final {
 public:
-    explicit ConvolutionJITFWDImpl(int isa, const TensorInfo &src, const TensorInfo &weights,
-        const TensorInfo &dst, const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL,
-        KuDNN::Shape dilates, KuDNN::Propagation prop, int nthreads, bool isDataLayoutNxc) noexcept(false)
+    explicit ConvolutionJITFWDImpl(int isa, const TensorInfo &src, const TensorInfo &weights, const TensorInfo &dst,
+                                   const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL,
+                                   KuDNN::Shape dilates, KuDNN::Propagation prop, int nthreads,
+                                   bool isDataLayoutNxc) noexcept(false)
     {
-        Service::ThrowOnStatus(ConvolutionJITFWD::ValidateInput(src, weights, dst, bias,
-            strides, dilates, paddingL, isa), "ConvolutionJIT layer");
-        InitConf(isa, src, weights, dst, bias, strides, paddingL, dilates,
-            prop, nthreads, isDataLayoutNxc);
+        Service::ThrowOnStatus(
+            ConvolutionJITFWD::ValidateInput(src, weights, dst, bias, strides, dilates, paddingL, isa),
+            "ConvolutionJIT layer");
+        InitConf(isa, src, weights, dst, bias, strides, paddingL, dilates, prop, nthreads, isDataLayoutNxc);
     }
 
-    explicit ConvolutionJITFWDImpl(const ConvolutionJITFWDImpl &other) noexcept(false)
-        : jcp_(other.jcp_) {}
+    explicit ConvolutionJITFWDImpl(const ConvolutionJITFWDImpl &other) noexcept(false) : jcp_(other.jcp_) {}
 
     explicit ConvolutionJITFWDImpl(ConvolutionJITFWDImpl &&) = delete;
 
-    ConvolutionJITFWDImpl& operator=(const ConvolutionJITFWDImpl &other) = delete;
+    ConvolutionJITFWDImpl &operator=(const ConvolutionJITFWDImpl &other) = delete;
 
     ConvolutionJITFWDImpl &operator=(ConvolutionJITFWDImpl &&) = delete;
 
-    void ExecuteForward(const void *src, const void *wei,
-        void *dst, const void *bias) noexcept
+    void ExecuteForward(const void *src, const void *wei, void *dst, const void *bias) noexcept
     {
-        if (jcp_.srcDt == Element::TypeT::F32 && jcp_.weiDt == Element::TypeT::F32
-            && jcp_.dstDt == Element::TypeT::F32) {
+        if (jcp_.srcDt == Element::TypeT::F32 && jcp_.weiDt == Element::TypeT::F32 &&
+            jcp_.dstDt == Element::TypeT::F32) {
             if (jcp_.ndims == DIM_3) {
                 ExecuteForward1D<float>(static_cast<const float *>(src), static_cast<const float *>(wei),
-                    static_cast<float *>(dst), static_cast<const float *>(bias));
+                                        static_cast<float *>(dst), static_cast<const float *>(bias));
             } else if (jcp_.ndims == DIM_4) {
                 ExecuteForward2D<float>(static_cast<const float *>(src), static_cast<const float *>(wei),
-                    static_cast<float *>(dst), static_cast<const float *>(bias));
+                                        static_cast<float *>(dst), static_cast<const float *>(bias));
             } else if (jcp_.ndims == DIM_5) {
                 ExecuteForward3D<float>(static_cast<const float *>(src), static_cast<const float *>(wei),
-                    static_cast<float *>(dst), static_cast<const float *>(bias));
+                                        static_cast<float *>(dst), static_cast<const float *>(bias));
             }
-        } else if (jcp_.srcDt == Element::TypeT::F16 && jcp_.weiDt == Element::TypeT::F16
-            && jcp_.dstDt == Element::TypeT::F16) {
+        } else if (jcp_.srcDt == Element::TypeT::F16 && jcp_.weiDt == Element::TypeT::F16 &&
+                   jcp_.dstDt == Element::TypeT::F16) {
             if (jcp_.ndims == DIM_3) {
                 ExecuteForward1D<__fp16>(static_cast<const __fp16 *>(src), static_cast<const __fp16 *>(wei),
-                    static_cast<__fp16 *>(dst), static_cast<const __fp16 *>(bias));
+                                         static_cast<__fp16 *>(dst), static_cast<const __fp16 *>(bias));
             } else if (jcp_.ndims == DIM_4) {
                 ExecuteForward2D<__fp16>(static_cast<const __fp16 *>(src), static_cast<const __fp16 *>(wei),
-                    static_cast<__fp16 *>(dst), static_cast<const __fp16 *>(bias));
+                                         static_cast<__fp16 *>(dst), static_cast<const __fp16 *>(bias));
             } else if (jcp_.ndims == DIM_5) {
                 ExecuteForward3D<__fp16>(static_cast<const __fp16 *>(src), static_cast<const __fp16 *>(wei),
-                    static_cast<__fp16 *>(dst), static_cast<const __fp16 *>(bias));
+                                         static_cast<__fp16 *>(dst), static_cast<const __fp16 *>(bias));
             }
-        } else if (jcp_.srcDt == Element::TypeT::BF16 && jcp_.weiDt == Element::TypeT::BF16
-            && jcp_.dstDt == Element::TypeT::BF16) {
+        } else if (jcp_.srcDt == Element::TypeT::BF16 && jcp_.weiDt == Element::TypeT::BF16 &&
+                   jcp_.dstDt == Element::TypeT::BF16) {
             if (jcp_.ndims == DIM_3) {
                 ExecuteForward1D<__bf16>(static_cast<const __bf16 *>(src), static_cast<const __bf16 *>(wei),
-                    static_cast<__bf16 *>(dst), static_cast<const __bf16 *>(bias));
+                                         static_cast<__bf16 *>(dst), static_cast<const __bf16 *>(bias));
             } else if (jcp_.ndims == DIM_4) {
                 ExecuteForward2D<__bf16>(static_cast<const __bf16 *>(src), static_cast<const __bf16 *>(wei),
-                    static_cast<__bf16 *>(dst), static_cast<const __bf16 *>(bias));
+                                         static_cast<__bf16 *>(dst), static_cast<const __bf16 *>(bias));
             } else if (jcp_.ndims == DIM_5) {
                 ExecuteForward3D<__bf16>(static_cast<const __bf16 *>(src), static_cast<const __bf16 *>(wei),
-                    static_cast<__bf16 *>(dst), static_cast<const __bf16 *>(bias));
+                                         static_cast<__bf16 *>(dst), static_cast<const __bf16 *>(bias));
             }
         }
     }
@@ -450,39 +438,31 @@ public:
 
     void DataCopyWithStride(float *dst, const float *src, IntType len, IntType stride);
 
-    void ExecuteForwardMatrixComputation(const float *src, const float *wei,
-        float *dst, const float *bias) noexcept;
+    void ExecuteForwardMatrixComputation(const float *src, const float *wei, float *dst, const float *bias) noexcept;
 
     bool Accelerate2dGemm();
 
-    void GemmAccelarate(const float *src, const float *wei,
-        float *dst, const float *bias) noexcept;
+    void GemmAccelarate(const float *src, const float *wei, float *dst, const float *bias) noexcept;
 
     bool CanUseDirectMatrixComputation();
 
-    void DirectMatrixComputation(const float *src, const float *wei,
-        float *dst, const float *bias) noexcept;
+    void DirectMatrixComputation(const float *src, const float *wei, float *dst, const float *bias) noexcept;
 
-    void DirectMatrixComputationWithStride(const float *src, const float *wei,
-        float *dst, const float *bias) noexcept;
+    void DirectMatrixComputationWithStride(const float *src, const float *wei, float *dst, const float *bias) noexcept;
 #endif
 
-    template<typename DataType>
-    void ExecuteForward1D(const DataType *src, const DataType *wei,
-        DataType *dst, const DataType *bias) noexcept;
+    template <typename DataType>
+    void ExecuteForward1D(const DataType *src, const DataType *wei, DataType *dst, const DataType *bias) noexcept;
 
-    template<typename DataType>
-    void ExecuteForward2D(const DataType *src, const DataType *wei,
-        DataType *dst, const DataType *bias) noexcept;
+    template <typename DataType>
+    void ExecuteForward2D(const DataType *src, const DataType *wei, DataType *dst, const DataType *bias) noexcept;
 
-    template<typename DataType>
-    void ExecuteForward3D(const DataType *src, const DataType *wei,
-        DataType *dst, const DataType *bias) noexcept;
+    template <typename DataType>
+    void ExecuteForward3D(const DataType *src, const DataType *wei, DataType *dst, const DataType *bias) noexcept;
 
-    void ExecuteForwardDW(const float *src, const float *wei,
-        float *dst, const float *bias) noexcept;
+    void ExecuteForwardDW(const float *src, const float *wei, float *dst, const float *bias) noexcept;
 
-    bool CreateKernel(const Element::TypeT& dtp)
+    bool CreateKernel(const Element::TypeT &dtp)
     {
 #ifdef KUDNNL_920Pro
         if (jcp_.isDepthwise) {
@@ -493,14 +473,17 @@ public:
         } else {
             dw_kernel_.reset(nullptr);
             if (dtp == Element::TypeT::F32) {
-                kernel_f32_.reset(new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_512, Element::TypeT::F32>(jcp_));
+                kernel_f32_.reset(
+                    new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_512, Element::TypeT::F32>(jcp_));
             } else if (dtp == Element::TypeT::F16) {
-                kernel_f16_.reset(new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_512, Element::TypeT::F16>(jcp_));
+                kernel_f16_.reset(
+                    new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_512, Element::TypeT::F16>(jcp_));
             } else if (dtp == Element::TypeT::BF16) {
-                kernel_bf16_.reset(new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_512, Element::TypeT::BF16>(jcp_));
+                kernel_bf16_.reset(
+                    new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_512, Element::TypeT::BF16>(jcp_));
             }
         }
-        
+
         if (UseMatrixComputation()) {
             MatrixComputationKernel_.reset(new JitConvMatrixComputationKernel(jcp_));
             return MatrixComputationKernel_->CreateKernel();
@@ -514,11 +497,14 @@ public:
         } else {
             dw_kernel_.reset(nullptr);
             if (dtp == Element::TypeT::F32) {
-                kernel_f32_.reset(new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_256, Element::TypeT::F32>(jcp_));
+                kernel_f32_.reset(
+                    new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_256, Element::TypeT::F32>(jcp_));
             } else if (dtp == Element::TypeT::F16) {
-                kernel_f16_.reset(new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_256, Element::TypeT::F16>(jcp_));
+                kernel_f16_.reset(
+                    new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_256, Element::TypeT::F16>(jcp_));
             } else if (dtp == Element::TypeT::BF16) {
-                kernel_bf16_.reset(new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_256, Element::TypeT::BF16>(jcp_));
+                kernel_bf16_.reset(
+                    new KudnnJitConvFwdKernel<ARMCG::CPUISAT::VectorComputation_256, Element::TypeT::BF16>(jcp_));
             }
         }
 #endif
@@ -531,18 +517,21 @@ public:
         }
     }
 
-    const uint8_t* GetKernel(const Element::TypeT& dtp)
+    const uint8_t *GetKernel(const Element::TypeT &dtp)
     {
 #ifdef KUDNNL_920Pro
         if (dtp == Element::TypeT::F32) {
-            return jcp_.isDepthwise ? dw_kernel_->JitKer()
-                                : (UseMatrixComputation() ? MatrixComputationKernel_->JitKer() : kernel_f32_->JitKer());
+            return jcp_.isDepthwise ?
+                       dw_kernel_->JitKer() :
+                       (UseMatrixComputation() ? MatrixComputationKernel_->JitKer() : kernel_f32_->JitKer());
         } else if (dtp == Element::TypeT::F16) {
-            return jcp_.isDepthwise ? dw_kernel_->JitKer()
-                                : (UseMatrixComputation() ? MatrixComputationKernel_->JitKer() : kernel_f16_->JitKer());
+            return jcp_.isDepthwise ?
+                       dw_kernel_->JitKer() :
+                       (UseMatrixComputation() ? MatrixComputationKernel_->JitKer() : kernel_f16_->JitKer());
         } else if (dtp == Element::TypeT::BF16) {
-            return jcp_.isDepthwise ? dw_kernel_->JitKer()
-                                : (UseMatrixComputation() ? MatrixComputationKernel_->JitKer() : kernel_bf16_->JitKer());
+            return jcp_.isDepthwise ?
+                       dw_kernel_->JitKer() :
+                       (UseMatrixComputation() ? MatrixComputationKernel_->JitKer() : kernel_bf16_->JitKer());
         }
 #else
         if (dtp == Element::TypeT::F32) {
@@ -559,27 +548,27 @@ public:
 #ifdef KUDNNL_920Pro
     bool UseMatrixComputation()
     {
-        return jcp_.srcDt == Element::TypeT::F32 && jcp_.weiDt == Element::TypeT::F32
-            && jcp_.dstDt == Element::TypeT::F32
-            && jcp_.ngroups == 1 && jcp_.ndims == KERNEL_DIMS_4
-            && jcp_.srcTag == KuDNN::Layout::ABCD && jcp_.dstTag == KuDNN::Layout::ABCD
-            && jcp_.ocWithoutPadding % NUM_16 == 0
-            && jcp_.dilateH == 0 && jcp_.dilateW == 0;
+        return jcp_.srcDt == Element::TypeT::F32 && jcp_.weiDt == Element::TypeT::F32 &&
+               jcp_.dstDt == Element::TypeT::F32 && jcp_.ngroups == 1 && jcp_.ndims == KERNEL_DIMS_4 &&
+               jcp_.srcTag == KuDNN::Layout::ABCD && jcp_.dstTag == KuDNN::Layout::ABCD &&
+               jcp_.ocWithoutPadding % NUM_16 == 0 && jcp_.dilateH == 0 && jcp_.dilateW == 0;
     }
 #endif
-    Element::TypeT GetTensorDtp(const KudnnConvJitConfT& jcp)
+    Element::TypeT GetTensorDtp(const KudnnConvJitConfT &jcp)
     {
-        Element::TypeT dtp = jcp.srcDt == Element::TypeT::F32 && jcp.weiDt == Element::TypeT::F32
-            && jcp.dstDt == Element::TypeT::F32 ? Element::TypeT::F32 : (jcp.srcDt == Element::TypeT::F16 &&
-            jcp.weiDt == Element::TypeT::F16 && jcp.dstDt == Element::TypeT::F16 ?
-            Element::TypeT::F16 : Element::TypeT::BF16);
+        Element::TypeT dtp = jcp.srcDt == Element::TypeT::F32 && jcp.weiDt == Element::TypeT::F32 &&
+                                     jcp.dstDt == Element::TypeT::F32 ?
+                                 Element::TypeT::F32 :
+                                 (jcp.srcDt == Element::TypeT::F16 && jcp.weiDt == Element::TypeT::F16 &&
+                                          jcp.dstDt == Element::TypeT::F16 ?
+                                      Element::TypeT::F16 :
+                                      Element::TypeT::BF16);
         return dtp;
     }
 
-    Status InitConf(int kCpuIsa,
-        const TensorInfo &src, const TensorInfo &weights, const TensorInfo &dst,
-        const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL,
-        KuDNN::Shape dilates, KuDNN::Propagation prop, int nthreads, bool isDataLayoutNxc) noexcept
+    Status InitConf(int kCpuIsa, const TensorInfo &src, const TensorInfo &weights, const TensorInfo &dst,
+                    const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL, KuDNN::Shape dilates,
+                    KuDNN::Propagation prop, int nthreads, bool isDataLayoutNxc) noexcept
     {
         using namespace ARMCG;
         Service::Unused(bias);
@@ -624,12 +613,9 @@ public:
         int extKw = CalculateExtendedFilterSize(jcp_.kw, jcp_.dilateW);
         int extKh = CalculateExtendedFilterSize(jcp_.kh, jcp_.dilateH);
         int extKd = CalculateExtendedFilterSize(jcp_.kd, jcp_.dilateD);
-        jcp_.rPad = CalculateEndPadding(
-            jcp_.lPad, jcp_.ow, jcp_.iw, jcp_.strideW, extKw);
-        jcp_.bPad = CalculateEndPadding(
-            jcp_.tPad, jcp_.oh, jcp_.ih, jcp_.strideH, extKh);
-        jcp_.backPad = CalculateEndPadding(
-            jcp_.fPad, jcp_.od, jcp_.id, jcp_.strideD, extKd);
+        jcp_.rPad = CalculateEndPadding(jcp_.lPad, jcp_.ow, jcp_.iw, jcp_.strideW, extKw);
+        jcp_.bPad = CalculateEndPadding(jcp_.tPad, jcp_.oh, jcp_.ih, jcp_.strideH, extKh);
+        jcp_.backPad = CalculateEndPadding(jcp_.fPad, jcp_.od, jcp_.id, jcp_.strideD, extKd);
 
         // post-op not supported
         jcp_.withSum = 0;
@@ -676,7 +662,8 @@ public:
         jcp_.simdW = fullSimdW;
         jcp_.ocBlock = jcp_.simdW;
         jcp_.icBlock = jcp_.is1stConv ? jcp_.ic : jcp_.simdW;
-        if (jcp_.srcDt == Element::TypeT::F16 && kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_512)) {
+        if (jcp_.srcDt == Element::TypeT::F16 &&
+            kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_512)) {
             jcp_.icBlock = jcp_.is1stConv ? jcp_.ic : IC_LEN16;
         }
         /* Channel padding */
@@ -708,8 +695,7 @@ public:
         if (jcp_.ver == KuDNN::KudnnConvVersionT::KUDNN_VER_FMA) {
             IntType maxNbOc = KERNEL_C_LEN2;
             IntType tRegNum = REG_INDEX25;
-            if (((jcp_.kw == 1 && jcp_.oc > KERNEL_C_LEN16) ||
-                (jcp_.kw > 1 && jcp_.lPad > 0 && jcp_.strideW > 1)) &&
+            if (((jcp_.kw == 1 && jcp_.oc > KERNEL_C_LEN16) || (jcp_.kw > 1 && jcp_.lPad > 0 && jcp_.strideW > 1)) &&
                 (jcp_.nbOc % KERNEL_C_LEN4 == 0)) {
                 maxNbOc = KERNEL_C_LEN4;
                 tRegNum = REG_INDEX31;
@@ -756,20 +742,21 @@ public:
 
             ARMCG::CPUISAT isa = static_cast<ARMCG::CPUISAT>(kCpuIsa);
             jcp_.urW = isa == ARMCG::CPUISAT::VectorComputation_512 ? UR_W_6 :
-                isa == ARMCG::CPUISAT::VectorComputation_256 ? UR_W_4 : UR_W_3;
+                       isa == ARMCG::CPUISAT::VectorComputation_256 ? UR_W_4 :
+                                                                      UR_W_3;
             jcp_.urW = Min(jcp_.urW, jcp_.ow);
             jcp_.chBlock = fullSimdW;
             jcp_.nbCh = DivUp(dst.GetDims()[1], jcp_.chBlock);
             jcp_.nbChBlocking = isa == ARMCG::CPUISAT::VectorComputation_512 ? NB_CH_BLKING_4 :
-                isa == ARMCG::CPUISAT::VectorComputation_256 ? NB_CH_BLKING_3 : NB_CH_BLKING_2;
+                                isa == ARMCG::CPUISAT::VectorComputation_256 ? NB_CH_BLKING_3 :
+                                                                               NB_CH_BLKING_2;
             if (jcp_.nbCh < jcp_.nbChBlocking) {
                 jcp_.nbChBlocking = jcp_.nbCh;
             }
 
             if (isDataLayoutNxc) {
                 jcp_.loopOrder = KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_NHWCG;
-                bool cacheAliasing =
-                    (jcp_.ngroups * jcp_.iw * jcp_.typeSizeIn) % CACHE_ALIAS_1024 == 0;
+                bool cacheAliasing = (jcp_.ngroups * jcp_.iw * jcp_.typeSizeIn) % CACHE_ALIAS_1024 == 0;
                 if (cacheAliasing) {
                     const IntType limit = jcp_.ow > LIMIT_7 ? LIMIT_7 : LIMIT_4;
                     jcp_.urW = Min(jcp_.urW, limit);
@@ -791,9 +778,8 @@ public:
         // Source and output data needs to fit in L2,
         // leaving some space for weights and prefetching.
         IntType hL2Zero = 0;
-        IntType hL2 = int(((0.6f * L2_size) / jcp_.simdW
-                           - Min(hL2Zero, jcp_.kh - jcp_.strideH) * jcp_.iw)
-            / (jcp_.strideH * jcp_.iw + jcp_.ow));
+        IntType hL2 = int(((0.6f * L2_size) / jcp_.simdW - Min(hL2Zero, jcp_.kh - jcp_.strideH) * jcp_.iw) /
+                          (jcp_.strideH * jcp_.iw + jcp_.ow));
         IntType tL2 = 1;
         jcp_.hBlocking = Max(tL2, Min(jcp_.oh, hL2));
 
@@ -827,10 +813,9 @@ public:
 #endif
 };
 
-void ConvolutionJITFWDImpl::ExecuteForwardDW(const float *src, const float *wei,
-    float *dst, const float *bias) noexcept
+void ConvolutionJITFWDImpl::ExecuteForwardDW(const float *src, const float *wei, float *dst, const float *bias) noexcept
 {
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     Element::TypeT dtp = GetTensorDtp(jcp);
     KudnnConvJitKerT jitKer = (decltype(jitKer))(GetKernel(dtp));
     const IntType dilateH = jcp.dilateH + 1;
@@ -847,13 +832,13 @@ void ConvolutionJITFWDImpl::ExecuteForwardDW(const float *src, const float *wei,
     const auto nThr = jcp.nThr;
 
     Parallel(nThr, [&](const IntType ithr, const IntType subNthr) {
-        IntType start {0};
-        IntType end {0};
+        IntType start{0};
+        IntType end{0};
         Balance211(workAmount, subNthr, ithr, start, end);
 
-        IntType n {0};
-        IntType chb {0};
-        IntType oh {0};
+        IntType n{0};
+        IntType chb{0};
+        IntType oh{0};
         if (jcp.loopOrder == KudnnConvLoopOrderT::KUDNN_LOOP_NGCW) {
             NdIteratorInit(start, n, jcp.mb, chb, chbWork, oh, jcp.oh);
         } else if (jcp.loopOrder == KudnnConvLoopOrderT::KUDNN_LOOP_NHWCG) {
@@ -865,38 +850,22 @@ void ConvolutionJITFWDImpl::ExecuteForwardDW(const float *src, const float *wei,
         auto iWork = start;
         while (iWork < end) {
             IntType ch = chb * chStep;
-            const IntType itOverflow =
-                std::max(jcp.tPad - oh * strideH, static_cast<IntType>(0));
-            const IntType ibOverflow =
-                std::max(oh * strideH + (jcp.kh - 1) * dilateH - jcp.tPad + 1, jcp.ih) - jcp.ih;
+            const IntType itOverflow = std::max(jcp.tPad - oh * strideH, static_cast<IntType>(0));
+            const IntType ibOverflow = std::max(oh * strideH + (jcp.kh - 1) * dilateH - jcp.tPad + 1, jcp.ih) - jcp.ih;
             const IntType ih =
-                std::max((oh * strideH - jcp.tPad + DivUp(itOverflow, dilateH) * dilateH),
-                static_cast<IntType>(0));
+                std::max((oh * strideH - jcp.tPad + DivUp(itOverflow, dilateH) * dilateH), static_cast<IntType>(0));
             const IntType kh = DivUp(itOverflow, dilateH);
-            const IntType khPadding =
-                jcp.kh - DivUp(itOverflow, dilateH) - DivUp(ibOverflow, dilateH);
+            const IntType khPadding = jcp.kh - DivUp(itOverflow, dilateH) - DivUp(ibOverflow, dilateH);
             const auto icOffIdx = isSrcLayoutNXC ? ch * jcp.chBlock : ch;
             const auto ocOffIdx = isDstLayoutNXC ? ch * jcp.chBlock : ch;
 
-            const IntType srcBlkOff = n * jcp.ngroups * jcp.ih * jcp.iw
-                + icOffIdx * jcp.chBlock * jcp.ih * jcp.iw
-                + jcp.chBlock * ih * jcp.iw
-                + jcp.chBlock * iw;
-            const IntType srcNXCOff = n * jcp.ngroups * jcp.ih * jcp.iw
-                + jcp.ic * ih * jcp.iw
-                + jcp.ic * iw
-                + icOffIdx;
-            const IntType weiBlkOff = ch * jcp.chBlock * jcp.kh * jcp.kw
-                + jcp.chBlock * kh * jcp.kw
-                + jcp.chBlock * kw;
-            const IntType dstBlkOff = n * jcp.ngroups * jcp.oh * jcp.ow
-                + ocOffIdx * jcp.chBlock * jcp.oh * jcp.ow
-                + jcp.chBlock * oh * jcp.ow
-                + jcp.chBlock * ow;
-            const IntType dstNXCOff = n * jcp.ngroups * jcp.oh * jcp.ow
-                + jcp.oc * oh * jcp.ow
-                + jcp.oc * ow
-                + ocOffIdx;
+            const IntType srcBlkOff = n * jcp.ngroups * jcp.ih * jcp.iw + icOffIdx * jcp.chBlock * jcp.ih * jcp.iw +
+                                      jcp.chBlock * ih * jcp.iw + jcp.chBlock * iw;
+            const IntType srcNXCOff = n * jcp.ngroups * jcp.ih * jcp.iw + jcp.ic * ih * jcp.iw + jcp.ic * iw + icOffIdx;
+            const IntType weiBlkOff = ch * jcp.chBlock * jcp.kh * jcp.kw + jcp.chBlock * kh * jcp.kw + jcp.chBlock * kw;
+            const IntType dstBlkOff = n * jcp.ngroups * jcp.oh * jcp.ow + ocOffIdx * jcp.chBlock * jcp.oh * jcp.ow +
+                                      jcp.chBlock * oh * jcp.ow + jcp.chBlock * ow;
+            const IntType dstNXCOff = n * jcp.ngroups * jcp.oh * jcp.ow + jcp.oc * oh * jcp.ow + jcp.oc * ow + ocOffIdx;
 
             auto paraConv = KudnnConvJitCallS();
             paraConv.src = jcp.isFusedConv ? src : src + (isSrcLayoutNXC ? srcNXCOff : srcBlkOff);
@@ -906,8 +875,7 @@ void ConvolutionJITFWDImpl::ExecuteForwardDW(const float *src, const float *wei,
             paraConv.khPadding = std::max(khPadding, static_cast<IntType>(0));
             if (isSrcLayoutNXC) {
                 IntType workRemain = end - iWork;
-                paraConv.chBlocks = ch + workRemain * chStep >= jcp.nbCh ?
-                    jcp.nbCh - ch : workRemain * chStep;
+                paraConv.chBlocks = ch + workRemain * chStep >= jcp.nbCh ? jcp.nbCh - ch : workRemain * chStep;
                 assert(jcp.loopOrder == KudnnConvLoopOrderT::KUDNN_LOOP_NHWCG);
             } else {
                 paraConv.chBlocks = ThisBlockSize(ch, jcp.nbCh, chStep);
@@ -940,25 +908,21 @@ void ConvolutionJITFWDImpl::Img2col(const float *src, float *dst)
             for (int od = 0; od < jcp_.od; ++od) {
                 for (int oh = 0; oh < jcp_.oh; ++oh) {
                     for (int ow = 0; ow < jcp_.ow; ++ow) {
-                        int id = jcp_.ndims == 5
-                            ? (od * jcp_.strideD - jcp_.fPad + kd * (jcp_.dilateD + 1))
-                            : 0;
-                        int ih = jcp_.ndims >= 4
-                            ? (oh * jcp_.strideH - jcp_.tPad + kh * (jcp_.dilateH + 1))
-                            : 0;
+                        int id = jcp_.ndims == 5 ? (od * jcp_.strideD - jcp_.fPad + kd * (jcp_.dilateD + 1)) : 0;
+                        int ih = jcp_.ndims >= 4 ? (oh * jcp_.strideH - jcp_.tPad + kh * (jcp_.dilateH + 1)) : 0;
                         int iw = ow * jcp_.strideW - jcp_.lPad + kw * (jcp_.dilateW + 1);
-                        if ((id >= 0) && (id < jcp_.id) && (ih >= 0) && (ih < jcp_.ih)
-                            && (iw >= 0) && (iw < jcp_.iw)) {
-                            dst[mb * sizeOut + (((((kd * jcp_.kh + kh) * jcp_.kw + kw) * jcp_.ic + ic)
-                                * jcp_.od + od) * jcp_.oh + oh) * jcp_.ow + ow] =
-                                src[mb * sizeIn + ((ic * jcp_.id + id) * jcp_.ih + ih) * jcp_.iw + iw];
+                        if ((id >= 0) && (id < jcp_.id) && (ih >= 0) && (ih < jcp_.ih) && (iw >= 0) && (iw < jcp_.iw)) {
+                            dst[mb * sizeOut +
+                                (((((kd * jcp_.kh + kh) * jcp_.kw + kw) * jcp_.ic + ic) * jcp_.od + od) * jcp_.oh +
+                                 oh) *
+                                    jcp_.ow +
+                                ow] = src[mb * sizeIn + ((ic * jcp_.id + id) * jcp_.ih + ih) * jcp_.iw + iw];
                         }
                     }
                 }
             }
         },
-        shape,
-        jcp_.alignedThreads);
+        shape, jcp_.alignedThreads);
 }
 
 void ConvolutionJITFWDImpl::Img2colS(const float *src, float *dst)
@@ -971,25 +935,24 @@ void ConvolutionJITFWDImpl::Img2colS(const float *src, float *dst)
         [&](int mb, int kd, int kh, int kw, int ic) {
             for (int od = 0; od < jcp_.od; ++od) {
                 for (int oh = 0; oh < jcp_.oh; ++oh) {
-                    int id = jcp_.ndims == 5 ? (od * jcp_.strideD - jcp_.fPad
-                        + kd * (jcp_.dilateD + 1)) : 0;
-                    int ih = jcp_.ndims >= 4 ? (oh * jcp_.strideH - jcp_.tPad
-                        + kh * (jcp_.dilateH + 1)) : 0;
+                    int id = jcp_.ndims == 5 ? (od * jcp_.strideD - jcp_.fPad + kd * (jcp_.dilateD + 1)) : 0;
+                    int ih = jcp_.ndims >= 4 ? (oh * jcp_.strideH - jcp_.tPad + kh * (jcp_.dilateH + 1)) : 0;
                     if ((id >= 0) && (id < jcp_.id) && (ih >= 0) && (ih < jcp_.ih)) {
                         int start = std::max(0, static_cast<int>(jcp_.lPad - kw));
                         int minIw = std::max(0, static_cast<int>(-jcp_.lPad + kw));
                         int maxIw = std::min(jcp_.iw, jcp_.ow - jcp_.lPad + kw);
-                        float *out = dst + mb * sizeOut + (((((kd * jcp_.kh + kh) * jcp_.kw + kw)
-                            * jcp_.ic + ic) * jcp_.od + od) * jcp_.oh + oh) * jcp_.ow + start;
-                        const float *in = src + mb * sizeIn + ((ic * jcp_.id + id) * jcp_.ih + ih)
-                            * jcp_.iw + minIw;
+                        float *out =
+                            dst + mb * sizeOut +
+                            (((((kd * jcp_.kh + kh) * jcp_.kw + kw) * jcp_.ic + ic) * jcp_.od + od) * jcp_.oh + oh) *
+                                jcp_.ow +
+                            start;
+                        const float *in = src + mb * sizeIn + ((ic * jcp_.id + id) * jcp_.ih + ih) * jcp_.iw + minIw;
                         DataCopy(out, in, maxIw - minIw);
                     }
                 }
             }
         },
-        shape,
-        jcp_.alignedThreads);
+        shape, jcp_.alignedThreads);
 }
 
 void ConvolutionJITFWDImpl::Img2colSS(const float *src, float *dst)
@@ -1002,34 +965,32 @@ void ConvolutionJITFWDImpl::Img2colSS(const float *src, float *dst)
         [&](int mb, int kd, int kh, int kw, int ic) {
             for (int od = 0; od < jcp_.od; ++od) {
                 for (int oh = 0; oh < jcp_.oh; ++oh) {
-                    int id = jcp_.ndims == 5 ? (od * jcp_.strideD - jcp_.fPad
-                        + kd * (jcp_.dilateD + 1)) : 0;
-                    int ih = jcp_.ndims >= 4 ? (oh * jcp_.strideH - jcp_.tPad
-                        + kh * (jcp_.dilateH + 1)) : 0;
+                    int id = jcp_.ndims == 5 ? (od * jcp_.strideD - jcp_.fPad + kd * (jcp_.dilateD + 1)) : 0;
+                    int ih = jcp_.ndims >= 4 ? (oh * jcp_.strideH - jcp_.tPad + kh * (jcp_.dilateH + 1)) : 0;
                     if ((id >= 0) && (id < jcp_.id) && (ih >= 0) && (ih < jcp_.ih)) {
-                        float *out = dst + mb * sizeOut + (((((kd * jcp_.kh + kh) * jcp_.kw + kw)
-                            * jcp_.ic + ic) * jcp_.od + od) * jcp_.oh + oh) * jcp_.ow;
-                        const float *in = src + mb * sizeIn + ((ic * jcp_.id + id) * jcp_.ih + ih)
-                            * jcp_.iw + kw;
+                        float *out =
+                            dst + mb * sizeOut +
+                            (((((kd * jcp_.kh + kh) * jcp_.kw + kw) * jcp_.ic + ic) * jcp_.od + od) * jcp_.oh + oh) *
+                                jcp_.ow;
+                        const float *in = src + mb * sizeIn + ((ic * jcp_.id + id) * jcp_.ih + ih) * jcp_.iw + kw;
                         DataCopyWithStride(out, in, jcp_.ow, jcp_.strideW);
                     }
                 }
             }
-        }, shape, jcp_.alignedThreads);
+        },
+        shape, jcp_.alignedThreads);
 }
 
 bool ConvolutionJITFWDImpl::CanUseDirectMatrixComputation()
 {
-    if (jcp_.ngroups != 1 || jcp_.ndims != KERNEL_DIMS_4
-        || jcp_.dilateH != 0 || jcp_.dilateW != 0) {
+    if (jcp_.ngroups != 1 || jcp_.ndims != KERNEL_DIMS_4 || jcp_.dilateH != 0 || jcp_.dilateW != 0) {
         return false;
     }
     if (jcp_.strideH == 1 && jcp_.strideW == 1 && jcp_.ow >= NUM_24) {
         return true;
     }
-    if (jcp_.strideW != 1 && jcp_.kw <= NUM_3 && jcp_.ow > NUM_32
-        && jcp_.lPad == 0 && jcp_.rPad == 0
-        && jcp_.tPad == 0 && jcp_.bPad == 0) {
+    if (jcp_.strideW != 1 && jcp_.kw <= NUM_3 && jcp_.ow > NUM_32 && jcp_.lPad == 0 && jcp_.rPad == 0 &&
+        jcp_.tPad == 0 && jcp_.bPad == 0) {
         return true;
     }
     return false;
@@ -1066,10 +1027,10 @@ void ConvolutionJITFWDImpl::DataCopy(float *dst, const float *src, IntType len)
     }
 }
 
-void ConvolutionJITFWDImpl::DirectMatrixComputationWithStride(const float *src, const float *wei,
-    float *dst, const float *bias) noexcept
+void ConvolutionJITFWDImpl::DirectMatrixComputationWithStride(const float *src, const float *wei, float *dst,
+                                                              const float *bias) noexcept
 {
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     Element::TypeT dtp = GetTensorDtp(jcp);
     KudnnConvMatrixComputationJitKerT jitKer = (decltype(jitKer))(GetKernel(dtp));
     int nThr = jcp.alignedThreads;
@@ -1083,11 +1044,11 @@ void ConvolutionJITFWDImpl::DirectMatrixComputationWithStride(const float *src, 
             IntType off = 0;
             for (auto stride = 0; stride < jcp.strideW; stride++) {
                 IntType len = (sizeW + 1 - stride) / jcp.strideW;
-                DataCopyWithStride(padSrc.data() + mb * jcp.ic * sizeH * sizeW
-                    + ic * sizeH * sizeW + (jcp.tPad + ih) * sizeW + jcp.lPad + off,
-                    src + mb * jcp.ic * jcp.ih * jcp.iw + ic * jcp.ih * jcp.iw + ih * jcp.iw + stride,
-                    len, jcp.strideW);
-                    off += len;
+                DataCopyWithStride(padSrc.data() + mb * jcp.ic * sizeH * sizeW + ic * sizeH * sizeW +
+                                       (jcp.tPad + ih) * sizeW + jcp.lPad + off,
+                                   src + mb * jcp.ic * jcp.ih * jcp.iw + ic * jcp.ih * jcp.iw + ih * jcp.iw + stride,
+                                   len, jcp.strideW);
+                off += len;
             }
         },
         Shape(jcp.mb, jcp.ic, jcp.ih), nThr);
@@ -1111,10 +1072,10 @@ void ConvolutionJITFWDImpl::DirectMatrixComputationWithStride(const float *src, 
         Shape(jcp.mb, jcp.oh), nThr);
 }
 
-void ConvolutionJITFWDImpl::DirectMatrixComputation(const float *src, const float *wei,
-    float *dst, const float *bias) noexcept
+void ConvolutionJITFWDImpl::DirectMatrixComputation(const float *src, const float *wei, float *dst,
+                                                    const float *bias) noexcept
 {
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     if (jcp.strideW != 1 && jcp.kw <= NUM_3) {
         DirectMatrixComputationWithStride(src, wei, dst, bias);
         return;
@@ -1128,9 +1089,9 @@ void ConvolutionJITFWDImpl::DirectMatrixComputation(const float *src, const floa
     if (jcp.tPad > 0 || jcp.bPad > 0 || jcp.lPad > 0 || jcp.rPad > 0) {
         Threading::ParallelForND<3>::run(
             [&](int mb, int ic, int oh) {
-                DataCopy(padSrc.data() + mb * jcp.ic * sizeH * sizeW
-                    + ic * sizeH * sizeW + (jcp.tPad + oh) * sizeW + jcp.lPad,
-                    src + mb * jcp.ic * jcp.ih * jcp.iw + ic * jcp.ih * jcp.iw + oh * jcp.iw, jcp.iw);
+                DataCopy(padSrc.data() + mb * jcp.ic * sizeH * sizeW + ic * sizeH * sizeW + (jcp.tPad + oh) * sizeW +
+                             jcp.lPad,
+                         src + mb * jcp.ic * jcp.ih * jcp.iw + ic * jcp.ih * jcp.iw + oh * jcp.iw, jcp.iw);
             },
             Shape(jcp.mb, jcp.ic, jcp.oh), nThr);
     }
@@ -1163,10 +1124,9 @@ bool ConvolutionJITFWDImpl::Accelerate2dGemm()
     return jcp_.ngroups == 1 && jcp_.ndims == KERNEL_DIMS_4 && jcp_.strideW != 1 && jcp_.lPad == 0 && jcp_.rPad == 0;
 }
 
-void ConvolutionJITFWDImpl::GemmAccelarate(const float *src, const float *wei,
-    float *dst, const float *bias) noexcept
+void ConvolutionJITFWDImpl::GemmAccelarate(const float *src, const float *wei, float *dst, const float *bias) noexcept
 {
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     Element::TypeT dtp = GetTensorDtp(jcp);
     KudnnConvMatrixComputationJitKerT jitKer = (decltype(jitKer))(GetKernel(dtp));
     int nThr = jcp.alignedThreads;
@@ -1178,12 +1138,13 @@ void ConvolutionJITFWDImpl::GemmAccelarate(const float *src, const float *wei,
         [&](int mb, int ic, int oh, int kh, int kw) {
             int ih = (oh * jcp_.strideH - jcp_.tPad + kh * (jcp_.dilateH + 1));
             if ((ih >= 0) && (ih < jcp_.ih)) {
-                float *out = colTmp.data() + mb * sizeOut + (((oh * jcp_.kh + kh)
-                    * jcp_.kw + kw) * jcp_.ic + ic) * jcp_.ow;
+                float *out =
+                    colTmp.data() + mb * sizeOut + (((oh * jcp_.kh + kh) * jcp_.kw + kw) * jcp_.ic + ic) * jcp_.ow;
                 const float *in = src + mb * sizeIn + (ic * jcp_.ih + ih) * jcp_.iw + kw;
                 DataCopyWithStride(out, in, jcp_.ow, jcp_.strideW);
             }
-        }, shape, nThr);
+        },
+        shape, nThr);
 
     Threading::ParallelForND<2>::run(
         [&](int mb, int oh) {
@@ -1204,10 +1165,10 @@ void ConvolutionJITFWDImpl::GemmAccelarate(const float *src, const float *wei,
         Shape(jcp.mb, jcp.oh, jcp.oc), nThr);
 }
 
-void ConvolutionJITFWDImpl::ExecuteForwardMatrixComputation(const float *src, const float *wei,
-    float *dst, const float *bias) noexcept
+void ConvolutionJITFWDImpl::ExecuteForwardMatrixComputation(const float *src, const float *wei, float *dst,
+                                                            const float *bias) noexcept
 {
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     if (CanUseDirectMatrixComputation()) {
         DirectMatrixComputation(src, wei, dst, bias);
         return;
@@ -1221,9 +1182,8 @@ void ConvolutionJITFWDImpl::ExecuteForwardMatrixComputation(const float *src, co
     int nThr = jcp.alignedThreads;
 
     IntType sizeOut = jcp.od * jcp.oh * jcp.ow * jcp.kd * jcp.kh * jcp.kw * jcp.ic;
-    bool noImg2Col = jcp.kd == 1 && jcp.kh == 1 && jcp.kw == 1
-        && jcp.strideD == 1 && jcp.strideH == 1 && jcp.strideW == 1
-        && jcp.dilateD == 0 && jcp.dilateH == 0 && jcp.dilateW == 0;
+    bool noImg2Col = jcp.kd == 1 && jcp.kh == 1 && jcp.kw == 1 && jcp.strideD == 1 && jcp.strideH == 1 &&
+                     jcp.strideW == 1 && jcp.dilateD == 0 && jcp.dilateH == 0 && jcp.dilateW == 0;
     if (!noImg2Col) {
         if (jcp.dilateW == 0 && jcp.strideW == 1) {
             Img2colS(src, colTmp.data());
@@ -1242,12 +1202,12 @@ void ConvolutionJITFWDImpl::ExecuteForwardMatrixComputation(const float *src, co
         Threading::ParallelForND<3>::run(
             [&](int mb, int ic, int oh) {
                 if (oh >= jcp.bPad && oh < jcp.ih + jcp.bPad) {
-                    DataCopy(padSrc.data() + mb * jcp.ic * sizeH * sizeW
-                        + ic * sizeH * sizeW + oh * sizeW + jcp.lPad,
-                        src + mb * jcp.ic * jcp.ih * jcp.iw + ic * jcp.ih *
-                        jcp.iw + (oh - jcp.bPad) * jcp.iw, jcp.iw);
+                    DataCopy(padSrc.data() + mb * jcp.ic * sizeH * sizeW + ic * sizeH * sizeW + oh * sizeW + jcp.lPad,
+                             src + mb * jcp.ic * jcp.ih * jcp.iw + ic * jcp.ih * jcp.iw + (oh - jcp.bPad) * jcp.iw,
+                             jcp.iw);
                 }
-            }, shape, nThr);
+            },
+            shape, nThr);
         Threading::ParallelFor::instance().run(
             [&](int64_t mb) {
                 for (int oc = 0; oc < jcp.oc; oc += NUM_16) {
@@ -1267,14 +1227,15 @@ void ConvolutionJITFWDImpl::ExecuteForwardMatrixComputation(const float *src, co
                         jitKer(&p);
                     }
                 }
-            }, jcp.mb, nThr);
+            },
+            jcp.mb, nThr);
     }
 }
 #endif
 
 template <typename DataType>
-void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType *wei,
-    DataType *dst, const DataType *bias) noexcept
+void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType *wei, DataType *dst,
+                                             const DataType *bias) noexcept
 {
 #ifdef KUDNNL_920Pro
     if constexpr (std::is_same_v<DataType, float>) {
@@ -1284,7 +1245,7 @@ void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType
         }
     }
 #endif
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     Element::TypeT dtp = GetTensorDtp(jcp);
     assert(GetKernel(dtp) != nullptr);
     KudnnConvJitKerT jitKer = (decltype(jitKer))(GetKernel(dtp));
@@ -1295,8 +1256,8 @@ void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType
     IntType workAmount = jcp.mb * nbGroups * ocChunks * jcp.nbOw;
     int nThr = jcp.alignedThreads;
     Parallel(nThr, [&](const int ithr, const int subNThr) {
-        IntType start {0};
-        IntType end {0};
+        IntType start{0};
+        IntType end{0};
         IntType startCopy;
         Balance211(workAmount, subNThr, ithr, start, end);
         startCopy = start;
@@ -1309,27 +1270,24 @@ void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType
         } else if (!isSrcLayoutNxc && !jcp_.is1stConv) {
             srcCstride = jcp.iw * jcp.icBlock;
         }
-        IntType whtIcStride = jcp.ngroups * jcp.ic < jcp.ocBlock ? jcp.ocBlock :
-            jcp.icBlock * jcp.ocBlock * jcp.kw;
+        IntType whtIcStride = jcp.ngroups * jcp.ic < jcp.ocBlock ? jcp.ocBlock : jcp.icBlock * jcp.ocBlock * jcp.kw;
         for (IntType icbL2 = 0; icbL2 < jcp.nbIc; icbL2 += jcp.nbIcL2) {
             start = startCopy;
-            IntType n {0};
-            IntType gg {0};
-            IntType occ {0};
-            IntType owb {0};
+            IntType n{0};
+            IntType gg{0};
+            IntType occ{0};
+            IntType owb{0};
 
             if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN) {
-                IntType dummy {0};
-                NdIteratorInit(start, occ, ocChunks, owb, jcp.nbOw, gg,
-                    nbGroups, n, jcp.mb, dummy, 1);
+                IntType dummy{0};
+                NdIteratorInit(start, occ, ocChunks, owb, jcp.nbOw, gg, nbGroups, n, jcp.mb, dummy, 1);
             } else if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW) {
-                IntType dummy {0};
-                NdIteratorInit(start, gg, nbGroups, n, jcp.mb, occ,
-                    ocChunks, owb, jcp.nbOw, dummy, 1);
+                IntType dummy{0};
+                NdIteratorInit(start, gg, nbGroups, n, jcp.mb, occ, ocChunks, owb, jcp.nbOw, dummy, 1);
             } else {
                 assert(!"unsupported loop order");
             }
-            
+
             while (start < end) {
                 IntType ocb = occ * jcp.nbOcBlocking;
                 IntType g = gg * gBlocking;
@@ -1338,43 +1296,29 @@ void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType
 
                 int owS = owb * jcp.owBlock;
                 int iwS = owS * jcp.strideW;
-                
-                const IntType ocOffIdx = isDstLayoutNxc
-                        ? g * jcp.oc + ocb * jcp.ocBlock
-                        : gOcb;
-                auto dstW = dst + (n * jcp.oc * jcp.ow * jcp.ngroups +
-                            ocOffIdx +
-                            owS * jcp.oc * jcp.ngroups);
+
+                const IntType ocOffIdx = isDstLayoutNxc ? g * jcp.oc + ocb * jcp.ocBlock : gOcb;
+                auto dstW = dst + (n * jcp.oc * jcp.ow * jcp.ngroups + ocOffIdx + owS * jcp.oc * jcp.ngroups);
                 if (!isDstLayoutNxc) {
-                    dstW = dst + (n * jcp.oc * jcp.ow * jcp.ngroups +
-                            ocOffIdx * jcp.ocBlock * jcp.ow +
-                            owS * jcp.ocBlock);
+                    dstW =
+                        dst + (n * jcp.oc * jcp.ow * jcp.ngroups + ocOffIdx * jcp.ocBlock * jcp.ow + owS * jcp.ocBlock);
                 }
-                const IntType icOffIdx = isSrcLayoutNxc
-                        ? g * jcp.ic + icbL2 * jcp.icBlock
-                        : gIcb + icbL2;
+                const IntType icOffIdx = isSrcLayoutNxc ? g * jcp.ic + icbL2 * jcp.icBlock : gIcb + icbL2;
                 auto srcW = src + (n * jcp.ic * jcp.iw * jcp.ngroups + icOffIdx + iwS * jcp.ic * jcp.ngroups);
                 if (!isSrcLayoutNxc && jcp_.is1stConv) {
-                    srcW = src + (n * jcp.ic * jcp.iw +
-                            icOffIdx * jcp.iw +
-                            iwS);
+                    srcW = src + (n * jcp.ic * jcp.iw + icOffIdx * jcp.iw + iwS);
                 } else if (!isSrcLayoutNxc && !jcp_.is1stConv) {
-                    srcW = src + (n * jcp.ic * jcp.iw * jcp.ngroups +
-                            icOffIdx * jcp.icBlock * jcp.iw +
-                            iwS * jcp.icBlock);
+                    srcW =
+                        src + (n * jcp.ic * jcp.iw * jcp.ngroups + icOffIdx * jcp.icBlock * jcp.iw + iwS * jcp.icBlock);
                 }
                 auto whtW = wei + (jcp.oc * jcp.ic * g + jcp.ocBlock * (ocb * jcp.ic + icbL2 * jcp.icBlock)) * jcp.kw;
-                auto biasW = bias ? bias
-                                + ocOffIdx
-                                        * (isDstLayoutNxc ? 1 : jcp.ocBlock)
-                                   : nullptr;
+                auto biasW = bias ? bias + ocOffIdx * (isDstLayoutNxc ? 1 : jcp.ocBlock) : nullptr;
 
                 IntType icbStep = isSrcLayoutNxc ? jcp.nbIcL2 : 1;
                 IntType icbEnd = std::min(static_cast<int>(jcp.nbIc), static_cast<int>(icbL2 + jcp.nbIcL2));
-                const IntType ocWork = ThisBlockSize(ocb * jcp.ocBlock,
-                    jcp.oc, jcp.nbOcBlocking * jcp.ocBlock);
+                const IntType ocWork = ThisBlockSize(ocb * jcp.ocBlock, jcp.oc, jcp.nbOcBlocking * jcp.ocBlock);
                 IntType icWork = icbStep * jcp.icBlock;
-                
+
                 for (IntType icb = icbL2; icb < icbEnd; icb += icbStep) {
                     IntType currNbIc = std::min(icbStep, icbEnd - icb);
                     IntType flags = 0;
@@ -1383,22 +1327,19 @@ void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType
                     }
                     if (icb + currNbIc >= jcp.nbIc) {
                         flags |= static_cast<int32_t>(KuDNN::KudnnConvFlag::KUDNN_FLAG_IC_LAST);
-                        icWork = ThisBlockSize(icb * jcp.icBlock,
-                            jcp.ic, icbStep * jcp.icBlock);
+                        icWork = ThisBlockSize(icb * jcp.icBlock, jcp.ic, icbStep * jcp.icBlock);
                     }
-                    KudnnJitConvKerPipelineOwThr(jitKer, parConv, srcW,
-                        dstW, whtW, biasW, icb, 1, owb, icWork, ocWork, flags);
+                    KudnnJitConvKerPipelineOwThr(jitKer, parConv, srcW, dstW, whtW, biasW, icb, 1, owb, icWork, ocWork,
+                                                 flags);
                     srcW += srcCstride;
                     whtW += whtIcStride;
                 }
                 if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN) {
-                    IntType dummy {0};
-                    NdIteratorJump(start, end, occ, ocChunks, owb, jcp.nbOw,
-                        gg, nbGroups, n, jcp.mb, dummy, 1);
+                    IntType dummy{0};
+                    NdIteratorJump(start, end, occ, ocChunks, owb, jcp.nbOw, gg, nbGroups, n, jcp.mb, dummy, 1);
                 } else if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW) {
-                    IntType dummy {0};
-                    NdIteratorJump(start, end, gg, nbGroups, n, jcp.mb, occ,
-                        ocChunks, owb, jcp.nbOw, dummy, 1);
+                    IntType dummy{0};
+                    NdIteratorJump(start, end, gg, nbGroups, n, jcp.mb, occ, ocChunks, owb, jcp.nbOw, dummy, 1);
                 } else {
                     assert(!"unsupported loop order");
                 }
@@ -1413,8 +1354,8 @@ void ConvolutionJITFWDImpl::ExecuteForward1D(const DataType *src, const DataType
 }
 
 template <typename DataType>
-void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType *wei,
-    DataType *dst, const DataType *bias) noexcept
+void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType *wei, DataType *dst,
+                                             const DataType *bias) noexcept
 {
 #ifdef KUDNNL_920Pro
     if constexpr (std::is_same_v<DataType, float>) {
@@ -1424,7 +1365,7 @@ void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType
         }
     }
 #endif
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     if constexpr (std::is_same_v<DataType, float>) {
         if (jcp.isDepthwise) {
             ExecuteForwardDW(src, wei, dst, bias);
@@ -1441,8 +1382,8 @@ void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType
     IntType workAmount = jcp.mb * nbGroups * ocChunks * jcp.oh * jcp.nbOw;
     int nThr = jcp.alignedThreads;
     Parallel(nThr, [&](const int ithr, const int subNThr) {
-        IntType start {0};
-        IntType end {0};
+        IntType start{0};
+        IntType end{0};
         IntType startCopy;
         Balance211(workAmount, subNThr, ithr, start, end);
         startCopy = start;
@@ -1464,20 +1405,18 @@ void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType
         }
         size_t whtHstride = jcp.icBlock * jcp.ocBlock * jcp.kw;
         size_t whtIcStride = jcp.ngroups * jcp.ic < jcp.ocBlock ? jcp.ocBlock :
-            jcp.icBlock * jcp.ocBlock * jcp.kh * jcp.kw;
+                                                                  jcp.icBlock * jcp.ocBlock * jcp.kh * jcp.kw;
         for (IntType icbL2 = 0; icbL2 < jcp.nbIc; icbL2 += jcp.nbIcL2) {
             start = startCopy;
-            IntType n {0};
-            IntType gg {0};
-            IntType occ {0};
-            IntType ohS {0};
-            IntType owb {0};
+            IntType n{0};
+            IntType gg{0};
+            IntType occ{0};
+            IntType ohS{0};
+            IntType owb{0};
             if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN) {
-                NdIteratorInit(start, occ, ocChunks, owb, jcp.nbOw, gg,
-                    nbGroups, n, jcp.mb, ohS, jcp.oh);
+                NdIteratorInit(start, occ, ocChunks, owb, jcp.nbOw, gg, nbGroups, n, jcp.mb, ohS, jcp.oh);
             } else if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW) {
-                NdIteratorInit(start, gg, nbGroups, n, jcp.mb, occ,
-                    ocChunks, owb, jcp.nbOw, ohS, jcp.oh);
+                NdIteratorInit(start, gg, nbGroups, n, jcp.mb, occ, ocChunks, owb, jcp.nbOw, ohS, jcp.oh);
             } else {
                 assert(!"unsupported loop order");
             }
@@ -1495,40 +1434,32 @@ void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType
 
                 for (IntType ohB = ohS; ohB < ohE; ohB += jcp.hBlocking) {
                     IntType ihB = -jcp.tPad + ohB * jcp.strideH;
-                    const IntType ocOffIdx = isDstLayoutNxc
-                            ? g * jcp.oc + ocb * jcp.ocBlock
-                            : gOcb;
-                    auto dstW = dst + (n * jcp.oc * jcp.ow * jcp.oh * jcp.ngroups +
-                        ocOffIdx + ohB * jcp.oc * jcp.ow * jcp.ngroups + iwS * jcp.oc * jcp.ngroups);
+                    const IntType ocOffIdx = isDstLayoutNxc ? g * jcp.oc + ocb * jcp.ocBlock : gOcb;
+                    auto dstW = dst + (n * jcp.oc * jcp.ow * jcp.oh * jcp.ngroups + ocOffIdx +
+                                       ohB * jcp.oc * jcp.ow * jcp.ngroups + iwS * jcp.oc * jcp.ngroups);
                     if (!isDstLayoutNxc) {
-                        dstW = dst + (n * jcp.oc * jcp.ow * jcp.oh * jcp.ngroups +
-                            ocOffIdx * jcp.ocBlock * jcp.ow * jcp.oh + ohB * jcp.ocBlock * jcp.ow + iwS * jcp.ocBlock);
+                        dstW = dst +
+                               (n * jcp.oc * jcp.ow * jcp.oh * jcp.ngroups + ocOffIdx * jcp.ocBlock * jcp.ow * jcp.oh +
+                                ohB * jcp.ocBlock * jcp.ow + iwS * jcp.ocBlock);
                     }
-                    const IntType icOffIdx = isSrcLayoutNxc
-                            ? g * jcp.ic + icbL2 * jcp.icBlock
-                            : gIcb + icbL2;
-                    auto srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.ngroups +
-                        icOffIdx + ihB * jcp.ic * jcp.iw * jcp.ngroups + iwS * jcp.ic * jcp.ngroups);
+                    const IntType icOffIdx = isSrcLayoutNxc ? g * jcp.ic + icbL2 * jcp.icBlock : gIcb + icbL2;
+                    auto srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.ngroups + icOffIdx +
+                                       ihB * jcp.ic * jcp.iw * jcp.ngroups + iwS * jcp.ic * jcp.ngroups);
                     if (!isSrcLayoutNxc && jcp_.is1stConv) {
-                        srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.ngroups +
-                            icOffIdx * jcp.iw * jcp.ih + ihB * jcp.iw + iwS);
+                        srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.ngroups + icOffIdx * jcp.iw * jcp.ih +
+                                      ihB * jcp.iw + iwS);
                     } else if (!isSrcLayoutNxc && !jcp_.is1stConv) {
-                        srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.ngroups +
-                            icOffIdx * jcp.icBlock * jcp.iw * jcp.ih + ihB * jcp.icBlock * jcp.iw + iwS * jcp.icBlock);
+                        srcW = src +
+                               (n * jcp.ic * jcp.iw * jcp.ih * jcp.ngroups + icOffIdx * jcp.icBlock * jcp.iw * jcp.ih +
+                                ihB * jcp.icBlock * jcp.iw + iwS * jcp.icBlock);
                     }
-                    auto whtW = wei + (g * jcp.oc * jcp.ic * jcp.kh * jcp.kw +
-                        ocb * jcp.ocBlock * jcp.ic * jcp.kw * jcp.kh +
-                        icbL2 * jcp.icBlock * jcp.ocBlock * jcp.kw * jcp.kh);
+                    auto whtW =
+                        wei + (g * jcp.oc * jcp.ic * jcp.kh * jcp.kw + ocb * jcp.ocBlock * jcp.ic * jcp.kw * jcp.kh +
+                               icbL2 * jcp.icBlock * jcp.ocBlock * jcp.kw * jcp.kh);
                     IntType icbStep = isSrcLayoutNxc ? jcp.nbIcL2 : 1;
                     IntType icbEnd = std::min(static_cast<int>(jcp.nbIc), static_cast<int>(icbL2 + jcp.nbIcL2));
-                    auto biasW = bias ? bias
-                                    + ocOffIdx
-                                            * (isDstLayoutNxc ? 1
-                                                                 : jcp.ocBlock)
-                                       : nullptr;
-                    const IntType ocWork
-                            = ThisBlockSize(ocb * jcp.ocBlock, jcp.oc,
-                                jcp.nbOcBlocking * jcp.ocBlock);
+                    auto biasW = bias ? bias + ocOffIdx * (isDstLayoutNxc ? 1 : jcp.ocBlock) : nullptr;
+                    const IntType ocWork = ThisBlockSize(ocb * jcp.ocBlock, jcp.oc, jcp.nbOcBlocking * jcp.ocBlock);
                     IntType icWork = icbStep * jcp.icBlock;
                     for (IntType icb = icbL2; icb < icbEnd; icb += icbStep) {
                         IntType currNbIc = std::min(static_cast<int>(icbStep), static_cast<int>(icbEnd - icb));
@@ -1543,17 +1474,17 @@ void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType
                         auto srcC = srcW;
                         auto dstC = dstW;
                         for (IntType oj = ohB, ij = ihB;
-                                oj < std::min(static_cast<int>(ohE), static_cast<int>(ohB + jcp.hBlocking));
-                                ++oj, ij += jcp.strideH) {
+                             oj < std::min(static_cast<int>(ohE), static_cast<int>(ohB + jcp.hBlocking));
+                             ++oj, ij += jcp.strideH) {
                             IntType dilateH = jcp.dilateH + 1;
                             IntType iToverflow = DivUp(std::max(0, static_cast<int>(-ij)), static_cast<int>(dilateH));
-                            IntType iBoverflow = DivUp(
-                                std::max(0, static_cast<int>(ij - jcp.ih + (jcp.kh - 1) * dilateH) + 1), dilateH);
+                            IntType iBoverflow =
+                                DivUp(std::max(0, static_cast<int>(ij - jcp.ih + (jcp.kh - 1) * dilateH) + 1), dilateH);
                             IntType khPadding = std::max(0, static_cast<int>(jcp.kh - iToverflow - iBoverflow));
                             auto auxSrc = srcC + iToverflow * dilateH * srcHstride;
                             auto auxWht = whtW + iToverflow * whtHstride;
-                            KudnnJitConvKerPipelineOwThr(jitKer, parConv, auxSrc, dstC, auxWht, biasW, icb,
-                                khPadding, owb, icWork, ocWork, flags);
+                            KudnnJitConvKerPipelineOwThr(jitKer, parConv, auxSrc, dstC, auxWht, biasW, icb, khPadding,
+                                                         owb, icWork, ocWork, flags);
                             srcC += srcHstride * jcp.strideH;
                             dstC += dstHstride;
                         }
@@ -1562,11 +1493,9 @@ void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType
                     }
                 }
                 if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN) {
-                    NdIteratorJump(start, end, occ, ocChunks, owb, jcp.nbOw,
-                        gg, nbGroups, n, jcp.mb, ohS, jcp.oh);
+                    NdIteratorJump(start, end, occ, ocChunks, owb, jcp.nbOw, gg, nbGroups, n, jcp.mb, ohS, jcp.oh);
                 } else if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW) {
-                    NdIteratorJump(start, end, gg, nbGroups, n, jcp.mb, occ,
-                        ocChunks, owb, jcp.nbOw, ohS, jcp.oh);
+                    NdIteratorJump(start, end, gg, nbGroups, n, jcp.mb, occ, ocChunks, owb, jcp.nbOw, ohS, jcp.oh);
                 } else {
                     assert(!"unsupported loop order");
                 }
@@ -1581,8 +1510,8 @@ void ConvolutionJITFWDImpl::ExecuteForward2D(const DataType *src, const DataType
 }
 
 template <typename DataType>
-void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType *wei,
-    DataType *dst, const DataType *bias) noexcept
+void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType *wei, DataType *dst,
+                                             const DataType *bias) noexcept
 {
 #ifdef KUDNNL_920Pro
     if constexpr (std::is_same_v<DataType, float>) {
@@ -1592,7 +1521,7 @@ void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType
         }
     }
 #endif
-    KudnnConvJitConfT& jcp = jcp_;
+    KudnnConvJitConfT &jcp = jcp_;
     Element::TypeT dtp = GetTensorDtp(jcp);
     assert(GetKernel(dtp) != nullptr);
     KudnnConvJitKerT jitKer = (decltype(jitKer))(GetKernel(dtp));
@@ -1602,10 +1531,10 @@ void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType
     IntType nbGroups = jcp.ngroups / gBlocking;
     IntType workAmount = jcp.mb * nbGroups * ocChunks * jcp.od * jcp.oh * jcp.nbOw;
     int nThr = jcp.alignedThreads;
-    
+
     Parallel(nThr, [&](const int ithr, const int subNThr) {
-        IntType start {0};
-        IntType end {0};
+        IntType start{0};
+        IntType end{0};
         IntType startCopy;
         Balance211(workAmount, subNThr, ithr, start, end);
         startCopy = start;
@@ -1631,21 +1560,19 @@ void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType
         size_t whtDstride = jcp.icBlock * jcp.ocBlock * jcp.kh * jcp.kw;
         size_t whtHstride = jcp.icBlock * jcp.ocBlock * jcp.kw;
         size_t whtIcStride = jcp.ngroups * jcp.ic < jcp.ocBlock ? jcp.ocBlock :
-            jcp.icBlock * jcp.ocBlock * jcp.kh * jcp.kw * jcp.kd;
+                                                                  jcp.icBlock * jcp.ocBlock * jcp.kh * jcp.kw * jcp.kd;
         for (IntType icbL2 = 0; icbL2 < jcp.nbIc; icbL2 += jcp.nbIcL2) {
             start = startCopy;
-            IntType n {0};
-            IntType gg {0};
-            IntType occ {0};
-            IntType ohS {0};
-            IntType odS {0};
-            IntType owb {0};
+            IntType n{0};
+            IntType gg{0};
+            IntType occ{0};
+            IntType ohS{0};
+            IntType odS{0};
+            IntType owb{0};
             if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN) {
-                NdIteratorInit(start, occ, ocChunks, owb, jcp.nbOw, gg,
-                    nbGroups, n, jcp.mb, odS, jcp.od, ohS, jcp.oh);
+                NdIteratorInit(start, occ, ocChunks, owb, jcp.nbOw, gg, nbGroups, n, jcp.mb, odS, jcp.od, ohS, jcp.oh);
             } else if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW) {
-                NdIteratorInit(start, gg, nbGroups, n, jcp.mb, occ,
-                    ocChunks, owb, jcp.nbOw, odS, jcp.od, ohS, jcp.oh);
+                NdIteratorInit(start, gg, nbGroups, n, jcp.mb, occ, ocChunks, owb, jcp.nbOw, odS, jcp.od, ohS, jcp.oh);
             } else {
                 assert(!"unsupported loop order");
             }
@@ -1665,50 +1592,36 @@ void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType
                 IntType idS = -jcp.fPad + odS * jcp.strideD;
                 IntType dilateD = jcp.dilateD + 1;
                 IntType dToverflow = DivUp(std::max(0, static_cast<int>(-idS)), dilateD);
-                IntType dBoverflow = DivUp(
-                    std::max(0, static_cast<int>(idS - jcp.id + (jcp.kd - 1) * dilateD + 1)),
-                    dilateD);
+                IntType dBoverflow =
+                    DivUp(std::max(0, static_cast<int>(idS - jcp.id + (jcp.kd - 1) * dilateD + 1)), dilateD);
                 IntType kdPadding = std::max(0, static_cast<int>(jcp.kd - dToverflow - dBoverflow));
 
-                const IntType ocOffIdx = isDstLayoutNxc
-                        ? g * jcp.oc + ocb * jcp.ocBlock
-                        : gOcb;
-                auto dstW = dst + (n * jcp.oc * jcp.ow * jcp.oh * jcp.od * jcp.ngroups +
-                    ocOffIdx + odS * jcp.ngroups * jcp.oc * jcp.ow * jcp.oh +
-                    ohS * jcp.ngroups * jcp.oc * jcp.ow +
-                    owS * jcp.ngroups * jcp.oc);
+                const IntType ocOffIdx = isDstLayoutNxc ? g * jcp.oc + ocb * jcp.ocBlock : gOcb;
+                auto dstW = dst + (n * jcp.oc * jcp.ow * jcp.oh * jcp.od * jcp.ngroups + ocOffIdx +
+                                   odS * jcp.ngroups * jcp.oc * jcp.ow * jcp.oh + ohS * jcp.ngroups * jcp.oc * jcp.ow +
+                                   owS * jcp.ngroups * jcp.oc);
                 if (!isDstLayoutNxc) {
                     dstW = dst + (n * jcp.oc * jcp.ow * jcp.oh * jcp.od * jcp.ngroups +
-                        ocOffIdx * jcp.od * jcp.ow * jcp.oh * jcp.ocBlock +
-                        odS * jcp.ocBlock * jcp.ow * jcp.oh +
-                        ohS * jcp.ocBlock * jcp.ow +
-                        owS * jcp.ocBlock);
+                                  ocOffIdx * jcp.od * jcp.ow * jcp.oh * jcp.ocBlock +
+                                  odS * jcp.ocBlock * jcp.ow * jcp.oh + ohS * jcp.ocBlock * jcp.ow + owS * jcp.ocBlock);
                 }
-                const IntType icOffIdx = isSrcLayoutNxc
-                        ? g * jcp.ic + icbL2 * jcp.icBlock
-                        : gIcb + icbL2;
-                auto srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.id * jcp.ngroups +
-                    icOffIdx + idS * jcp.ngroups * jcp.ic * jcp.iw * jcp.ih +
-                    ihS * jcp.ngroups * jcp.ic * jcp.iw +
-                    iwS * jcp.ngroups * jcp.ic +
-                    dToverflow * dilateD * srcDstride);
+                const IntType icOffIdx = isSrcLayoutNxc ? g * jcp.ic + icbL2 * jcp.icBlock : gIcb + icbL2;
+                auto srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.id * jcp.ngroups + icOffIdx +
+                                   idS * jcp.ngroups * jcp.ic * jcp.iw * jcp.ih + ihS * jcp.ngroups * jcp.ic * jcp.iw +
+                                   iwS * jcp.ngroups * jcp.ic + dToverflow * dilateD * srcDstride);
                 if (!isSrcLayoutNxc && jcp_.is1stConv) { // when src layout is not axb / aBcde16b, and is abx
-                    srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.id * jcp.ngroups +
-                        icOffIdx * jcp.id * jcp.iw * jcp.ih +
-                        idS * jcp.iw * jcp.ih +
-                        ihS * jcp.iw +
-                        iwS +
-                        dToverflow * dilateD * srcDstride);
+                    srcW = src +
+                           (n * jcp.ic * jcp.iw * jcp.ih * jcp.id * jcp.ngroups + icOffIdx * jcp.id * jcp.iw * jcp.ih +
+                            idS * jcp.iw * jcp.ih + ihS * jcp.iw + iwS + dToverflow * dilateD * srcDstride);
                 } else if (!isSrcLayoutNxc && !jcp_.is1stConv) { // when src layout is not axb, and is aBcde16b
-                    srcW = src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.id * jcp.ngroups +
-                        icOffIdx * jcp.id * jcp.iw * jcp.ih * jcp.icBlock +
-                        idS * jcp.icBlock * jcp.iw * jcp.ih +
-                        ihS * jcp.icBlock * jcp.iw +
-                        iwS * jcp.icBlock +
-                        dToverflow * dilateD * srcDstride);
+                    srcW =
+                        src + (n * jcp.ic * jcp.iw * jcp.ih * jcp.id * jcp.ngroups +
+                               icOffIdx * jcp.id * jcp.iw * jcp.ih * jcp.icBlock + idS * jcp.icBlock * jcp.iw * jcp.ih +
+                               ihS * jcp.icBlock * jcp.iw + iwS * jcp.icBlock + dToverflow * dilateD * srcDstride);
                 }
-                auto whtW = wei + (ocb * jcp.ocBlock * jcp.ic * jcp.kh * jcp.kw * jcp.kd +
-                    icbL2 * jcp.ocBlock * jcp.ocBlock * jcp.kw * jcp.kh * jcp.kd + dToverflow * whtDstride);
+                auto whtW =
+                    wei + (ocb * jcp.ocBlock * jcp.ic * jcp.kh * jcp.kw * jcp.kd +
+                           icbL2 * jcp.ocBlock * jcp.ocBlock * jcp.kw * jcp.kh * jcp.kd + dToverflow * whtDstride);
                 auto biasW = bias ? bias + ocOffIdx * (isDstLayoutNxc ? 1 : jcp.ocBlock) : nullptr;
                 const IntType icbStep = isSrcLayoutNxc ? jcp.nbIcL2 : 1;
                 IntType icbEnd = std::min(static_cast<int>(jcp.nbIc), static_cast<int>(icbL2 + jcp.nbIcL2));
@@ -1726,19 +1639,15 @@ void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType
                     }
                     auto srcC = srcW;
                     auto dstC = dstW;
-                    for (IntType oj = ohS, ij = ihS; oj < ohE;
-                            ++oj, ij += jcp.strideH) {
+                    for (IntType oj = ohS, ij = ihS; oj < ohE; ++oj, ij += jcp.strideH) {
                         IntType dilateH = jcp.dilateH + 1;
                         IntType iToverflow = DivUp(std::max(0, static_cast<int>(-ij)), dilateH);
-                        IntType iBoverflow = DivUp(std::max(0,
-                            static_cast<int>(ij - jcp.ih + (jcp.kh - 1) * dilateH + 1)), dilateH);
-                        IntType khPadding = std::max(
-                            0, static_cast<int>(jcp.kh - iToverflow - iBoverflow));
-                        KudnnJitSveConv3dKerPipelineOwThr(jitKer, parConv,
-                            srcC + iToverflow * dilateH * srcHstride,
-                            dstC, whtW + iToverflow * whtHstride,
-                            biasW, icb, khPadding, kdPadding, owb,
-                            icWork, ocWork, flags);
+                        IntType iBoverflow =
+                            DivUp(std::max(0, static_cast<int>(ij - jcp.ih + (jcp.kh - 1) * dilateH + 1)), dilateH);
+                        IntType khPadding = std::max(0, static_cast<int>(jcp.kh - iToverflow - iBoverflow));
+                        KudnnJitSveConv3dKerPipelineOwThr(jitKer, parConv, srcC + iToverflow * dilateH * srcHstride,
+                                                          dstC, whtW + iToverflow * whtHstride, biasW, icb, khPadding,
+                                                          kdPadding, owb, icWork, ocWork, flags);
                         srcC += srcHstride * jcp.strideH;
                         dstC += dstHstride;
                     }
@@ -1747,13 +1656,11 @@ void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType
                 }
 
                 if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_CWGN) {
-                    NdIteratorJump(start, end, occ, ocChunks, owb, jcp.nbOw,
-                        gg, nbGroups, n, jcp.mb, odS, jcp.od, ohS,
-                        jcp.oh);
+                    NdIteratorJump(start, end, occ, ocChunks, owb, jcp.nbOw, gg, nbGroups, n, jcp.mb, odS, jcp.od, ohS,
+                                   jcp.oh);
                 } else if (jcp.loopOrder == KuDNN::KudnnConvLoopOrderT::KUDNN_LOOP_GNCW) {
-                    NdIteratorJump(start, end, gg, nbGroups, n, jcp.mb, occ,
-                        ocChunks, owb, jcp.nbOw, odS, jcp.od, ohS,
-                        jcp.oh);
+                    NdIteratorJump(start, end, gg, nbGroups, n, jcp.mb, occ, ocChunks, owb, jcp.nbOw, odS, jcp.od, ohS,
+                                   jcp.oh);
                 } else {
                     assert(!"unsupported loop order");
                 }
@@ -1764,27 +1671,30 @@ void ConvolutionJITFWDImpl::ExecuteForward3D(const DataType *src, const DataType
         // on the last iteration of loop above. Only valid pointers make sense
         // here as call parameters to avoid execution of prefetch instructions
         // with nullptr, other parameters are not used in real jit call here
-        KudnnJitSveConv3dKerPipelineOwThr(jitKer, parConv, src, dst,
-            wei, bias, 0, 0, 0, 0, 0, 0, 0);
+        KudnnJitSveConv3dKerPipelineOwThr(jitKer, parConv, src, dst, wei, bias, 0, 0, 0, 0, 0, 0, 0);
     });
 }
-} // Detail
+} // namespace Detail
 
 ConvolutionJITFWD::~ConvolutionJITFWD() noexcept {}
 
-ConvolutionJITFWD::ConvolutionJITFWD(int isa, const TensorInfo &src, const TensorInfo &weights,
-    const TensorInfo &dst, const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL,
-    KuDNN::Shape dilates, KuDNN::Propagation prop, int nthreads, bool isDataLayoutNxc) noexcept(false)
-    : pImpl(new Detail::ConvolutionJITFWDImpl(isa, src, weights, dst, bias, strides,
-        paddingL, dilates, prop, nthreads, isDataLayoutNxc)) {}
+ConvolutionJITFWD::ConvolutionJITFWD(int isa, const TensorInfo &src, const TensorInfo &weights, const TensorInfo &dst,
+                                     const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL,
+                                     KuDNN::Shape dilates, KuDNN::Propagation prop, int nthreads,
+                                     bool isDataLayoutNxc) noexcept(false)
+    : pImpl(new Detail::ConvolutionJITFWDImpl(isa, src, weights, dst, bias, strides, paddingL, dilates, prop, nthreads,
+                                              isDataLayoutNxc))
+{
+}
 
 ConvolutionJITFWD::ConvolutionJITFWD(const ConvolutionJITFWD &other) noexcept(false)
-    : pImpl(new Detail::ConvolutionJITFWDImpl{*(other.pImpl.get())}) {}
+    : pImpl(new Detail::ConvolutionJITFWDImpl{*(other.pImpl.get())})
+{
+}
 
-ConvolutionJITFWD::ConvolutionJITFWD(ConvolutionJITFWD &&other) noexcept
-    : pImpl(std::move(other.pImpl)) {}
+ConvolutionJITFWD::ConvolutionJITFWD(ConvolutionJITFWD &&other) noexcept : pImpl(std::move(other.pImpl)) {}
 
-ConvolutionJITFWD& ConvolutionJITFWD::operator=(const ConvolutionJITFWD &other) noexcept(false)
+ConvolutionJITFWD &ConvolutionJITFWD::operator=(const ConvolutionJITFWD &other) noexcept(false)
 {
     if (this != &other) {
         this->pImpl.reset(new Detail::ConvolutionJITFWDImpl{*(other.pImpl.get())});
@@ -1792,7 +1702,7 @@ ConvolutionJITFWD& ConvolutionJITFWD::operator=(const ConvolutionJITFWD &other) 
     return *this;
 }
 
-ConvolutionJITFWD& ConvolutionJITFWD::operator=(ConvolutionJITFWD &&other) noexcept
+ConvolutionJITFWD &ConvolutionJITFWD::operator=(ConvolutionJITFWD &&other) noexcept
 {
     if (this != &other) {
         this->pImpl = std::move(other.pImpl);
@@ -1800,15 +1710,14 @@ ConvolutionJITFWD& ConvolutionJITFWD::operator=(ConvolutionJITFWD &&other) noexc
     return *this;
 }
 
-void ConvolutionJITFWD::ExecuteForward(const void *src, const void *wei,
-    void *dst, const void *bias) noexcept
+void ConvolutionJITFWD::ExecuteForward(const void *src, const void *wei, void *dst, const void *bias) noexcept
 {
     pImpl->ExecuteForward(src, wei, dst, bias);
 }
 
-Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo &weights,
-    const TensorInfo &dst, const TensorInfo &bias,
-    const Shape &strides, const Shape &dilates, const Shape &paddingL, int kCpuIsa) noexcept
+Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo &weights, const TensorInfo &dst,
+                                        const TensorInfo &bias, const Shape &strides, const Shape &dilates,
+                                        const Shape &paddingL, int kCpuIsa) noexcept
 {
     Service::Unused(bias);
     if (CheckDwConv(src, weights, dst, kCpuIsa)) {
@@ -1849,8 +1758,7 @@ Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo 
             return Status::UNSUPPORTED;
         }
         IntType urWTail = ow % urW;
-        IntType rPadNoTail = std::max(CalculateEndPadding(lPad, ow - urWTail, iw, strideW, extKW),
-            static_cast<int>(0));
+        IntType rPadNoTail = std::max(CalculateEndPadding(lPad, ow - urWTail, iw, strideW, extKW), static_cast<int>(0));
         if (rPadNoTail > urW || lPad > urW) {
             return Status::UNSUPPORTED;
         }
@@ -1876,8 +1784,8 @@ Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo 
             }
         }
 
-        if (ARMCG::GetCpu().GetSveLen() == ARMCG::Util::SveLen::VectorComputation_512
-            && isa == ARMCG::CPUISAT::VectorComputation_256) {
+        if (ARMCG::GetCpu().GetSveLen() == ARMCG::Util::SveLen::VectorComputation_512 &&
+            isa == ARMCG::CPUISAT::VectorComputation_256) {
             return Status::UNSUPPORTED;
         }
 
@@ -1887,10 +1795,10 @@ Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo 
     IntType ngroups = withGroups ? weights.GetDims()[0] : 1;
     IntType oc = dst.GetDims()[1] / ngroups;
     IntType ic = src.GetDims()[1] / ngroups;
-    const bool isSrcLayoutNxc = src.GetLayout() == KuDNN::Layout::ACB ||
-        src.GetLayout() == KuDNN::Layout::ACDB || src.GetLayout() == KuDNN::Layout::ACDEB;
-    const bool isDstLayoutNxc = dst.GetLayout() == KuDNN::Layout::ACB ||
-        dst.GetLayout() == KuDNN::Layout::ACDB || dst.GetLayout() == KuDNN::Layout::ACDEB;
+    const bool isSrcLayoutNxc = src.GetLayout() == KuDNN::Layout::ACB || src.GetLayout() == KuDNN::Layout::ACDB ||
+                                src.GetLayout() == KuDNN::Layout::ACDEB;
+    const bool isDstLayoutNxc = dst.GetLayout() == KuDNN::Layout::ACB || dst.GetLayout() == KuDNN::Layout::ACDB ||
+                                dst.GetLayout() == KuDNN::Layout::ACDEB;
 #ifdef KUDNNL_920Pro
     IntType simdW = ARMCG::CpuIsaTraits<ARMCG::CPUISAT::VectorComputation_512>::VLEN / sizeof(float);
     if (src.GetType() == Element::TypeT::F16) {
@@ -1906,8 +1814,8 @@ Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo 
     bool is1stConv = (ic < simdW) && (ngroups == 1);
     IntType icBlock = is1stConv ? ic : simdW;
     IntType ocBlock = simdW;
-    if (src.GetType() == KuDNN::Element::TypeT::F32 && weights.GetType() == KuDNN::Element::TypeT::F32
-        && dst.GetType() == KuDNN::Element::TypeT::F32) {
+    if (src.GetType() == KuDNN::Element::TypeT::F32 && weights.GetType() == KuDNN::Element::TypeT::F32 &&
+        dst.GetType() == KuDNN::Element::TypeT::F32) {
         // for generate sve512 kernel, but user try to use sve256 kernel
         if ((kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_256) && (simdW != IC_LEN8)) ||
             (kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_512) && (simdW != IC_LEN16))) {
@@ -1921,14 +1829,12 @@ Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo 
             ic = RndUp(ic, icBlock);
         }
 
-        bool argsOk = true
-            && (ic <= icPaded)
-            && (oc <= ocPaded);
+        bool argsOk = true && (ic <= icPaded) && (oc <= ocPaded);
         if (!argsOk) {
             return Status::UNSUPPORTED;
         }
-    } else if (src.GetType() == KuDNN::Element::TypeT::F16 && weights.GetType() == KuDNN::Element::TypeT::F16
-        && dst.GetType() == KuDNN::Element::TypeT::F16) {
+    } else if (src.GetType() == KuDNN::Element::TypeT::F16 && weights.GetType() == KuDNN::Element::TypeT::F16 &&
+               dst.GetType() == KuDNN::Element::TypeT::F16) {
         // for generate sve512 kernel, but user try to use sve256 kernel
         if ((kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_256) && (simdW != IC_LEN16)) ||
             (kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_512) && (simdW != IC_LEN32))) {
@@ -1936,8 +1842,8 @@ Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo 
         }
         icBlock = simdW;
         ocBlock = simdW;
-    } else if (src.GetType() == KuDNN::Element::TypeT::BF16 && weights.GetType() == KuDNN::Element::TypeT::BF16
-        && dst.GetType() == KuDNN::Element::TypeT::BF16) {
+    } else if (src.GetType() == KuDNN::Element::TypeT::BF16 && weights.GetType() == KuDNN::Element::TypeT::BF16 &&
+               dst.GetType() == KuDNN::Element::TypeT::BF16) {
         // for generate sve512 kernel, but user try to use sve256 kernel
         if ((kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_256) && (simdW != IC_LEN8)) ||
             (kCpuIsa == static_cast<IntType>(ARMCG::CPUISAT::VectorComputation_512) && (simdW != IC_LEN16))) {
@@ -1955,4 +1861,4 @@ Status ConvolutionJITFWD::ValidateInput(const TensorInfo &src, const TensorInfo 
     return Status::SUCCESS;
 }
 
-} // KuDNN
+} // namespace KuDNN

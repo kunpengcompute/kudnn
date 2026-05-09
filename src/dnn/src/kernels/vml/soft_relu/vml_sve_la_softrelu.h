@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,17 +16,17 @@
 #include "kernels/vml/vml_sve_la_exp.h"
 #include "kernels/vml/vml_sve_la_sigmoid.h"
 
-#define SOFT_RELU_LOG1P_C0  svdup_f32(-0x1.68c6fap-26f)
-#define SOFT_RELU_LOG1P_C1  svdup_f32(0x1.ffff1cp-1f)
-#define SOFT_RELU_LOG1P_C2  svdup_f32(-0x1.002eb2p-1f)
-#define SOFT_RELU_LOG1P_C3  svdup_f32(0x1.4e0c1p-2f)
-#define SOFT_RELU_LOG1P_C4  svdup_f32(-0x1.47af7ep-2f)
-#define SOFT_RELU_LOG1P_C5  svdup_f32(-0x1.6c3a08p-3f)
-#define SOFT_RELU_LOG1P_C6  svdup_f32(-0x1.51e3ccp0f)
-#define SOFT_RELU_LOG1P_C7  svdup_f32(-0x1.c3d024p0f)
-#define SOFT_RELU_LOG1P_C8  svdup_f32(-0x1.89a61cp0f)
-#define SOFT_RELU_126       svdup_f32(126.0f)
-#define SOFT_RELU_MANTISSA_SIGN_MASK    svdup_u32(0x807fffff)
+#define SOFT_RELU_LOG1P_C0 svdup_f32(-0x1.68c6fap-26f)
+#define SOFT_RELU_LOG1P_C1 svdup_f32(0x1.ffff1cp-1f)
+#define SOFT_RELU_LOG1P_C2 svdup_f32(-0x1.002eb2p-1f)
+#define SOFT_RELU_LOG1P_C3 svdup_f32(0x1.4e0c1p-2f)
+#define SOFT_RELU_LOG1P_C4 svdup_f32(-0x1.47af7ep-2f)
+#define SOFT_RELU_LOG1P_C5 svdup_f32(-0x1.6c3a08p-3f)
+#define SOFT_RELU_LOG1P_C6 svdup_f32(-0x1.51e3ccp0f)
+#define SOFT_RELU_LOG1P_C7 svdup_f32(-0x1.c3d024p0f)
+#define SOFT_RELU_LOG1P_C8 svdup_f32(-0x1.89a61cp0f)
+#define SOFT_RELU_126 svdup_f32(126.0f)
+#define SOFT_RELU_MANTISSA_SIGN_MASK svdup_u32(0x807fffff)
 
 __attribute__((always_inline)) inline svfloat32_t SvSoftReluF32X(svfloat32_t va, svfloat32_t x, svbool_t pg)
 {
@@ -87,8 +87,8 @@ __attribute__((always_inline)) inline svfloat32_t SvSoftReluF32X(svfloat32_t va,
     return res;
 }
 
-__attribute__((always_inline)) inline svfloat32_t SvSoftReluBwdF32X(svfloat32_t va, svfloat32_t srcX,
-                                                                    svfloat32_t ddX, svbool_t pg)
+__attribute__((always_inline)) inline svfloat32_t SvSoftReluBwdF32X(svfloat32_t va, svfloat32_t srcX, svfloat32_t ddX,
+                                                                    svbool_t pg)
 {
     svfloat32_t ax = svmul_f32_x(pg, va, srcX);
     svfloat32_t res = SvSigmoidF32X(ax, pg);

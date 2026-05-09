@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -33,16 +33,15 @@ struct ConvKernel final {
         return NUM_2 * (NUM_16 / sizeof(CompType));
     }
     template <Layout Lt, IntType KernelSize, IntType ExecSize, IntType sw>
-    static void Do(const CompType *src, const CompType *wei, CompType *dst,
-        IntType dstStride, IntType dstIdx, IntType icBlock) noexcept;
+    static void Do(const CompType *src, const CompType *wei, CompType *dst, IntType dstStride, IntType dstIdx,
+                   IntType icBlock) noexcept;
 };
 
 template <typename ComputeType, typename DataType>
-void Conv2D(const ConvolutionParams &params, const DataType *src,
-    const DataType *wei, DataType *dst,
-    const DataType *bia) noexcept(false);
+void Conv2D(const ConvolutionParams &params, const DataType *src, const DataType *wei, DataType *dst,
+            const DataType *bia) noexcept(false);
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_CONV_KERNELS_HPP

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -50,7 +50,8 @@ void ClipSveFWDBF16(const int64_t len, const float alpha, const float beta, cons
     int64_t i;
     int64_t loopCliph = svcnth();
 
-    for (i = 0; i <= len - loopCliph * VML_VectorComputation_UNFOLD_N; i += loopCliph * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopCliph * VML_VectorComputation_UNFOLD_N;
+         i += loopCliph * VML_VectorComputation_UNFOLD_N) {
         ClipMainKernelFwdBF16(alpha, beta, src + i, dst + i, loopCliph);
     }
     for (; i < len; i += loopCliph) {
@@ -109,8 +110,8 @@ static void ClipMainKernelBwdBF16(float alpha, float beta, const __bf16 *src, co
     CONVERT_STORE_FP32_TO_BF16(ds, pgB16, resBot, resTop, step);
 }
 
-void ClipSveBWDBF16(const int64_t len, const float alpha, const float beta,
-                    const __bf16 *src, const __bf16 *dd, __bf16 *ds)
+void ClipSveBWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, const __bf16 *dd,
+                    __bf16 *ds)
 {
     int64_t i = 0;
     int64_t loopCliph = svcnth();

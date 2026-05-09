@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -21,18 +21,16 @@ namespace RMSNorm {
 
 // FWD
 template <typename CompType, typename InType, typename OutType, typename ScaleType>
-void EvaluateLastAxis(SizeType execAcrossAxis, const InType *src, OutType *dst,
-                      const ScaleType *scale, float *variance,
+void EvaluateLastAxis(SizeType execAcrossAxis, const InType *src, OutType *dst, const ScaleType *scale, float *variance,
                       bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;
 
 template <typename CompType, typename InType, typename OutType, typename ScaleType>
-void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst,
-                       const ScaleType *scale, float *variance,
+void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst, const ScaleType *scale, float *variance,
                        bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize,
                        SizeType innerSize) noexcept;
 
-} // RMSNorm
-} // Detail
-} // KuDNN
+} // namespace RMSNorm
+} // namespace Detail
+} // namespace KuDNN
 
 #endif //  KUDNN_RMSNORM_KERNELS_HPP

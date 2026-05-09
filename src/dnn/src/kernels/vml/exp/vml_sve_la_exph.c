@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,14 +9,14 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
- 
+
 #include "kernels/vml/vml_sve_la_exp.h"
 
 #define VectorComputation_EXPH_TABLE_BITS 5
 #define VectorComputation_EXPH_N (1 << VectorComputation_EXPH_TABLE_BITS)
 
 #define VectorComputation_EXPH_LOWBOUND svdup_n_f16(-0x1.708p3f) // ~-11.5
-#define VectorComputation_EXPH_UPBOUND svdup_n_f16(0x1.630p3f) // ~11.09
+#define VectorComputation_EXPH_UPBOUND svdup_n_f16(0x1.630p3f)   // ~11.09
 
 void ExpLaSveFWDF16(const int64_t len, const __fp16 *src, __fp16 *dst)
 {
@@ -89,7 +89,7 @@ void ExpLaSveBWDF16(const int64_t len, const __fp16 *src, const __fp16 *dd, __fp
         resOdd = svmul_f32_m(pgB32, resOdd, ddOdd);
 
         svfloat16_t res = svcvt_f16_f32_x(pgB32, resEven); /* resEven(f16) */
-        srcX = CvtOddF16F32(resOdd, pgB32); /* resOdd(f16) */
+        srcX = CvtOddF16F32(resOdd, pgB32);                /* resOdd(f16) */
         res = svsel_f16(pgB32, res, srcX);
         res = svsel_f16(pgRetInf, ddX, res);
 

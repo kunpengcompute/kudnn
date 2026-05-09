@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -19,7 +19,7 @@
 namespace KuDNN {
 using namespace ARMCG;
 
-template<CPUISAT isa>
+template <CPUISAT isa>
 struct KudnnJitDwConvFwdKernel : public JitGenerator {
 public:
     explicit KudnnJitDwConvFwdKernel(const KudnnConvJitConfT &jcc) : jcp(jcc) {}

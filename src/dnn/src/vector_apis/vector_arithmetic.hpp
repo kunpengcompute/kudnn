@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -23,13 +23,13 @@ namespace Vector {
 
 template <typename ComputeType, SizeType N>
 struct AddXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svadd_x(pg0, lhs0, rhs0);
@@ -47,13 +47,12 @@ struct AddXN final {
 
 template <typename ComputeType, SizeType N>
 struct AddnXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        ComputeType &rhs0, ComputeType &rhs1,
-        ComputeType &rhs2, ComputeType &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   ComputeType &rhs0, ComputeType &rhs1, ComputeType &rhs2, ComputeType &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svadd_x(pg0, lhs0, rhs0);
@@ -71,13 +70,13 @@ struct AddnXN final {
 
 template <typename ComputeType, SizeType N>
 struct AddMN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svadd_m(pg0, lhs0, rhs0);
@@ -95,16 +94,15 @@ struct AddMN final {
 
 template <typename ComputeType, SizeType N>
 struct NmlsZN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
-        const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
-        const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
-        const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
-        const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
-        const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
+                   const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
+                   const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
+                   const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
+                   const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
+                   const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svnmls_z(pg0, x0, y0, z0);
@@ -122,16 +120,15 @@ struct NmlsZN final {
 
 template <typename ComputeType, SizeType N>
 struct MlaMN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
-        const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
-        const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
-        const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
-        const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
-        const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
+                   const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
+                   const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
+                   const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
+                   const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
+                   const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmla_m(pg0, x0, y0, z0);
@@ -149,16 +146,15 @@ struct MlaMN final {
 
 template <typename ComputeType, SizeType N>
 struct MlaXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
-        const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
-        const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
-        const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
-        const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
-        const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
+                   const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
+                   const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
+                   const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
+                   const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
+                   const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmla_x(pg0, x0, y0, z0);
@@ -176,16 +172,15 @@ struct MlaXN final {
 
 template <typename ComputeType, SizeType N>
 struct MlaZN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
-        const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
-        const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
-        const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
-        const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
-        const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &x0, const typename Vec<ComputeType>::Type &x1,
+                   const typename Vec<ComputeType>::Type &x2, const typename Vec<ComputeType>::Type &x3,
+                   const typename Vec<ComputeType>::Type &y0, const typename Vec<ComputeType>::Type &y1,
+                   const typename Vec<ComputeType>::Type &y2, const typename Vec<ComputeType>::Type &y3,
+                   const typename Vec<ComputeType>::Type &z0, const typename Vec<ComputeType>::Type &z1,
+                   const typename Vec<ComputeType>::Type &z2, const typename Vec<ComputeType>::Type &z3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmla_z(pg0, x0, y0, z0);
@@ -203,14 +198,13 @@ struct MlaZN final {
 
 template <typename ComputeType, SizeType N>
 struct DivXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svdiv_x(pg0, lhs0, rhs0);
@@ -228,14 +222,13 @@ struct DivXN final {
 
 template <typename ComputeType, SizeType N>
 struct DivMN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svdiv_m(pg0, lhs0, rhs0);
@@ -253,14 +246,12 @@ struct DivMN final {
 
 template <typename ComputeType, SizeType N>
 struct DivnXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const ComputeType &rhs0, const ComputeType &rhs1,
-        const ComputeType &rhs2, const ComputeType &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const ComputeType &rhs0, const ComputeType &rhs1, const ComputeType &rhs2, const ComputeType &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svdiv_x(pg0, lhs0, rhs0);
@@ -278,14 +269,13 @@ struct DivnXN final {
 
 template <typename ComputeType, SizeType N>
 struct MulXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmul_x(pg0, lhs0, rhs0);
@@ -303,14 +293,12 @@ struct MulXN final {
 
 template <typename ComputeType, SizeType N>
 struct MulnXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        ComputeType &rhs0, ComputeType &rhs1,
-        ComputeType &rhs2, ComputeType &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   ComputeType &rhs0, ComputeType &rhs1, ComputeType &rhs2, ComputeType &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmul_x(pg0, lhs0, rhs0);
@@ -328,14 +316,13 @@ struct MulnXN final {
 
 template <typename ComputeType, SizeType N>
 struct MulZN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmul_z(pg0, lhs0, rhs0);
@@ -353,14 +340,13 @@ struct MulZN final {
 
 template <typename ComputeType, SizeType N>
 struct MulMN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmul_m(pg0, lhs0, rhs0);
@@ -378,14 +364,13 @@ struct MulMN final {
 
 template <typename ComputeType, SizeType N>
 struct SubXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svsub_x(pg0, lhs0, rhs0);
@@ -403,14 +388,13 @@ struct SubXN final {
 
 template <typename ComputeType, SizeType N>
 struct SubZN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svsub_z(pg0, lhs0, rhs0);
@@ -428,14 +412,13 @@ struct SubZN final {
 
 template <typename ComputeType, SizeType N>
 struct SubMN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
-        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+                   const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svsub_m(pg0, lhs0, rhs0);
@@ -453,14 +436,12 @@ struct SubMN final {
 
 template <typename ComputeType, SizeType N>
 struct SubnXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        const ComputeType &rhs0, const ComputeType &rhs1,
-        const ComputeType &rhs2, const ComputeType &rhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   const ComputeType &rhs0, const ComputeType &rhs1, const ComputeType &rhs2, const ComputeType &rhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svsub_x(pg0, lhs0, rhs0);
@@ -478,16 +459,15 @@ struct SubnXN final {
 
 template <typename ComputeType, SizeType N>
 struct MadZN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<ComputeType>::Type &x0, typename Vec<ComputeType>::Type &x1,
-        typename Vec<ComputeType>::Type &x2, typename Vec<ComputeType>::Type &x3,
-        typename Vec<ComputeType>::Type &y0, typename Vec<ComputeType>::Type &y1,
-        typename Vec<ComputeType>::Type &y2, typename Vec<ComputeType>::Type &y3,
-        typename Vec<ComputeType>::Type &z0, typename Vec<ComputeType>::Type &z1,
-        typename Vec<ComputeType>::Type &z2, typename Vec<ComputeType>::Type &z3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vec<ComputeType>::Type &x0, typename Vec<ComputeType>::Type &x1,
+                   typename Vec<ComputeType>::Type &x2, typename Vec<ComputeType>::Type &x3,
+                   typename Vec<ComputeType>::Type &y0, typename Vec<ComputeType>::Type &y1,
+                   typename Vec<ComputeType>::Type &y2, typename Vec<ComputeType>::Type &y3,
+                   typename Vec<ComputeType>::Type &z0, typename Vec<ComputeType>::Type &z1,
+                   typename Vec<ComputeType>::Type &z2, typename Vec<ComputeType>::Type &z3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svmad_z(pg0, x0, y0, z0);
@@ -505,12 +485,11 @@ struct MadZN final {
 
 template <typename ComputeType, SizeType N>
 struct SqrtXN final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3,
-        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
-        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
-        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
-        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+                   const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+                   typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+                   typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
         out0 = svsqrt_x(pg0, lhs0);
@@ -526,8 +505,8 @@ struct SqrtXN final {
     }
 };
 
-} // Vector
-} // Detail
-} // KuDNN
+} // namespace Vector
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_VECTOR_ARIMETHIC

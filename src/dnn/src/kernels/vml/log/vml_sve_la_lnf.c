@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -50,7 +50,8 @@ static void KplVmlVsLnLaSveMainN(const float *src, float *dst, int step)
     VML_VectorComputation_FUNC_PG_N2_2PARA(n, svasr_n_s32_x, pg, n, FLOAT_MANTISSA_BIT_LEN);
     VML_VectorComputation_FUNC_PG_1PARA(resHi, svcvt_f32_x, pg, n);
 
-    VML_VectorComputation_FUNC_PG_N13_3PARA(taylor, svmad_f32_x, pg, VectorComputation_VSLN_POLY_C8, r, VectorComputation_VSLN_POLY_C7);
+    VML_VectorComputation_FUNC_PG_N13_3PARA(taylor, svmad_f32_x, pg, VectorComputation_VSLN_POLY_C8, r,
+                                            VectorComputation_VSLN_POLY_C7);
     VML_VectorComputation_FUNC_PG_N3_3PARA(taylor, svmad_f32_x, pg, taylor, r, VectorComputation_VSLN_POLY_C6);
     VML_VectorComputation_FUNC_PG_N3_3PARA(taylor, svmad_f32_x, pg, taylor, r, VectorComputation_VSLN_POLY_C5);
     VML_VectorComputation_FUNC_PG_N3_3PARA(taylor, svmad_f32_x, pg, taylor, r, VectorComputation_VSLN_POLY_C4);
@@ -60,7 +61,8 @@ static void KplVmlVsLnLaSveMainN(const float *src, float *dst, int step)
     VML_VectorComputation_FUNC_PG_N2_3PARA(resHi, svmad_f32_x, pg, resHi, VectorComputation_FLOAT_LN2, r);
     VML_VectorComputation_FUNC_PG_3PARA(res, svmad_f32_x, pg, r2, taylor, resHi);
 
-    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f32, cmpLeZero, svreinterpret_f32_u32(svdup_n_u32(0x7fc00000)), res);
+    VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f32, cmpLeZero, svreinterpret_f32_u32(svdup_n_u32(0x7fc00000)),
+                                             res);
     VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f32, cmpEqZero, VectorComputation_FLOAT_NEG_INF, res);
     VML_VectorComputation_FUNC_NOPG_N2_3PARA(res, svsel_f32, cmpEqInf, VectorComputation_FLOAT_INF, res);
 

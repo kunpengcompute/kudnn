@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,26 +16,19 @@ namespace KuDNN {
 namespace Detail {
 namespace LNorm {
 
-template
-void EvaluateScaleShiftLastAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
-    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance,
-    const OUT_TYPE *diffDst, SCALE_SHIFT_TYPE *diffScale,
-    SCALE_SHIFT_TYPE *diffShift, float *bufScale, float *bufShift, float eps,
+template void EvaluateScaleShiftLastAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance, const OUT_TYPE *diffDst,
+    SCALE_SHIFT_TYPE *diffScale, SCALE_SHIFT_TYPE *diffShift, float *bufScale, float *bufShift, float eps,
     NormalizationFlags flags, SizeType axisSize, SizeType axisSizeConst) noexcept;
 
-template
-void EvaluateLastAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
-    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance,
-    const OUT_TYPE *diffDst, const SCALE_SHIFT_TYPE *scale, IN_TYPE *diffSrc,
-    float eps, NormalizationFlags flags, SizeType axisSize) noexcept;
+template void EvaluateLastAxis<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+    SizeType outerSize, const IN_TYPE *src, const float *mean, const float *variance, const OUT_TYPE *diffDst,
+    const SCALE_SHIFT_TYPE *scale, IN_TYPE *diffSrc, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;
 
-
-template
-void EvaluateRewriteScaleShift<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
-    SCALE_SHIFT_TYPE *diffScale,
-    SCALE_SHIFT_TYPE *diffShift, float *bufScale, float *bufShift,
+template void EvaluateRewriteScaleShift<COMP_TYPE, IN_TYPE, OUT_TYPE, SCALE_SHIFT_TYPE>(
+    SCALE_SHIFT_TYPE *diffScale, SCALE_SHIFT_TYPE *diffShift, float *bufScale, float *bufShift,
     NormalizationFlags flags, SizeType axisSize, SizeType numThreads) noexcept;
 
-} // LNorm
-} // Detail
-} // KuDNN
+} // namespace LNorm
+} // namespace Detail
+} // namespace KuDNN

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_THREADING_HPP
 #define KUDNN_THREADING_HPP
@@ -35,7 +34,7 @@ KUDNN_API_PUBLIC int SetNumThreadsLocal(int nThreads) noexcept;
 KUDNN_API_PUBLIC EnvMode SetEnvMode(EnvMode mode) noexcept;
 KUDNN_API_PUBLIC ThreadingControl GetThreadingControlStatus() noexcept;
 
-} // Threading
-} // KuDNN
+} // namespace Threading
+} // namespace KuDNN
 
 #endif // KUDNN_THREADING_HPP

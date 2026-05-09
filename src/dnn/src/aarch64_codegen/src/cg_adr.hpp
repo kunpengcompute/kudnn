@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -18,28 +18,28 @@
 namespace ARMCG {
 
 enum class ShMod {
-    LSL = 0,              // logical shift left
-    LSR = 1,             // logical shift right
-    ASR = 2,             // arithmetic shift right
-    ROR = 3,            // rotate right
-    MSL = 4,            // masking shift left, aka "shifting ones", which shifts to the left with 1 as padding
+    LSL = 0, // logical shift left
+    LSR = 1, // logical shift right
+    ASR = 2, // arithmetic shift right
+    ROR = 3, // rotate right
+    MSL = 4, // masking shift left, aka "shifting ones", which shifts to the left with 1 as padding
     NONE = 5
 };
 
 enum class ExtMod {
-    UXTB = 0,           // unsigned extend to byte
-    UXTH = 1,           // unsigned extend to half-word
-    UXTW = 2,          // unsigned extend to word
-    UXTX = 3,         // unsigned extend to double-word
-    SXTB = 4,          // signed extend to byte
-    SXTH = 5,          // signed extend to half-word
-    SXTW = 6,         // signed extend to word
-    SXTX = 7,          // signed extend to double-word
+    UXTB = 0, // unsigned extend to byte
+    UXTH = 1, // unsigned extend to half-word
+    UXTW = 2, // unsigned extend to word
+    UXTX = 3, // unsigned extend to double-word
+    SXTB = 4, // signed extend to byte
+    SXTH = 5, // signed extend to half-word
+    SXTW = 6, // signed extend to word
+    SXTX = 7, // signed extend to double-word
     UXT = 8,
     SXT = 9,
-    MUL = 10,            // multiply
-    MUL_VL = 11,     // multipy by vector length
-    EXT_LSL = 12    // logical shift left
+    MUL = 10,    // multiply
+    MUL_VL = 11, // multipy by vector length
+    EXT_LSL = 12 // logical shift left
 };
 
 // Pre-indexed: first update base register with offset and then use it to do addressing
@@ -210,9 +210,13 @@ private:
 class AdrReg : public Adr {
 public:
     explicit AdrReg(const XReg &xn, const XReg &xm, ShMod mod, uint32_t sh)
-        : Adr(AdrKind::BASE_REG), xn_(xn), xm_(xm), mod_(mod), sh_(sh), init_(true) {}
+        : Adr(AdrKind::BASE_REG), xn_(xn), xm_(xm), mod_(mod), sh_(sh), init_(true)
+    {
+    }
     explicit AdrReg(const XReg &xn, const XReg &xm, ShMod mod = ShMod::LSL)
-        : Adr(AdrKind::BASE_REG), xn_(xn), xm_(xm), mod_(mod), sh_(0), init_(false) {}
+        : Adr(AdrKind::BASE_REG), xn_(xn), xm_(xm), mod_(mod), sh_(0), init_(false)
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -247,9 +251,13 @@ private:
 class AdrExt : public Adr {
 public:
     explicit AdrExt(const XReg &xn, const RReg &rm, ExtMod mod, uint32_t sh)
-        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), mod_(Trans(rm, mod)), sh_(sh), init_(true) {}
+        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), mod_(Trans(rm, mod)), sh_(sh), init_(true)
+    {
+    }
     explicit AdrExt(const XReg &xn, const RReg &rm, ExtMod mod)
-        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), mod_(Trans(rm, mod)), sh_(0), init_(false) {}
+        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), mod_(Trans(rm, mod)), sh_(0), init_(false)
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -284,9 +292,13 @@ private:
 class AdrScSc : public Adr {
 public:
     explicit AdrScSc(const XReg &xn, const XReg &xm, ShMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_SC), xn_(xn), xm_(xm), mod_(mod), sh_(sh), init_(true) {}
+        : Adr(AdrKind::SC_SC), xn_(xn), xm_(xm), mod_(mod), sh_(sh), init_(true)
+    {
+    }
     explicit AdrScSc(const XReg &xn, const XReg &xm)
-        : Adr(AdrKind::SC_SC), xn_(xn), xm_(xm), mod_(ShMod::LSL), sh_(0), init_(false) {}
+        : Adr(AdrKind::SC_SC), xn_(xn), xm_(xm), mod_(ShMod::LSL), sh_(0), init_(false)
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -321,9 +333,12 @@ private:
 class AdrScImm : public Adr {
 public:
     explicit AdrScImm(const XReg &xn, int32_t simm = 0, ExtMod mod = ExtMod::MUL_VL)
-        : Adr(AdrKind::SC_IMM), xn_(xn), simm_(simm), mod_(Trans(mod)) {}
-    explicit AdrScImm(const AdrImm &a)
-        : Adr(AdrKind::SC_IMM), xn_(a.GetXn()), simm_(a.GetImm()), mod_(ExtMod::MUL_VL) {}
+        : Adr(AdrKind::SC_IMM), xn_(xn), simm_(simm), mod_(Trans(mod))
+    {
+    }
+    explicit AdrScImm(const AdrImm &a) : Adr(AdrKind::SC_IMM), xn_(a.GetXn()), simm_(a.GetImm()), mod_(ExtMod::MUL_VL)
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -393,6 +408,6 @@ inline AdrScImm Ptr(const XReg &xn, int32_t simm, ExtMod mod)
     return AdrScImm(xn, simm, mod);
 }
 
-} // ARMCG
+} // namespace ARMCG
 
-#endif  // CG_ADR_HPP
+#endif // CG_ADR_HPP

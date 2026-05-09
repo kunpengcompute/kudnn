@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -15,9 +15,9 @@
 
 #include "vml_sve_base.h"
 
-#define VectorComputation_SIGMOID_LN_MIN_F32  svdup_f32(-0x1.5cp6f) // -87
-#define VectorComputation_SIGMOID_LN_MAX_F32  svdup_f32(0x1.5cp6f) // 87
-#define VectorComputation_SIGMOID_INVLN2_F32  svdup_n_f32(0x1.715476p+0f)
+#define VectorComputation_SIGMOID_LN_MIN_F32 svdup_f32(-0x1.5cp6f) // -87
+#define VectorComputation_SIGMOID_LN_MAX_F32 svdup_f32(0x1.5cp6f)  // 87
+#define VectorComputation_SIGMOID_INVLN2_F32 svdup_n_f32(0x1.715476p+0f)
 #define VectorComputation_SIGMOID_SHIFTER_F32 svdup_n_f32(0x1.803f8p17f)
 #define VectorComputation_SIGMOID_POLY_C0_F32 svdup_n_f32(0x1.62e584p-1f)
 #define VectorComputation_SIGMOID_POLY_C1_F32 svdup_n_f32(0x1.ebfc28p-3f)
@@ -29,7 +29,8 @@ __attribute__((always_inline)) inline svfloat32_t SveSigmoidF32Exp(svfloat32_t x
     svuint32_t k = svreinterpret_u32_f32(ki);
     svfloat32_t expk = svexpa_f32(k);
     svfloat32_t r = svnmls_f32_z(npg, kd, x, VectorComputation_SIGMOID_INVLN2_F32);
-    svfloat32_t poly = svmla_f32_z(npg, VectorComputation_SIGMOID_POLY_C0_F32, r, VectorComputation_SIGMOID_POLY_C1_F32);
+    svfloat32_t poly =
+        svmla_f32_z(npg, VectorComputation_SIGMOID_POLY_C0_F32, r, VectorComputation_SIGMOID_POLY_C1_F32);
     poly = svmla_f32_z(npg, VML_VectorComputation_F32_ONE, poly, r);
     svfloat32_t expx = svmla_f32_z(pg, VML_VectorComputation_F32_ONE, expk, poly);
     return expx;

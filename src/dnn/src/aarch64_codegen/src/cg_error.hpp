@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef CG_ERROR_HPP
 #define CG_ERROR_HPP
@@ -53,41 +52,39 @@ enum class Err {
 
 class Error : public std::runtime_error {
     static constexpr int ERR_NUM = 30;
-    static constexpr const char* ERR_DESC[ERR_NUM] = {
-        "none",
-        "code is too big",
-        "label is redefined",
-        "label is too far",
-        "label is not found",
-        "bad parameter",
-        "can't protect",
-        "offset is too big",
-        "can't alloc",
-        "label is not set by L()",
-        "label is already set by L()",
-        "internal error",
-        "illegal register index (can not encoding register index)",
-        "illegal register element index (can not encoding element index)",
-        "illegal predicate register type",
-        "illegal immediate parameter (range error)",
-        "illegal immediate parameter (unavailable value error)",
-        "illegal immediate parameter (condition error)",
-        "illegal shift-mode paramater",
-        "illegal extend-mode parameter",
-        "illegal condition parameter",
-        "illegal barrier option",
-        "illegal const parameter (range error)",
-        "illegal const parameter (unavailable error)",
-        "illegal const parameter (condition error)",
-        "illegal type",
-        "bad align",
-        "bad addressing",
-        "bad scale",
-        "Munmap"
-    };
+    static constexpr const char *ERR_DESC[ERR_NUM] = {"none",
+                                                      "code is too big",
+                                                      "label is redefined",
+                                                      "label is too far",
+                                                      "label is not found",
+                                                      "bad parameter",
+                                                      "can't protect",
+                                                      "offset is too big",
+                                                      "can't alloc",
+                                                      "label is not set by L()",
+                                                      "label is already set by L()",
+                                                      "internal error",
+                                                      "illegal register index (can not encoding register index)",
+                                                      "illegal register element index (can not encoding element index)",
+                                                      "illegal predicate register type",
+                                                      "illegal immediate parameter (range error)",
+                                                      "illegal immediate parameter (unavailable value error)",
+                                                      "illegal immediate parameter (condition error)",
+                                                      "illegal shift-mode paramater",
+                                                      "illegal extend-mode parameter",
+                                                      "illegal condition parameter",
+                                                      "illegal barrier option",
+                                                      "illegal const parameter (range error)",
+                                                      "illegal const parameter (unavailable error)",
+                                                      "illegal const parameter (condition error)",
+                                                      "illegal type",
+                                                      "bad align",
+                                                      "bad addressing",
+                                                      "bad scale",
+                                                      "Munmap"};
 
 public:
-    static const char* GetErrorDescription(Err err)
+    static const char *GetErrorDescription(Err err)
     {
         int item = static_cast<int>(err);
         if (item < 0 || item >= ERR_NUM) {
@@ -97,7 +94,7 @@ public:
         }
     }
 
-    static const char* ConvertErrorToString(const Error &err)
+    static const char *ConvertErrorToString(const Error &err)
     {
         return err.What();
     }

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -79,8 +79,7 @@ void UniFcvtzs(const ZRegS &d, const ZRegS &s)
 }
 
 template <typename TReg>
-void UniFdiv(const TReg &dst, const TReg &src, const TReg &src2,
-    const TReg &tmp, const PReg &pred)
+void UniFdiv(const TReg &dst, const TReg &src, const TReg &src2, const TReg &tmp, const PReg &pred)
 {
     uint32_t dstIdx = dst.getIdx();
     uint32_t srcIdx = src.getIdx();
@@ -107,9 +106,7 @@ void UniFdiv(const TReg &dst, const TReg &src, const TReg &src2)
     Fdiv(dst, src, src2);
 }
 
-void UniFdiv(const VReg4S &dst,
-    const VReg4S &src, const VReg4S &src2,
-    const VReg4S &tmp, const PReg &pred)
+void UniFdiv(const VReg4S &dst, const VReg4S &src, const VReg4S &src2, const VReg4S &tmp, const PReg &pred)
 {
     (void)(tmp);
     (void)(pred);
@@ -124,8 +121,8 @@ void UniFmad(const T &dst, const T &src, const T &src2)
 
 void UniFmad(const VReg4S &dst, const VReg4S &src, const VReg4S &src2)
 {
-        Fmul(dst, dst, src);
-        Fadd(dst, dst, src2);
+    Fmul(dst, dst, src);
+    Fadd(dst, dst, src2);
 }
 
 template <typename T>

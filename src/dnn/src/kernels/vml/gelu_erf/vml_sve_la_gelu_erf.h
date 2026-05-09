@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -15,7 +15,7 @@
 
 #include "kernels/vml/vml_sve_la_erf.h"
 
-#define GELU_ERF_INV_SQRT_PI    svdup_f32(0x1.20dd74p-1f)
+#define GELU_ERF_INV_SQRT_PI svdup_f32(0x1.20dd74p-1f)
 
 __attribute__((always_inline)) inline svfloat32_t SvGeluErfF32X(svfloat32_t x, svbool_t pg)
 {

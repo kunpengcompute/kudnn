@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
- 
+
 #include "kernels/vml/vml_sve_la_exp.h"
 #define VML_VectorComputation_UNFOLD_N 6
 #include "kernels/vml/common_macro.h"
@@ -27,7 +27,8 @@ static void EluMainKernelFwdF32(svfloat32_t va, const float *src, float *dst, in
 
     // exp
     VML_VectorComputation_DECLARE(svfloat32_t, ki);
-    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, x, VectorComputation_EXPF_INVLN2HI, VectorComputation_EXP2F_SHIFT);
+    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, x, VectorComputation_EXPF_INVLN2HI,
+                                            VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svfloat32_t, kd);
     VML_VectorComputation_FUNC_PG_N2_2PARA(kd, svsub_f32_x, pg, ki, VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svuint32_t, k);
@@ -38,7 +39,8 @@ static void EluMainKernelFwdF32(svfloat32_t va, const float *src, float *dst, in
     VML_VectorComputation_FUNC_PG_N3_3PARA(r, svnmls_f32_x, pg, kd, x, VectorComputation_EXPF_INVLN2HI);
     VML_VectorComputation_FUNC_PG_N3_3PARA(r, svmla_f32_x, pg, r, x, VectorComputation_EXPF_INVLN2LO);
     VML_VectorComputation_DECLARE(svfloat32_t, poly);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r, VectorComputation_EXP2F_C0);
+    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r,
+                                            VectorComputation_EXP2F_C0);
     VML_VectorComputation_FUNC_PG_N1_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C2, poly, r);
     VML_VectorComputation_DECLARE(svfloat32_t, res);
     VML_VectorComputation_FUNC_PG_2PARA(res, svmul_f32_x, pg, expk, poly);
@@ -84,7 +86,8 @@ static void EluMainKernelBwdF32(svfloat32_t va, const float *src, const float *d
 
     // exp
     VML_VectorComputation_DECLARE(svfloat32_t, ki);
-    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, x, VectorComputation_EXPF_INVLN2HI, VectorComputation_EXP2F_SHIFT);
+    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, x, VectorComputation_EXPF_INVLN2HI,
+                                            VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svfloat32_t, kd);
     VML_VectorComputation_FUNC_PG_N2_2PARA(kd, svsub_f32_x, pg, ki, VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svuint32_t, k);
@@ -95,7 +98,8 @@ static void EluMainKernelBwdF32(svfloat32_t va, const float *src, const float *d
     VML_VectorComputation_FUNC_PG_N3_3PARA(r, svnmls_f32_x, pg, kd, x, VectorComputation_EXPF_INVLN2HI);
     VML_VectorComputation_FUNC_PG_N3_3PARA(r, svmla_f32_x, pg, r, x, VectorComputation_EXPF_INVLN2LO);
     VML_VectorComputation_DECLARE(svfloat32_t, poly);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r, VectorComputation_EXP2F_C0);
+    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r,
+                                            VectorComputation_EXP2F_C0);
     VML_VectorComputation_FUNC_PG_N1_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C2, poly, r);
     VML_VectorComputation_DECLARE(svfloat32_t, partialX);
     VML_VectorComputation_FUNC_PG_2PARA(partialX, svmul_f32_x, pg, expk, poly);

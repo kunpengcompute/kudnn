@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -299,7 +299,7 @@ static float findMaxValue(T* value1, SizeType valueSize1, T* value2, SizeType va
 static bool Test_Template_Function_FP32(const KuDNN::TensorInfo srcTensor, const KuDNN::TensorInfo weightTensor,
                                         const KuDNN::TensorInfo dstTensor, const KuDNN::TensorInfo biasTensor,
                                         const KuDNN::TensorInfo resTensor, const KuDNN::TensorInfo linearResTensor,
-                                        float alpha, float beta, float gamma, KuDNN::ResOpsFunction algKind, 
+                                        float alpha, float beta, float gamma, KuDNN::ResOpsFunction algKind,
                                         int numThreads, int transSrc = 0, int transDst = 0){
 
     KuDNN::LinearResFWD LinearResFWD(srcTensor, weightTensor, dstTensor, biasTensor, resTensor, linearResTensor, alpha, beta, gamma, algKind, numThreads);

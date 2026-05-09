@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -46,21 +46,23 @@ static constexpr float LNORM_FWD_THREADS_GLOBALSTATS2_C1 = 13.49f;
 
 class NormalizationLayerFWDImpl final : public Parallelizable {
 public:
-    NormalizationLayerFWDImpl(const TensorInfo &srcInfo, const TensorInfo &statsInfo,
-        const TensorInfo &scaleshiftInfo, const TensorInfo &dstInfo, NormalizationFlags flags) noexcept(false)
-        : srcType(srcInfo.GetType()), scaleShiftType(scaleshiftInfo.GetType()), dstType(dstInfo.GetType()),
-        compType(Element::TypeT::F32),
-        /* since all the arrays are broadcasted to 5D, we need to add extra dimensions which were broadcasted */
-        axisNum(srcInfo.GetAxisNumAccordingToLayout((srcInfo.GetNumDims() - 1)) + MAX_DIMS - srcInfo.GetNumDims()),
-        normFlags(flags)
+    NormalizationLayerFWDImpl(const TensorInfo &srcInfo, const TensorInfo &statsInfo, const TensorInfo &scaleshiftInfo,
+                              const TensorInfo &dstInfo, NormalizationFlags flags) noexcept(false)
+        : srcType(srcInfo.GetType()),
+          scaleShiftType(scaleshiftInfo.GetType()),
+          dstType(dstInfo.GetType()),
+          compType(Element::TypeT::F32),
+          /* since all the arrays are broadcasted to 5D, we need to add extra dimensions which were broadcasted */
+          axisNum(srcInfo.GetAxisNumAccordingToLayout((srcInfo.GetNumDims() - 1)) + MAX_DIMS - srcInfo.GetNumDims()),
+          normFlags(flags)
     {
         // threading implementation depends on the value of calculateStats flag
         // so we initialize it at the constructor stage
-        Service::ThrowOnStatus(NormalizationLayerFWD::ValidateInput(srcInfo, statsInfo, scaleshiftInfo,
-            dstInfo, flags), "Normalization Layer");
+        Service::ThrowOnStatus(NormalizationLayerFWD::ValidateInput(srcInfo, statsInfo, scaleshiftInfo, dstInfo, flags),
+                               "Normalization Layer");
 
-        reorderedDims = Service::BroadcastTo5D(
-            Service::GetShapeAccordingToLayout(srcInfo.GetDims(), srcInfo.GetLayout()));
+        reorderedDims =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetDims(), srcInfo.GetLayout()));
         axisSize = reorderedDims[axisNum];
         innerSize = Service::ArrayProduct(reorderedDims, reorderedDims.GetNumDims(), axisNum + 1);
         statShape = statsInfo.GetDims();
@@ -73,33 +75,32 @@ public:
     }
 
     template <typename CompType, typename InType, typename OutType>
-    void Evaluate(const Shape &batchSplitDims, const void *src, void *dst, const void *scale,
-            const void *shift, float *mean, float *variance, bool saveStats, const float eps) const noexcept
+    void Evaluate(const Shape &batchSplitDims, const void *src, void *dst, const void *scale, const void *shift,
+                  float *mean, float *variance, bool saveStats, const float eps) const noexcept
     {
         const InType *typedSrc = static_cast<const InType *>(src);
         OutType *typedDst = static_cast<OutType *>(dst);
         const OutType *typedScale = static_cast<const OutType *>(scale);
         const OutType *typedShift = static_cast<const OutType *>(shift);
-        ChooseImpl<CompType>(batchSplitDims, typedSrc, typedDst, typedScale, typedShift,
-            mean, variance, saveStats, eps);
+        ChooseImpl<CompType>(batchSplitDims, typedSrc, typedDst, typedScale, typedShift, mean, variance, saveStats,
+                             eps);
     }
 
-    void RunSequential(const Shape &batchSplitDims, const void *src, void *dst, const void *scale,
-            const void *shift, float *mean, float *variance, bool saveStats, const float eps) const noexcept
+    void RunSequential(const Shape &batchSplitDims, const void *src, void *dst, const void *scale, const void *shift,
+                       float *mean, float *variance, bool saveStats, const float eps) const noexcept
     {
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
-            Service::ParseType<true, false>(compType, Element::TypeT::F32, Element::TypeT::F32, *this,
-                batchSplitDims, src, dst, scale, shift, mean, variance, saveStats, eps);
+            Service::ParseType<true, false>(compType, Element::TypeT::F32, Element::TypeT::F32, *this, batchSplitDims,
+                                            src, dst, scale, shift, mean, variance, saveStats, eps);
         } else {
             Service::ParseType<true, false>(compType, compType, dstType, *this, batchSplitDims, src, dst, scale, shift,
-                mean, variance, saveStats, eps);
+                                            mean, variance, saveStats, eps);
         }
     }
 
-    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides,
-            const void *src, void *dst, const void *scale,
-            const void *shift, float *mean, float *variance,
-        bool saveStats, const float eps) const noexcept(false)
+    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, const void *src, void *dst,
+                       const void *scale, const void *shift, float *mean, float *variance, bool saveStats,
+                       const float eps) const noexcept(false)
     {
         SizeType strideSrc = 0;
         SizeType strideDst = 0;
@@ -122,14 +123,13 @@ public:
         }
 
         RunSequential(batchSplitDims, static_cast<const std::byte *>(src) + strideSrc,
-            static_cast<std::byte *>(dst) + strideDst, static_cast<const std::byte *>(scale) + strideScale,
-            static_cast<const std::byte *>(shift) + strideShift, mean + strideMean,
-            variance + strideVariance, saveStats, eps);
+                      static_cast<std::byte *>(dst) + strideDst, static_cast<const std::byte *>(scale) + strideScale,
+                      static_cast<const std::byte *>(shift) + strideShift, mean + strideMean, variance + strideVariance,
+                      saveStats, eps);
     }
 
-    void Run(const void *src, void *dst, const void *scale,
-            const void *shift, float *mean, float *variance,
-        bool saveStats, const float eps) const noexcept(false)
+    void Run(const void *src, void *dst, const void *scale, const void *shift, float *mean, float *variance,
+             bool saveStats, const float eps) const noexcept(false)
     {
         CheckInputArg(src, dst, scale, shift, mean, variance, saveStats);
         const void *srcExec = src;
@@ -139,16 +139,16 @@ public:
         float *meanExec = mean;
         float *varianceExec = variance;
         void *dstExec = dst;
-        
-        BeforeRunReorderLayer(&srcExec, &scaleExec, &shiftExec, &meanExec, &varianceExec,
-            &dstExec, src, scale, shift, mean, variance);
-        
-        Threading::BatchThreader(*this, srcExec, dstExec, scaleExec,
-            shiftExec, meanExec, varianceExec, saveStats, eps);
 
-        AfterRunReorderLayer(&srcExec, &scaleExec, &shiftExec, &meanExec, &varianceExec, &dstExec,
-            calculateStats, mean, variance, dst);
+        BeforeRunReorderLayer(&srcExec, &scaleExec, &shiftExec, &meanExec, &varianceExec, &dstExec, src, scale, shift,
+                              mean, variance);
+
+        Threading::BatchThreader(*this, srcExec, dstExec, scaleExec, shiftExec, meanExec, varianceExec, saveStats, eps);
+
+        AfterRunReorderLayer(&srcExec, &scaleExec, &shiftExec, &meanExec, &varianceExec, &dstExec, calculateStats, mean,
+                             variance, dst);
     }
+
 private:
     Element::Type srcType;
     Element::Type scaleShiftType;
@@ -165,16 +165,14 @@ private:
     Layout statLayout;
     Layout dstLayout;
 
-    void BeforeRunReorderLayer(const void **srcExec, const void **scaleExec, const void **shiftExec,
-        float **meanExec, float **varianceExec, void **dstExec, const void *src, const void *scale,
-            const void *shift, float *mean, float *variance) const noexcept(false)
+    void BeforeRunReorderLayer(const void **srcExec, const void **scaleExec, const void **shiftExec, float **meanExec,
+                               float **varianceExec, void **dstExec, const void *src, const void *scale,
+                               const void *shift, float *mean, float *variance) const noexcept(false)
     {
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
             void *tmp = Service::AlignedAlloc(reorderedDims.GetTotalDimsSize() * sizeof(float));
-            ReorderLayer r({
-                reorderedDims, srcType, Layout::ABCDE}, {
-                reorderedDims, Element::TypeT::F32, Layout::ABCDE
-            });
+            ReorderLayer r({reorderedDims, srcType, Layout::ABCDE},
+                           {reorderedDims, Element::TypeT::F32, Layout::ABCDE});
             r.Run(src, tmp);
             *srcExec = tmp;
         }
@@ -193,8 +191,8 @@ private:
             }
         }
         if (statLayout != GetSrcLayoutWithoutLastDim(srcLayout)) {
-            ReorderLayer r({statShape, Element::TypeT::F32, statLayout}, {statShape,
-                Element::TypeT::F32, GetSrcLayoutWithoutLastDim(srcLayout)});
+            ReorderLayer r({statShape, Element::TypeT::F32, statLayout},
+                           {statShape, Element::TypeT::F32, GetSrcLayoutWithoutLastDim(srcLayout)});
             void *tmp;
             if (mean != nullptr) {
                 tmp = Service::AlignedAlloc(statShape.GetTotalDimsSize() * sizeof(float));
@@ -207,18 +205,18 @@ private:
                 *varianceExec = static_cast<float *>(tmp);
             }
         }
-        bool isNotFullMatch = (dstLayout != srcLayout) ||
-            (((srcType != dstType) || (scaleShiftType != dstType)) && (dstType != Element::TypeT::F32));
+        bool isNotFullMatch = (dstLayout != srcLayout) || (((srcType != dstType) || (scaleShiftType != dstType)) &&
+                                                           (dstType != Element::TypeT::F32));
         if (isNotFullMatch) {
             bool dt = (((srcType != dstType) || (scaleShiftType != dstType)) && (dstType != Element::TypeT::F32));
-            *dstExec = Service::AlignedAlloc(
-                reorderedDims.GetTotalDimsSize() * (dt ? sizeof(float) : dstType.GetSize()));
+            *dstExec =
+                Service::AlignedAlloc(reorderedDims.GetTotalDimsSize() * (dt ? sizeof(float) : dstType.GetSize()));
         }
     }
 
-    void AfterRunReorderLayer(const void **srcExec, const void **scaleExec, const void **shiftExec,
-        float **meanExec, float **varianceExec, void **dstExec, bool calculateStats,
-        float *mean, float *variance, void *dst) const noexcept(false)
+    void AfterRunReorderLayer(const void **srcExec, const void **scaleExec, const void **shiftExec, float **meanExec,
+                              float **varianceExec, void **dstExec, bool calculateStats, float *mean, float *variance,
+                              void *dst) const noexcept(false)
     {
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
             Service::Deallocate(const_cast<void *>(*srcExec));
@@ -229,9 +227,8 @@ private:
         }
         if (statLayout != GetSrcLayoutWithoutLastDim(srcLayout)) {
             if (calculateStats) {
-                ReorderLayer r({
-                    statShape, Element::TypeT::F32, GetSrcLayoutWithoutLastDim(srcLayout)}, {
-                    statShape, Element::TypeT::F32, statLayout});
+                ReorderLayer r({statShape, Element::TypeT::F32, GetSrcLayoutWithoutLastDim(srcLayout)},
+                               {statShape, Element::TypeT::F32, statLayout});
                 if (mean != nullptr) {
                     r.Run(*meanExec, mean);
                 }
@@ -246,33 +243,32 @@ private:
                 Service::Deallocate(*varianceExec);
             }
         }
-        bool isNotFullMatch = (dstLayout != srcLayout) ||
-            (((srcType != dstType) || (scaleShiftType != dstType)) && (dstType != Element::TypeT::F32));
+        bool isNotFullMatch = (dstLayout != srcLayout) || (((srcType != dstType) || (scaleShiftType != dstType)) &&
+                                                           (dstType != Element::TypeT::F32));
         if (isNotFullMatch) {
             bool dt = (((srcType != dstType) || (scaleShiftType != dstType)) && (dstType != Element::TypeT::F32));
-            ReorderLayer r({dstShape, dt ? Element::Type{Element::TypeT::F32} : dstType,
-                srcLayout}, {dstShape, dstType, dstLayout});
+            ReorderLayer r({dstShape, dt ? Element::Type{Element::TypeT::F32} : dstType, srcLayout},
+                           {dstShape, dstType, dstLayout});
             r.Run(*dstExec, dst);
             Service::Deallocate(*dstExec);
         }
     }
 
-    void CheckInputArg(const void *src, void *dst, const void *scale,
-        const void *shift, float *mean, float *variance,
-        bool saveStats) const
+    void CheckInputArg(const void *src, void *dst, const void *scale, const void *shift, float *mean, float *variance,
+                       bool saveStats) const
     {
         if ((src == nullptr) || (dst == nullptr)) {
-            throw Service::LogicError {"Normalization: one of input matrices is nullptr"};
+            throw Service::LogicError{"Normalization: one of input matrices is nullptr"};
         }
         if ((static_cast<bool>(normFlags & NormalizationFlags::USE_GLOBAL_STATS) || saveStats) &&
             ((mean == nullptr) || (variance == nullptr))) {
-            throw Service::LogicError {"Normalization: one of input matrices is nullptr"};
+            throw Service::LogicError{"Normalization: one of input matrices is nullptr"};
         }
         if (static_cast<bool>(normFlags & NormalizationFlags::USE_SCALE) && (scale == nullptr)) {
-            throw Service::LogicError {"Normalization Layer: one of input matrices is nullptr"};
+            throw Service::LogicError{"Normalization Layer: one of input matrices is nullptr"};
         }
         if (static_cast<bool>(normFlags & NormalizationFlags::USE_SHIFT) && (shift == nullptr)) {
-            throw Service::LogicError {"Normalization Layer: one of input matrices is nullptr"};
+            throw Service::LogicError{"Normalization Layer: one of input matrices is nullptr"};
         }
     }
 
@@ -313,35 +309,39 @@ private:
 
     template <typename CompType, typename InType, typename OutType, typename ScaleShiftType>
     void ChooseImpl(const Shape &batchSplitDims, const InType *src, OutType *dst, const ScaleShiftType *scale,
-            const ScaleShiftType *shift, float *mean, float *variance, bool saveStats, const float eps) const noexcept
+                    const ScaleShiftType *shift, float *mean, float *variance, bool saveStats,
+                    const float eps) const noexcept
     {
         SizeType outerSize = batchSplitDims.GetTotalDimsSize();
         if (axisNum == (reorderedDims.GetNumDims() - 1)) {
-            LNorm::EvaluateLastAxis<CompType>(outerSize, src, dst,
-                scale, shift, mean, variance, saveStats, eps, normFlags, axisSize);
+            LNorm::EvaluateLastAxis<CompType>(outerSize, src, dst, scale, shift, mean, variance, saveStats, eps,
+                                              normFlags, axisSize);
         } else {
-            LNorm::EvaluateCrossAxis<CompType>(outerSize, src, dst,
-                scale, shift, mean, variance, saveStats, eps, normFlags, axisSize, innerSize);
+            LNorm::EvaluateCrossAxis<CompType>(outerSize, src, dst, scale, shift, mean, variance, saveStats, eps,
+                                               normFlags, axisSize, innerSize);
         }
     }
 };
 
-} // detail
+} // namespace Detail
 
 NormalizationLayerFWD::~NormalizationLayerFWD() noexcept {}
 
-NormalizationLayerFWD::NormalizationLayerFWD(const TensorInfo &srcInfo,
-    const TensorInfo &statsInfo, const TensorInfo &scaleshiftInfo, const TensorInfo &dstInfo,
-    NormalizationFlags flags) noexcept(false)
-    : pImpl(new Detail::NormalizationLayerFWDImpl(srcInfo, statsInfo, scaleshiftInfo, dstInfo, flags)) {}
+NormalizationLayerFWD::NormalizationLayerFWD(const TensorInfo &srcInfo, const TensorInfo &statsInfo,
+                                             const TensorInfo &scaleshiftInfo, const TensorInfo &dstInfo,
+                                             NormalizationFlags flags) noexcept(false)
+    : pImpl(new Detail::NormalizationLayerFWDImpl(srcInfo, statsInfo, scaleshiftInfo, dstInfo, flags))
+{
+}
 
 NormalizationLayerFWD::NormalizationLayerFWD(const NormalizationLayerFWD &other) noexcept(false)
-    : pImpl(new Detail::NormalizationLayerFWDImpl{*(other.pImpl.get())}) {}
+    : pImpl(new Detail::NormalizationLayerFWDImpl{*(other.pImpl.get())})
+{
+}
 
-NormalizationLayerFWD::NormalizationLayerFWD(NormalizationLayerFWD &&other) noexcept
-    : pImpl(std::move(other.pImpl)) {}
+NormalizationLayerFWD::NormalizationLayerFWD(NormalizationLayerFWD &&other) noexcept : pImpl(std::move(other.pImpl)) {}
 
-NormalizationLayerFWD& NormalizationLayerFWD::operator=(const NormalizationLayerFWD &other) noexcept(false)
+NormalizationLayerFWD &NormalizationLayerFWD::operator=(const NormalizationLayerFWD &other) noexcept(false)
 {
     if (this != &other) {
         this->pImpl.reset(new Detail::NormalizationLayerFWDImpl{*(other.pImpl.get())});
@@ -349,7 +349,7 @@ NormalizationLayerFWD& NormalizationLayerFWD::operator=(const NormalizationLayer
     return *this;
 }
 
-NormalizationLayerFWD& NormalizationLayerFWD::operator=(NormalizationLayerFWD &&other) noexcept
+NormalizationLayerFWD &NormalizationLayerFWD::operator=(NormalizationLayerFWD &&other) noexcept
 {
     if (this != &other) {
         this->pImpl = std::move(other.pImpl);
@@ -357,17 +357,15 @@ NormalizationLayerFWD& NormalizationLayerFWD::operator=(NormalizationLayerFWD &&
     return *this;
 }
 
-void NormalizationLayerFWD::Run(const void *src, void *dst,
-    const void *scale, const void *shift,
-    float *mean, float *variance,
-    bool saveStats, const float eps) const noexcept(false)
+void NormalizationLayerFWD::Run(const void *src, void *dst, const void *scale, const void *shift, float *mean,
+                                float *variance, bool saveStats, const float eps) const noexcept(false)
 {
     pImpl->Run(src, dst, scale, shift, mean, variance, saveStats, eps);
 }
 
-Status NormalizationLayerFWD::ValidateInput(const TensorInfo &srcInfo,
-    const TensorInfo &statsInfo, const TensorInfo &scaleshiftInfo, const TensorInfo &dstInfo,
-    NormalizationFlags flags) noexcept(false)
+Status NormalizationLayerFWD::ValidateInput(const TensorInfo &srcInfo, const TensorInfo &statsInfo,
+                                            const TensorInfo &scaleshiftInfo, const TensorInfo &dstInfo,
+                                            NormalizationFlags flags) noexcept(false)
 {
     if (static_cast<bool>(flags & NormalizationFlags::FUSE_NORM_RELU)) {
         return Status::UNSUPPORTED;
@@ -380,9 +378,8 @@ Status NormalizationLayerFWD::ValidateInput(const TensorInfo &srcInfo,
         return Status::UNSUPPORTED;
     }
     if (((static_cast<bool>(flags & NormalizationFlags::USE_SCALE)) ||
-        (static_cast<bool>(flags & NormalizationFlags::USE_SHIFT))) &&
-        (scaleshiftInfo.GetType() != Element::TypeT::F32) &&
-        (scaleshiftInfo.GetType() != Element::TypeT::F16)) {
+         (static_cast<bool>(flags & NormalizationFlags::USE_SHIFT))) &&
+        (scaleshiftInfo.GetType() != Element::TypeT::F32) && (scaleshiftInfo.GetType() != Element::TypeT::F16)) {
         return Status::UNSUPPORTED;
     }
     if ((srcInfo.GetNumDims() - 1) != statsInfo.GetNumDims()) {
@@ -408,4 +405,4 @@ Status NormalizationLayerFWD::ValidateInput(const TensorInfo &srcInfo,
     return Status::SUCCESS;
 }
 
-} // KuDNN
+} // namespace KuDNN

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,8 +30,8 @@ inline void Unused(T &&t) noexcept
     static_cast<void>(t);
 }
 
-template <typename T, typename ... Args>
-inline void Unused(T &&t, Args && ... args) noexcept
+template <typename T, typename... Args>
+inline void Unused(T &&t, Args &&...args) noexcept
 {
     Unused(std::forward<T>(t));
     Unused(std::forward<Args>(args)...);
@@ -211,10 +211,10 @@ inline T BitCast(const U &u)
     // Since bit_cast is used in SYCL kernels it cannot use std::memcpy as it
     // can be implemented as @llvm.objectsize.* + __memcpy_chk for Release
     // builds which cannot be translated to SPIR-V.
-    void* pT = static_cast<void*>(&t);
+    void *pT = static_cast<void *>(&t);
     uint8_t *tPtr = static_cast<uint8_t *>(pT);
     U tempU = u;
-    void* pU = static_cast<void*>(&tempU);
+    void *pU = static_cast<void *>(&tempU);
     const uint8_t *uPtr = static_cast<const uint8_t *>(pU);
     for (size_t i = 0; i < sizeof(U); i++) {
         tPtr[i] = uPtr[i];

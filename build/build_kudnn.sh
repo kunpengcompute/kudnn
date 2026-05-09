@@ -97,10 +97,10 @@ if [ "${ONLY_TESTS}" = "on" ]  && [ "${ONLY_KUDNN}" = "on" ]; then
     echo -e "these two parameters can NOT be set on at the same time\n"
     exit 1
 fi
- 
+
 #if the ONLY_TEST is on, it is not neccesary for us to build from the very beginning
 if [ "${ONLY_TESTS}" = "on" ]; then
-    FROM_SCRATCH=off 
+    FROM_SCRATCH=off
 fi
 
 # compiler tool chain

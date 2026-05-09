@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -21,8 +21,8 @@
 namespace ARMCG {
 
 // Advanced SIMD load/store multipule structure
-void CodeGenerator::AdvSimdLdStMultiStructExceptLd1St1(
-    uint32_t l, uint32_t opc, const VRegList &vt, const AdrNoOfs &adr)
+void CodeGenerator::AdvSimdLdStMultiStructExceptLd1St1(uint32_t l, uint32_t opc, const VRegList &vt,
+                                                       const AdrNoOfs &adr)
 {
     uint32_t q = GenQ(vt);
     uint32_t size = GenSize(vt);
@@ -30,11 +30,13 @@ void CodeGenerator::AdvSimdLdStMultiStructExceptLd1St1(
 
     VerifyIncRange(len, BITFIELD_1, BITFIELD_4, Err::ILLEGAL_REG_IDX);
 
-    opc = (opc == 0x2 && len == 1) ? 0x7 : (opc == 0x2 && len == VAL_2) ? 0xa :
-        (opc == 0x2 && len == VAL_3) ? 0x6 : opc;
+    opc = (opc == 0x2 && len == 1)     ? 0x7 :
+          (opc == 0x2 && len == VAL_2) ? 0xa :
+          (opc == 0x2 && len == VAL_3) ? 0x6 :
+                                         opc;
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x18, BITFIELD_23), LeftShift(l, BITFIELD_22),
-        LeftShift(opc, BITFIELD_12), LeftShift(size, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(vt.GetIdx(), 0)});
+                            LeftShift(opc, BITFIELD_12), LeftShift(size, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -44,63 +46,69 @@ void CodeGenerator::AdvSimdLdStMultiStructForLd1St1(uint32_t l, uint32_t opc, co
 }
 
 // Advanced SIMD load/store single structures
-void CodeGenerator::AdvSimdLdStSingleStruct(
-    uint32_t l, uint32_t r, uint32_t num, const VRegElem &vt, const AdrNoOfs &adr)
+void CodeGenerator::AdvSimdLdStSingleStruct(uint32_t l, uint32_t r, uint32_t num, const VRegElem &vt,
+                                            const AdrNoOfs &adr)
 {
     uint32_t q = GenQ(vt);
     uint32_t s = GenS(vt);
     uint32_t size = GenSizeEnc(vt);
-    uint32_t opc = (vt.GetBit() == VAL_8) ? Field(num - 1, 1, 1) : (vt.GetBit() == VAL_16) ?
-        Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_2 : Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_4;
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x1a, BITFIELD_23), LeftShift(l, BITFIELD_22),
-        LeftShift(r, BITFIELD_21), LeftShift(opc, BITFIELD_13), LeftShift(s, BITFIELD_12), LeftShift(size, BITFIELD_10),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
+    uint32_t opc = (vt.GetBit() == VAL_8)  ? Field(num - 1, 1, 1) :
+                   (vt.GetBit() == VAL_16) ? Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_2 :
+                                             Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_4;
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(0x1a, BITFIELD_23), LeftShift(l, BITFIELD_22),
+                LeftShift(r, BITFIELD_21), LeftShift(opc, BITFIELD_13), LeftShift(s, BITFIELD_12),
+                LeftShift(size, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
     WriteData(code);
 }
 
 // Advanced SIMD load replication single structures
-void CodeGenerator::AdvSimdLdRepSingleStruct(uint32_t l, uint32_t r, uint32_t opcode, uint32_t s,
-    const VRegVec &vt, const AdrNoOfs &adr)
+void CodeGenerator::AdvSimdLdRepSingleStruct(uint32_t l, uint32_t r, uint32_t opcode, uint32_t s, const VRegVec &vt,
+                                             const AdrNoOfs &adr)
 {
     uint32_t q = GenQ(vt);
     uint32_t size = GenSize(vt);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x1a, BITFIELD_23), LeftShift(l, BITFIELD_22),
-        LeftShift(r, BITFIELD_21), LeftShift(opcode, BITFIELD_13), LeftShift(s, BITFIELD_12),
-        LeftShift(size, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(0x1a, BITFIELD_23), LeftShift(l, BITFIELD_22),
+                LeftShift(r, BITFIELD_21), LeftShift(opcode, BITFIELD_13), LeftShift(s, BITFIELD_12),
+                LeftShift(size, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
     WriteData(code);
 }
 
 // Advanced SIMD load/store single structures (post-indexed register)
-void CodeGenerator::AdvSimdLdStSingleStructPostReg(uint32_t l, uint32_t r,
-    uint32_t num, const VRegElem &vt, const AdrPostReg &adr)
+void CodeGenerator::AdvSimdLdStSingleStructPostReg(uint32_t l, uint32_t r, uint32_t num, const VRegElem &vt,
+                                                   const AdrPostReg &adr)
 {
     uint32_t q = GenQ(vt);
     uint32_t s = GenS(vt);
     uint32_t size = GenSizeEnc(vt);
-    uint32_t opc = (vt.GetBit() == VAL_8) ? Field(num - 1, BITFIELD_1, BITFIELD_1) :
-        (vt.GetBit() == VAL_16) ? Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_2 : Field(num - 1, 1, 1) + VAL_4;
+    uint32_t opc = (vt.GetBit() == VAL_8)  ? Field(num - 1, BITFIELD_1, BITFIELD_1) :
+                   (vt.GetBit() == VAL_16) ? Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_2 :
+                                             Field(num - 1, 1, 1) + VAL_4;
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x1b, BITFIELD_23), LeftShift(l, BITFIELD_22),
-        LeftShift(r, BITFIELD_21), LeftShift(adr.GetXm().GetIdx(), BITFIELD_16), LeftShift(opc, BITFIELD_13),
-        LeftShift(s, BITFIELD_12), LeftShift(size, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(vt.GetIdx(), 0)});
+                            LeftShift(r, BITFIELD_21), LeftShift(adr.GetXm().GetIdx(), BITFIELD_16),
+                            LeftShift(opc, BITFIELD_13), LeftShift(s, BITFIELD_12), LeftShift(size, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
     WriteData(code);
 }
 
 // Advanced SIMD load/store single structures (post-indexed immediate)
-void CodeGenerator::AdvSimdLdStSingleStructPostImm(
-    uint32_t l, uint32_t r, uint32_t num, const VRegElem &vt, const AdrPostImm &adr)
+void CodeGenerator::AdvSimdLdStSingleStructPostImm(uint32_t l, uint32_t r, uint32_t num, const VRegElem &vt,
+                                                   const AdrPostImm &adr)
 {
     uint32_t q = GenQ(vt);
     uint32_t s = GenS(vt);
     uint32_t size = GenSizeEnc(vt);
-    uint32_t opc = (vt.GetBit() == VAL_8) ? Field(num - 1, BITFIELD_1, BITFIELD_1) : (vt.GetBit() == VAL_16) ?
-        Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_2 : Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_4;
+    uint32_t opc = (vt.GetBit() == VAL_8)  ? Field(num - 1, BITFIELD_1, BITFIELD_1) :
+                   (vt.GetBit() == VAL_16) ? Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_2 :
+                                             Field(num - 1, BITFIELD_1, BITFIELD_1) + VAL_4;
 
     VerifyIncList(adr.GetImm(), {num * vt.GetBit() / VAL_8}, Err::ILLEGAL_IMM_VALUE);
 
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x1b, BITFIELD_23), LeftShift(l, BITFIELD_22),
-        LeftShift(r, BITFIELD_21), LeftShift(0x1f, BITFIELD_16), LeftShift(opc, BITFIELD_13), LeftShift(s, BITFIELD_12),
-        LeftShift(size, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
+                            LeftShift(r, BITFIELD_21), LeftShift(0x1f, BITFIELD_16), LeftShift(opc, BITFIELD_13),
+                            LeftShift(s, BITFIELD_12), LeftShift(size, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -111,18 +119,17 @@ void CodeGenerator::LdStSimdFpPair(uint32_t l, const VRegSc &vt1, const VRegSc &
     int32_t times = vt1.GetBit() / 32;
 
     VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
-    VerifyCond(
-        imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
+                   Err::ILLEGAL_IMM_RANGE, true);
+    VerifyCond(imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t opc = (vt1.GetBit() == 32) ? 0 : (vt1.GetBit() == 64) ? 1 : 2;
     uint32_t sh = static_cast<uint32_t>(std::log2(4 * times));
     uint32_t imm7 = (imm >> sh) & Ones(IMM7_BIT_LENGTH);
     uint32_t v = 1;
     uint32_t code = Concat({LeftShift(opc, BITFIELD_30), LeftShift(0x5, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(0x2, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
-        LeftShift(vt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(vt1.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x2, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
+                            LeftShift(vt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
+                            LeftShift(vt1.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -133,18 +140,17 @@ void CodeGenerator::LdStSimdFpPairPre(uint32_t l, const VRegSc &vt1, const VRegS
     int32_t times = vt1.GetBit() / 32;
 
     VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
-    VerifyCond(
-        imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
+                   Err::ILLEGAL_IMM_RANGE, true);
+    VerifyCond(imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t opc = (vt1.GetBit() == 32) ? 0 : (vt1.GetBit() == 64) ? 1 : 2;
     uint32_t sh = static_cast<uint32_t>(std::log2(OFFSET_FOUR * times));
     uint32_t imm7 = (imm >> sh) & Ones(IMM7_BIT_LENGTH);
     uint32_t v = 1;
     uint32_t code = Concat({LeftShift(opc, BITFIELD_30), LeftShift(0x5, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(0x3, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
-        LeftShift(vt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(vt1.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x3, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
+                            LeftShift(vt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
+                            LeftShift(vt1.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -155,18 +161,17 @@ void CodeGenerator::LdStSimdFpPairPostImm(uint32_t l, const VRegSc &vt1, const V
     int32_t times = vt1.GetBit() / 32;
 
     VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
-    VerifyCond(
-        imm, [times](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
+                   Err::ILLEGAL_IMM_RANGE, true);
+    VerifyCond(imm, [times](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t opc = (vt1.GetBit() == 32) ? 0 : (vt1.GetBit() == 64) ? 1 : 2;
     uint32_t sh = static_cast<uint32_t>(std::log2(OFFSET_FOUR * times));
     uint32_t imm7 = (imm >> sh) & Ones(IMM7_BIT_LENGTH);
     uint32_t v = 1;
     uint32_t code = Concat({LeftShift(opc, BITFIELD_30), LeftShift(0x5, BITFIELD_27), LeftShift(v, BITFIELD_26),
-        LeftShift(0x1, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
-        LeftShift(vt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(vt1.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x1, BITFIELD_23), LeftShift(l, BITFIELD_22), LeftShift(imm7, BITFIELD_15),
+                            LeftShift(vt2.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
+                            LeftShift(vt1.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -179,12 +184,12 @@ void CodeGenerator::LdStSimdFpUnImm(uint32_t opc, const VRegSc &vt, const AdrUim
     uint32_t imm12 = (imm >> sh) & Ones(IMM12_BIT_LENGTH);
 
     VerifyIncRange(imm, 0, IMM13_RANGE_HIGH * times, Err::ILLEGAL_IMM_RANGE);
-    VerifyCond(imm, [=](uint64_t x) {return ((x & Ones(sh)) == 0);}, Err::ILLEGAL_IMM_COND);
+    VerifyCond(imm, [=](uint64_t x) { return ((x & Ones(sh)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t size = GenSize(vt);
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(0x1, BITFIELD_26),
-        LeftShift(0x1, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), BITFIELD_0)});
+                            LeftShift(0x1, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
+                            LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -193,28 +198,29 @@ void CodeGenerator::AdvSimdPermute(uint32_t opcode, const VRegVec &vd, const VRe
 {
     uint32_t q = GenQ(vd);
     uint32_t size = GenSize(vd);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0xe, BITFIELD_24), LeftShift(size, BITFIELD_22),
-        LeftShift(vm.GetIdx(), BITFIELD_16), LeftShift(opcode, BITFIELD_12), LeftShift(0x2, BITFIELD_10),
-        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(0xe, BITFIELD_24), LeftShift(size, BITFIELD_22),
+                LeftShift(vm.GetIdx(), BITFIELD_16), LeftShift(opcode, BITFIELD_12), LeftShift(0x2, BITFIELD_10),
+                LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Advanced SIMD extract
-void CodeGenerator::AdvSimdExtract(
-    uint32_t op2, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm, uint32_t index)
+void CodeGenerator::AdvSimdExtract(uint32_t op2, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm,
+                                   uint32_t index)
 {
     uint32_t q = GenQ(vd);
     uint32_t imm4 = static_cast<uint32_t>(index) & Ones(IMM4_BIT_LENGTH);
 
     VerifyIncRange(index, 0, IMM5_RANGE_HIGH, Err::ILLEGAL_CONST_RANGE);
     if (q == 0) {
-        VerifyCond(imm4, [](int64_t x) { return (static_cast<uint64_t>(x) >> OFFSET_THREE) == 0; },
-            Err::ILLEGAL_CONST_COND);
+        VerifyCond(
+            imm4, [](int64_t x) { return (static_cast<uint64_t>(x) >> OFFSET_THREE) == 0; }, Err::ILLEGAL_CONST_COND);
     }
 
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x2e, BITFIELD_24), LeftShift(op2, BITFIELD_22),
-        LeftShift(vm.GetIdx(), BITFIELD_16), LeftShift(imm4, BITFIELD_11),
-        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+                            LeftShift(vm.GetIdx(), BITFIELD_16), LeftShift(imm4, BITFIELD_11),
+                            LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -225,8 +231,8 @@ void CodeGenerator::AdvSimdCopyDupElem(uint32_t op, uint32_t imm4, const VRegVec
     uint32_t size = GenSize(vd);
     uint32_t imm5 = (0x1 << size) | (vn.GetElemIdx() << (size + OFFSET_ONE));
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11),
-        LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+                            LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x1, BITFIELD_10),
+                            LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -237,8 +243,8 @@ void CodeGenerator::AdvSimdCopyDupGen(uint32_t op, uint32_t imm4, const VRegVec 
     uint32_t size = GenSize(vd);
     uint32_t imm5 = 0x1 << size;
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x3, BITFIELD_10),
-        LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+                            LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x3, BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -249,8 +255,8 @@ void CodeGenerator::AdvSimdCopyMov(uint32_t op, uint32_t imm4, const RReg &rd, c
     uint32_t size = GenSize(vn);
     uint32_t imm5 = ((0x1 << size) | (vn.GetElemIdx() << (size + OFFSET_ONE))) & Ones(IMM5_BIT_LENGTH);
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x1, BITFIELD_10),
-        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
+                            LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x1, BITFIELD_10),
+                            LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -261,8 +267,8 @@ void CodeGenerator::AdvSimdCopyInsGen(uint32_t op, uint32_t imm4, const VRegElem
     uint32_t size = GenSize(vd);
     uint32_t imm5 = ((0x1 << size) | (vd.GetElemIdx() << (size + OFFSET_ONE))) & Ones(IMM5_BIT_LENGTH);
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x1, BITFIELD_10),
-        LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+                            LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x1, BITFIELD_10),
+                            LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -274,8 +280,8 @@ void CodeGenerator::AdvSimdCopyElemIns(uint32_t op, const VRegElem &vd, const VR
     uint32_t imm5 = ((0x1 << size) | (vd.GetElemIdx() << (size + OFFSET_ONE))) & Ones(IMM5_BIT_LENGTH);
     uint32_t imm4 = (vn.GetElemIdx() << size) & Ones(IMM4_BIT_LENGTH);
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x1, BITFIELD_10),
-        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+                            LeftShift(imm5, BITFIELD_16), LeftShift(imm4, BITFIELD_11), LeftShift(0x1, BITFIELD_10),
+                            LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -284,9 +290,10 @@ void CodeGenerator::AdvSimd2RegMisc(uint32_t q, uint32_t u, uint32_t opcode, con
 {
     uint32_t size = GenSize(vn);
 
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(opcode, BITFIELD_12),
-        LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(opcode, BITFIELD_12),
+                LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -296,9 +303,10 @@ void CodeGenerator::AdvSimd2RegMiscSz0x(uint32_t u, uint32_t opcode, const VRegV
     bool selVd = (opcode == 0x17);
     uint32_t q = (!selVd) ? GenQ(vd) : GenQ(vn);
     uint32_t size = (selVd) ? GenSize(vd) : GenSize(vn);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift((size & 0x1), BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(opcode, BITFIELD_12),
-        LeftShift(2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift((size & 0x1), BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(opcode, BITFIELD_12),
+                LeftShift(2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -307,9 +315,10 @@ void CodeGenerator::AdvSimd2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegV
 {
     uint32_t q = GenQ(vd);
     uint32_t size = GenSize(vd);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(opcode, BITFIELD_12),
-        LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(opcode, BITFIELD_12),
+                LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -318,9 +327,10 @@ void CodeGenerator::AdvSimdAcrossLanes(uint32_t u, uint32_t opcode, const VRegSc
 {
     uint32_t q = GenQ(vn);
     uint32_t size = GenSize(vn);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(size, BITFIELD_22), LeftShift(0x3, BITFIELD_20), LeftShift(opcode, BITFIELD_12),
-        LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift(size, BITFIELD_22), LeftShift(0x3, BITFIELD_20), LeftShift(opcode, BITFIELD_12),
+                LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -329,76 +339,86 @@ void CodeGenerator::AdvSimd3Same(uint32_t u, uint32_t opcode, const VRegVec &vd,
 {
     uint32_t q = GenQ(vd);
     uint32_t size = GenSize(vd);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
-        LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
-        LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+                LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+                LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Advanced SIMD three same
-void CodeGenerator::AdvSimd3SameSz0x(
-    uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm)
+void CodeGenerator::AdvSimd3SameSz0x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn,
+                                     const VRegVec &vm)
 {
     uint32_t q = GenQ(vd);
     uint32_t size = GenSize(vd) & 1;
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
-        LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
-        LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+                LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+                LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Advanced SIMD three same
-void CodeGenerator::AdvSimd3SameSz1x(uint32_t u, uint32_t opcode, const VRegVec &vd,
-    const VRegVec &vn, const VRegVec &vm)
+void CodeGenerator::AdvSimd3SameSz1x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn,
+                                     const VRegVec &vm)
 {
     uint32_t q = GenQ(vd);
     uint32_t size = GenSize(vd);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
-        LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
-        LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+                LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+                LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Advanced SIMD three same
-void CodeGenerator::AdvSimd3SameSz(
-    uint32_t u, uint32_t size, uint32_t opcode, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm)
+void CodeGenerator::AdvSimd3SameSz(uint32_t u, uint32_t size, uint32_t opcode, const VRegVec &vd, const VRegVec &vn,
+                                   const VRegVec &vm)
 {
     uint32_t q = GenQ(vd);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
-        LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
-        LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
-        LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+                LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+                LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+                LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Advanced SIMD modified immediate (vector)
-void CodeGenerator::AdvSimdModiImmMoviMvni(
-    uint32_t op, uint32_t o2, const VRegVec &vd, uint32_t imm, ShMod shmod, uint32_t sh)
+void CodeGenerator::AdvSimdModiImmMoviMvni(uint32_t op, uint32_t o2, const VRegVec &vd, uint32_t imm, ShMod shmod,
+                                           uint32_t sh)
 {
     uint32_t q = GenQ(vd);
     uint32_t crmode = (vd.GetBit() == VectorComputation_ELT_BITLEN_B) ? 0xe :
-        (vd.GetBit() == VectorComputation_ELT_BITLEN_H) ? 0x8 | (sh >> OFFSET_TWO) :
-        (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::LSL) ? (sh >> OFFSET_TWO) :
-        (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::MSL) ? 0xc | (sh >> OFFSET_FOUR) : 0xe;
+                      (vd.GetBit() == VectorComputation_ELT_BITLEN_H) ? 0x8 | (sh >> OFFSET_TWO) :
+                      (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::LSL) ? (sh >> OFFSET_TWO) :
+                      (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::MSL) ? 0xc |
+                                                                                                   (sh >> OFFSET_FOUR) :
+                                                                                               0xe;
 
     if (vd.GetBit() == VectorComputation_ELT_BITLEN_B) {
         VerifyIncList(sh, {0}, Err::ILLEGAL_CONST_VALUE);
     } else if (vd.GetBit() == VectorComputation_ELT_BITLEN_H) {
-        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, BITFIELD_1, BITFIELD_1)}, Err::ILLEGAL_CONST_VALUE);
+        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, BITFIELD_1, BITFIELD_1)},
+                      Err::ILLEGAL_CONST_VALUE);
     } else if (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::LSL) {
-        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, BITFIELD_2, BITFIELD_1)}, Err::ILLEGAL_CONST_VALUE);
+        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, BITFIELD_2, BITFIELD_1)},
+                      Err::ILLEGAL_CONST_VALUE);
     } else if (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::MSL) {
-        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, 0, 0) + VectorComputation_ELT_BITLEN_B}, Err::ILLEGAL_CONST_VALUE);
+        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, 0, 0) + VectorComputation_ELT_BITLEN_B},
+                      Err::ILLEGAL_CONST_VALUE);
     }
 
     uint32_t abc = Field(imm, BITFIELD_7, BITFIELD_5);
     uint32_t defgh = Field(imm, BITFIELD_4, BITFIELD_0);
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xf, BITFIELD_24),
-        LeftShift(abc, BITFIELD_16), LeftShift(crmode, BITFIELD_12), LeftShift(o2, BITFIELD_11),
-        LeftShift(0x1, BITFIELD_10), LeftShift(defgh, BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xf, BITFIELD_24),
+                LeftShift(abc, BITFIELD_16), LeftShift(crmode, BITFIELD_12), LeftShift(o2, BITFIELD_11),
+                LeftShift(0x1, BITFIELD_10), LeftShift(defgh, BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -417,20 +437,22 @@ void CodeGenerator::AdvSimdShImm(uint32_t u, uint32_t opcode, const VRegVec &vd,
 
     VerifyIncRange(sh, (OFFSET_ONE - lsh), (base - lsh), Err::ILLEGAL_CONST_RANGE);
 
-    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xf, BITFIELD_24),
-        LeftShift(immh, BITFIELD_19), LeftShift(immb, BITFIELD_16), LeftShift(opcode, BITFIELD_11),
-        LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xf, BITFIELD_24),
+                LeftShift(immh, BITFIELD_19), LeftShift(immb, BITFIELD_16), LeftShift(opcode, BITFIELD_11),
+                LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
 // Floating-piont data-processing (2 source)
-void CodeGenerator::FpDataProc2Reg(
-    uint32_t m, uint32_t s, uint32_t type, uint32_t opcode, const VRegSc &vd, const VRegSc &vn, const VRegSc &vm)
+void CodeGenerator::FpDataProc2Reg(uint32_t m, uint32_t s, uint32_t type, uint32_t opcode, const VRegSc &vd,
+                                   const VRegSc &vn, const VRegSc &vm)
 {
-    uint32_t code = Concat({LeftShift(m, BITFIELD_31), LeftShift(s, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
-        LeftShift(type, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
-        LeftShift(opcode, BITFIELD_12), LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
-        LeftShift(vd.GetIdx(), BITFIELD_0)});
+    uint32_t code =
+        Concat({LeftShift(m, BITFIELD_31), LeftShift(s, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+                LeftShift(type, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+                LeftShift(opcode, BITFIELD_12), LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+                LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -809,4 +831,4 @@ void CodeGenerator::Fadd(const SReg &vd, const SReg &vn, const SReg &vm)
     FpDataProc2Reg(0, 0, 0, VAL_2, vd, vn, vm);
 }
 
-} // ARMCG
+} // namespace ARMCG

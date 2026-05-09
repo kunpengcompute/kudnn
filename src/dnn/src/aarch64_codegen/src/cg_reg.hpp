@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -33,17 +33,44 @@ public:
     };
     enum class Code {
         X0 = 0,
-        X1,  X2,  X3,  X4,  X5,  X6,  X7,  X8,  X9,  X10,
-        X11, X12, X13, X14, X15, X16, X17, X18, X19, X20,
-        X21, X22, X23, X24, X25, X26, X27, X28, X29, X30,
+        X1,
+        X2,
+        X3,
+        X4,
+        X5,
+        X6,
+        X7,
+        X8,
+        X9,
+        X10,
+        X11,
+        X12,
+        X13,
+        X14,
+        X15,
+        X16,
+        X17,
+        X18,
+        X19,
+        X20,
+        X21,
+        X22,
+        X23,
+        X24,
+        X25,
+        X26,
+        X27,
+        X28,
+        X29,
+        X30,
         X31 = 31,
     };
 
 public:
     explicit Operand(Kind kind, uint32_t bit) noexcept : kind_(kind), bit_(bit) {}
 
-    static const int vl = 4;        // vector length
-    static const int svl = 4;       // streaming vector length. svl >= vl
+    static const int vl = 4;  // vector length
+    static const int svl = 4; // streaming vector length. svl >= vl
 
     uint32_t GetBit() const
     {
@@ -86,9 +113,7 @@ private:
 
 class Reg : public Operand {
 public:
-    explicit Reg(uint32_t index, Kind kind, uint32_t bit) noexcept
-        : Operand(kind, bit),
-          index_(index) {}
+    explicit Reg(uint32_t index, Kind kind, uint32_t bit) noexcept : Operand(kind, bit), index_(index) {}
 
     uint32_t GetIdx() const
     {
@@ -131,7 +156,7 @@ public:
 };
 class SReg : public VRegSc {
 public:
-    explicit SReg(uint32_t index)  noexcept : VRegSc(index, BIT_32) {}
+    explicit SReg(uint32_t index) noexcept : VRegSc(index, BIT_32) {}
 };
 class DReg : public VRegSc {
 public:
@@ -151,14 +176,13 @@ public:
 // VectorComputation SIMD Vector Register Element
 class ZRegElem : public ZRegBase {
 public:
-    explicit ZRegElem(uint32_t index, uint32_t eidx, uint32_t bit) noexcept
-        : ZRegBase(index, bit),
-          elemIdx_(eidx) {}
+    explicit ZRegElem(uint32_t index, uint32_t eidx, uint32_t bit) noexcept : ZRegBase(index, bit), elemIdx_(eidx) {}
 
     uint32_t GetElemIdx() const
     {
         return elemIdx_;
     }
+
 private:
     uint32_t elemIdx_;
 };
@@ -166,15 +190,17 @@ private:
 // base for VectorComputation SIMD Vector Register List
 class ZRegList : public ZRegBase {
 public:
-    explicit ZRegList(const ZRegBase &s) noexcept
-        : ZRegBase(s.GetIdx(), s.GetBit()), len_(1) {}
+    explicit ZRegList(const ZRegBase &s) noexcept : ZRegBase(s.GetIdx(), s.GetBit()), len_(1) {}
     explicit ZRegList(const ZRegBase &s, const ZRegBase &e) noexcept
-        : ZRegBase(s.GetIdx(), s.GetBit()), len_(e.GetIdx() - s.GetIdx() + 1) {}
+        : ZRegBase(s.GetIdx(), s.GetBit()), len_(e.GetIdx() - s.GetIdx() + 1)
+    {
+    }
 
     uint32_t GetLen() const
     {
         return len_;
     }
+
 private:
     uint32_t len_;
 };
@@ -236,7 +262,7 @@ public:
 class ZRegDList : public ZRegList {
 public:
     explicit ZRegDList(const ZRegD &s) noexcept;
-    explicit ZRegDList(const ZRegBase &s, const ZRegBase &e) noexcept: ZRegList(s, e) {}
+    explicit ZRegDList(const ZRegBase &s, const ZRegBase &e) noexcept : ZRegList(s, e) {}
     ZRegDElem operator[](uint32_t i) const
     {
         return ZRegDElem(GetIdx(), i);
@@ -328,7 +354,9 @@ public:
 class PRegBase : public Reg {
 public:
     explicit PRegBase(uint32_t index, bool m = false, uint32_t bits = VAL_16 * vl) noexcept
-        : Reg(index, ((m == 0) ? Kind::PREG_Z : Kind::PREG_M), bits) {}
+        : Reg(index, ((m == 0) ? Kind::PREG_Z : Kind::PREG_M), bits)
+    {
+    }
 
     bool IsM() const
     {
@@ -364,12 +392,9 @@ enum class PredType {
 
 class PReg : public PRegBase {
 public:
-    explicit PReg(uint32_t index, bool m = false) noexcept
-        : PRegBase(index, m),
-          b(index),
-          h(index),
-          s(index),
-          d(index) {}
+    explicit PReg(uint32_t index, bool m = false) noexcept : PRegBase(index, m), b(index), h(index), s(index), d(index)
+    {
+    }
     PRegBase operator/(PredType t) const
     {
         return (t == PredType::T_Z) ? PRegBase(GetIdx(), false) : PRegBase(GetIdx(), true);
@@ -435,6 +460,6 @@ public:
     ZARegVB b;
 };
 
-} // ARMCG
+} // namespace ARMCG
 
 #endif // CG_REG_HPP

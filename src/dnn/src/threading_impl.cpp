@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -147,7 +147,7 @@ ThreadingControl GetThreadingControlStatus() noexcept
 
 SplitDimInfo GetSplitDimInfo(const Shape &batchedDims, SizeType optNumThreads)
 {
-    SplitDimInfo info {0, 1, {0, 0, 0, 0, 0}};
+    SplitDimInfo info{0, 1, {0, 0, 0, 0, 0}};
 
     // find d (lastDimSplitIdx)
     while ((info.lastDimSplitIdx < batchedDims.GetNumDims()) && (info.prod <= optNumThreads)) {
@@ -166,7 +166,7 @@ SplitDimInfo GetSplitDimInfo(const Shape &batchedDims, SizeType optNumThreads)
 // partition logic is closely related to strides computations. Splitting these two logical points
 // may lead to unaligned behavior between them, thus errors.
 // each vector element represents splitDims and splitStrides for the i-th thread.
-std::vector<std::pair<Shape, Shape>> SplitDims(const Shape &batchedDims, SizeType& optNumThreads) noexcept
+std::vector<std::pair<Shape, Shape>> SplitDims(const Shape &batchedDims, SizeType &optNumThreads) noexcept
 {
     SplitDimInfo res = GetSplitDimInfo(batchedDims, optNumThreads);
     SizeType lastDimSplitIdx = res.lastDimSplitIdx;
@@ -188,8 +188,8 @@ std::vector<std::pair<Shape, Shape>> SplitDims(const Shape &batchedDims, SizeTyp
     }
 
     std::array<SizeType, MAX_DIMS> splitDimsResid = splitDims;
-    splitDimsResid[lastDimSplitIdx] = batchedDims[lastDimSplitIdx] -
-        (numThreadsLastSplitDim - 1) * splitDims[lastDimSplitIdx];
+    splitDimsResid[lastDimSplitIdx] =
+        batchedDims[lastDimSplitIdx] - (numThreadsLastSplitDim - 1) * splitDims[lastDimSplitIdx];
     // fill other dimensions unchanged
     SizeType ctr = lastDimSplitIdx + 1;
     while (ctr < batchedDims.GetNumDims()) {
@@ -218,5 +218,5 @@ std::vector<std::pair<Shape, Shape>> SplitDims(const Shape &batchedDims, SizeTyp
     return out;
 }
 
-} // Threading
-} // KuDNN
+} // namespace Threading
+} // namespace KuDNN

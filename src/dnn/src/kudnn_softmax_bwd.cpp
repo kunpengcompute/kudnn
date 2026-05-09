@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -48,23 +48,26 @@ static constexpr SizeType SOFTMAX_BWD_THREADS_THRESHOLD_3 = 160;
 
 class SoftmaxLayerBWDImpl final : public Parallelizable {
 public:
-
-    SoftmaxLayerBWDImpl(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo,
-        const TensorInfo &srcDiffInfo, SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept(false)
-        : compType(Element::TypeT::F32), dstT(dstInfo), dstDiffT(dstDiffInfo), srcDiffT(srcDiffInfo),
-        /*  since all the arrays are broadcasted to 5D, we need to add extra dimensions which were broadcasted */
-        axisNum(dstInfo.GetAxisNumAccordingToLayout(axis) + MAX_DIMS - dstInfo.GetNumDims()), algKind(algorithm)
+    SoftmaxLayerBWDImpl(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo, const TensorInfo &srcDiffInfo,
+                        SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept(false)
+        : compType(Element::TypeT::F32),
+          dstT(dstInfo),
+          dstDiffT(dstDiffInfo),
+          srcDiffT(srcDiffInfo),
+          /*  since all the arrays are broadcasted to 5D, we need to add extra dimensions which were broadcasted */
+          axisNum(dstInfo.GetAxisNumAccordingToLayout(axis) + MAX_DIMS - dstInfo.GetNumDims()),
+          algKind(algorithm)
     {
         Service::ThrowOnStatus(SoftmaxLayerBWD::ValidateInput(dstInfo, dstDiffInfo, srcDiffInfo, axis, algorithm),
-            "Softmax Layer");
-        reorderedDims = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dstInfo.GetDims(),
-            dstInfo.GetLayout()));
-        reorderedStridesDst  = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dstInfo.GetStrides(),
-            dstInfo.GetLayout()), false);
-        reorderedStridesDstDiff = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dstDiffInfo.GetStrides(),
-            dstDiffInfo.GetLayout()), false);
-        reorderedStridesSrcDiff = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcDiffInfo.GetStrides(),
-            srcDiffInfo.GetLayout()), false);
+                               "Softmax Layer");
+        reorderedDims =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dstInfo.GetDims(), dstInfo.GetLayout()));
+        reorderedStridesDst = Service::BroadcastTo5D(
+            Service::GetShapeAccordingToLayout(dstInfo.GetStrides(), dstInfo.GetLayout()), false);
+        reorderedStridesDstDiff = Service::BroadcastTo5D(
+            Service::GetShapeAccordingToLayout(dstDiffInfo.GetStrides(), dstDiffInfo.GetLayout()), false);
+        reorderedStridesSrcDiff = Service::BroadcastTo5D(
+            Service::GetShapeAccordingToLayout(srcDiffInfo.GetStrides(), srcDiffInfo.GetLayout()), false);
         // extra dimensions which were broadcasted
         Parallelizable::Initialize(GetOptNumThreads(), BatchedDims());
     }
@@ -79,28 +82,28 @@ public:
         const DstType *typedDst = static_cast<const DstType *>(dst);
         const DstType *typedDiffDst = static_cast<const DstType *>(dstDiff);
         if (axisNum == (reorderedDims.GetNumDims() - 1)) {
-            Softmax::EvaluateLastAxisBWD<CompType>(typedDst, typedDiffDst, typedDiffSrc,
-                axisSize, outerSize, axisNum, algKind);
+            Softmax::EvaluateLastAxisBWD<CompType>(typedDst, typedDiffDst, typedDiffSrc, axisSize, outerSize, axisNum,
+                                                   algKind);
         } else {
-            Softmax::EvaluateCrossAxisBWD<CompType>(typedDst, typedDiffDst, typedDiffSrc,
-                innerSize, axisSize, outerSize, algKind);
+            Softmax::EvaluateCrossAxisBWD<CompType>(typedDst, typedDiffDst, typedDiffSrc, innerSize, axisSize,
+                                                    outerSize, algKind);
         }
     }
 
-    void RunSequential(const Shape &batchSplitDims, const void *dst,
-                       const void *dstDiff, void *srcDiff) const noexcept(false)
+    void RunSequential(const Shape &batchSplitDims, const void *dst, const void *dstDiff, void *srcDiff) const
+        noexcept(false)
     {
         if (srcDiffT.GetType() != dstT.GetType()) {
-            Service::ParseType<false, false>(compType, compType, compType,
-                *this, batchSplitDims, dst, dstDiff, srcDiff);
+            Service::ParseType<false, false>(compType, compType, compType, *this, batchSplitDims, dst, dstDiff,
+                                             srcDiff);
         } else {
             Service::ParseType<false, false>(compType, srcDiffT.GetType(), dstT.GetType(), *this, batchSplitDims, dst,
-                dstDiff, srcDiff);
+                                             dstDiff, srcDiff);
         }
     }
 
-    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, const void *dst,
-        const void *dstDiff, void *srcDiff) const noexcept(false)
+    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, const void *dst, const void *dstDiff,
+                       void *srcDiff) const noexcept(false)
     {
         SizeType strideDst = 0;
         SizeType strideDstDiff = 0;
@@ -113,14 +116,14 @@ public:
             strideSrcDiff += batchStrides[i] * reorderedStridesSrcDiff[i] * srcSize;
         }
         RunSequential(batchSplitDims, static_cast<const std::byte *>(dst) + strideDst,
-            static_cast<const std::byte *>(dstDiff) + strideDstDiff,
-            static_cast<std::byte *>(srcDiff) + strideSrcDiff);
+                      static_cast<const std::byte *>(dstDiff) + strideDstDiff,
+                      static_cast<std::byte *>(srcDiff) + strideSrcDiff);
     }
 
     void Run(const void *dst, const void *dstDiff, void *srcDiff) const noexcept(false)
     {
         if ((dst == nullptr) || (dstDiff == nullptr) || (srcDiff == nullptr)) {
-            throw Service::LogicError {"Softmax Layer: one of input matrices is nullptr"};
+            throw Service::LogicError{"Softmax Layer: one of input matrices is nullptr"};
         }
         const void *dstExec = dst;
         const void *dstDiffExec = dstDiff;
@@ -193,8 +196,7 @@ private:
             if (totalSize < SOFTMAX_BWD_TOTAL_SIZE_1) {
                 return (totalSize + SOFTMAX_BWD_THR_SCALER_1 - 1) / SOFTMAX_BWD_THR_SCALER_1;
             } else {
-                float coef = std::pow(SOFTMAX_BWD_THR_POWER_1,
-                    std::log2(totalSize / SOFTMAX_BWD_TOTAL_SIZE_1));
+                float coef = std::pow(SOFTMAX_BWD_THR_POWER_1, std::log2(totalSize / SOFTMAX_BWD_TOTAL_SIZE_1));
                 return static_cast<SizeType>(SOFTMAX_BWD_THR_SCALER_2 * coef);
             }
         } else if (innerWithAxisSize < SOFTMAX_BWD_INNER_SIZE_2) {
@@ -219,21 +221,25 @@ private:
     }
 };
 
-} // Detail
+} // namespace Detail
 
 SoftmaxLayerBWD::~SoftmaxLayerBWD() noexcept {}
 
 SoftmaxLayerBWD::SoftmaxLayerBWD(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo,
-    const TensorInfo &srcDiffInfo, SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept(false)
-    : pImpl(new Detail::SoftmaxLayerBWDImpl(dstInfo, dstDiffInfo, srcDiffInfo, axis, algorithm)) {}
+                                 const TensorInfo &srcDiffInfo, SizeType axis,
+                                 SoftmaxAlgorithmKind algorithm) noexcept(false)
+    : pImpl(new Detail::SoftmaxLayerBWDImpl(dstInfo, dstDiffInfo, srcDiffInfo, axis, algorithm))
+{
+}
 
 SoftmaxLayerBWD::SoftmaxLayerBWD(const SoftmaxLayerBWD &other) noexcept(false)
-    : pImpl(new Detail::SoftmaxLayerBWDImpl{*(other.pImpl.get())}) {}
+    : pImpl(new Detail::SoftmaxLayerBWDImpl{*(other.pImpl.get())})
+{
+}
 
-SoftmaxLayerBWD::SoftmaxLayerBWD(SoftmaxLayerBWD &&other) noexcept
-    : pImpl(std::move(other.pImpl)) {}
+SoftmaxLayerBWD::SoftmaxLayerBWD(SoftmaxLayerBWD &&other) noexcept : pImpl(std::move(other.pImpl)) {}
 
-SoftmaxLayerBWD& SoftmaxLayerBWD::operator=(const SoftmaxLayerBWD &other) noexcept(false)
+SoftmaxLayerBWD &SoftmaxLayerBWD::operator=(const SoftmaxLayerBWD &other) noexcept(false)
 {
     if (this != &other) {
         this->pImpl.reset(new Detail::SoftmaxLayerBWDImpl{*(other.pImpl.get())});
@@ -241,7 +247,7 @@ SoftmaxLayerBWD& SoftmaxLayerBWD::operator=(const SoftmaxLayerBWD &other) noexce
     return *this;
 }
 
-SoftmaxLayerBWD& SoftmaxLayerBWD::operator=(SoftmaxLayerBWD &&other) noexcept
+SoftmaxLayerBWD &SoftmaxLayerBWD::operator=(SoftmaxLayerBWD &&other) noexcept
 {
     if (this != &other) {
         this->pImpl = std::move(other.pImpl);
@@ -255,7 +261,8 @@ void SoftmaxLayerBWD::Run(const void *dst, const void *dstDiff, void *srcDiff) c
 }
 
 Status SoftmaxLayerBWD::ValidateInput(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo,
-    const TensorInfo &srcDiffInfo, SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept
+                                      const TensorInfo &srcDiffInfo, SizeType axis,
+                                      SoftmaxAlgorithmKind algorithm) noexcept
 {
     Service::Unused(algorithm);
     if (dstInfo.GetType() != dstDiffInfo.GetType()) {
@@ -282,4 +289,4 @@ Status SoftmaxLayerBWD::ValidateInput(const TensorInfo &dstInfo, const TensorInf
     return Status::SUCCESS;
 }
 
-} // KuDNN
+} // namespace KuDNN

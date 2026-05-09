@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -29,7 +29,8 @@ static void KplVmlVsExpLaSveMainN(const float *src, float *dst, int step)
     VML_VectorComputation_FUNC_NOPG_N3_3PARA(x, svsub_f32_m, pgSpR, x, VectorComputation_FLOAT_TWO);
 
     VML_VectorComputation_DECLARE(svfloat32_t, ki);
-    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, x, VectorComputation_EXPF_INVLN2HI, VectorComputation_EXP2F_SHIFT);
+    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, x, VectorComputation_EXPF_INVLN2HI,
+                                            VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svfloat32_t, kd);
     VML_VectorComputation_FUNC_PG_N2_2PARA(kd, svsub_f32_x, pg, ki, VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svuint32_t, k);
@@ -42,7 +43,8 @@ static void KplVmlVsExpLaSveMainN(const float *src, float *dst, int step)
 
     // polynomial of exp2
     VML_VectorComputation_DECLARE(svfloat32_t, poly);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r, VectorComputation_EXP2F_C0);
+    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r,
+                                            VectorComputation_EXP2F_C0);
     VML_VectorComputation_FUNC_PG_N1_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C2, poly, r);
     VML_VectorComputation_DECLARE(svfloat32_t, res);
     VML_VectorComputation_FUNC_PG_2PARA(res, svmul_f32_x, pg, expk, poly);
@@ -85,7 +87,8 @@ static void ExpMainKernelBwdF32(const float *src, const float *dd, float *ds, in
     VML_VectorComputation_FUNC_NOPG_N3_3PARA(srcX, svsub_f32_m, pgSpR, srcX, VectorComputation_FLOAT_TWO);
 
     VML_VectorComputation_DECLARE(svfloat32_t, ki);
-    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, srcX, VectorComputation_EXPF_INVLN2HI, VectorComputation_EXP2F_SHIFT);
+    VML_VectorComputation_FUNC_PG_N23_3PARA(ki, svmad_f32_x, pg, srcX, VectorComputation_EXPF_INVLN2HI,
+                                            VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svfloat32_t, kd);
     VML_VectorComputation_FUNC_PG_N2_2PARA(kd, svsub_f32_x, pg, ki, VectorComputation_EXP2F_SHIFT);
     VML_VectorComputation_DECLARE(svuint32_t, k);
@@ -98,7 +101,8 @@ static void ExpMainKernelBwdF32(const float *src, const float *dd, float *ds, in
 
     // polynomial of exp2
     VML_VectorComputation_DECLARE(svfloat32_t, poly);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r, VectorComputation_EXP2F_C0);
+    VML_VectorComputation_FUNC_PG_N13_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C1, r,
+                                            VectorComputation_EXP2F_C0);
     VML_VectorComputation_FUNC_PG_N1_3PARA(poly, svmla_f32_x, pg, VectorComputation_EXP2F_C2, poly, r);
     VML_VectorComputation_DECLARE(svfloat32_t, partialX);
     VML_VectorComputation_FUNC_PG_2PARA(partialX, svmul_f32_x, pg, expk, poly);

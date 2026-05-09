@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,13 +30,13 @@ extern const struct SveExpfData G_VectorComputation_VSEXP_DATA;
 #define VectorComputation_EXPF_UPBOUND svdup_f32(G_VectorComputation_VSEXP_DATA.upBound)
 #define VectorComputation_EXPF_LOWBOUND svdup_f32(G_VectorComputation_VSEXP_DATA.lowBound)
 
-#define VectorComputation_EXPF_LN2HI  svdup_f32(0x1.62e43p-1f)
-#define VectorComputation_EXPF_C0     svdup_f32(0x1p0f)
-#define VectorComputation_EXPF_C1     svdup_f32(0x1.fffff6p-1f)
-#define VectorComputation_EXPF_C2     svdup_f32(0x1.fffdc6p-2f)
-#define VectorComputation_EXPF_C3     svdup_f32(0x1.555a8p-3f)
-#define VectorComputation_EXPF_C4     svdup_f32(0x1.573a1ap-5f)
-#define VectorComputation_EXPF_C5     svdup_f32(0x1.0f9f9cp-7f)
+#define VectorComputation_EXPF_LN2HI svdup_f32(0x1.62e43p-1f)
+#define VectorComputation_EXPF_C0 svdup_f32(0x1p0f)
+#define VectorComputation_EXPF_C1 svdup_f32(0x1.fffff6p-1f)
+#define VectorComputation_EXPF_C2 svdup_f32(0x1.fffdc6p-2f)
+#define VectorComputation_EXPF_C3 svdup_f32(0x1.555a8p-3f)
+#define VectorComputation_EXPF_C4 svdup_f32(0x1.573a1ap-5f)
+#define VectorComputation_EXPF_C5 svdup_f32(0x1.0f9f9cp-7f)
 
 #define VectorComputation_EXP2F_POLY_ORDER 3U
 
@@ -107,8 +107,8 @@ struct VectorComputation_EXPM1F_DATA {
 };
 extern __attribute__((aligned(0x20))) const struct VectorComputation_EXPM1F_DATA G_VectorComputation_EXPM1F_DATA;
 
-inline svfloat32_t VsExpm1PolySve(svbool_t pg, svfloat32_t r,
-    svfloat32_t laneVal, const struct VectorComputation_EXPM1F_DATA *d)
+inline svfloat32_t VsExpm1PolySve(svbool_t pg, svfloat32_t r, svfloat32_t laneVal,
+                                  const struct VectorComputation_EXPM1F_DATA *d)
 {
     svfloat32_t r2 = svmul_f32_x(pg, r, r);
 
@@ -126,8 +126,7 @@ inline svfloat32_t VsExpm1InlineSve(svbool_t pg, svfloat32_t x)
     const struct VectorComputation_EXPM1F_DATA *d = PTR_BARRIER(&G_VectorComputation_EXPM1F_DATA);
     svfloat32_t laneVal = svld1rq_f32(svptrue_b32(), &d->c2);
     svfloat32_t z = svmla_n_f32_x(pg, svdup_n_f32(d->shift), x, d->invLn2);
-    svfloat32_t exp2n = svreinterpret_f32_u32(svlsl_n_u32_x(pg, svreinterpret_u32_f32(z),
-        FLOAT_MANTISSA_BIT_LEN));
+    svfloat32_t exp2n = svreinterpret_f32_u32(svlsl_n_u32_x(pg, svreinterpret_u32_f32(z), FLOAT_MANTISSA_BIT_LEN));
     svfloat32_t n = svsub_n_f32_x(pg, z, d->shift);
     svfloat32_t r = svmls_lane_f32(svmls_lane_f32(x, n, laneVal, 0x2), n, laneVal, 0x3);
     svfloat32_t p = VsExpm1PolySve(pg, r, laneVal, d);

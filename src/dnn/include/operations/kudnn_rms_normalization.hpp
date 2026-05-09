@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,7 +10,6 @@
  * See the Mulan PSL v2 for more details.
  */
 
-
 #ifndef KUDNN_RMS_NORMALIZATION_HPP
 #define KUDNN_RMS_NORMALIZATION_HPP
 
@@ -21,27 +20,27 @@ namespace KuDNN {
 
 namespace Detail {
 class RMSNormalizationLayerFWDImpl;
-} // Detail
+} // namespace Detail
 
 class KUDNN_API_PUBLIC RMSNormalizationLayerFWD final {
 public:
     using SizeType = ::KuDNN::SizeType;
-    static Status ValidateInput(const TensorInfo &srcInfo, const TensorInfo &statsInfo,
-                                const TensorInfo &scaleInfo, const TensorInfo &dstInfo,
-                                NormalizationFlags flags) noexcept(false);
+    static Status ValidateInput(const TensorInfo &srcInfo, const TensorInfo &statsInfo, const TensorInfo &scaleInfo,
+                                const TensorInfo &dstInfo, NormalizationFlags flags) noexcept(false);
     RMSNormalizationLayerFWD(const TensorInfo &srcInfo, const TensorInfo &statsInfo, const TensorInfo &scaleInfo,
-                        const TensorInfo &dstInfo, NormalizationFlags flags) noexcept(false);
+                             const TensorInfo &dstInfo, NormalizationFlags flags) noexcept(false);
     RMSNormalizationLayerFWD(const RMSNormalizationLayerFWD &other) noexcept(false);
     RMSNormalizationLayerFWD(RMSNormalizationLayerFWD &&other) noexcept;
-    RMSNormalizationLayerFWD& operator=(const RMSNormalizationLayerFWD &other) noexcept(false);
-    RMSNormalizationLayerFWD& operator=(RMSNormalizationLayerFWD &&other) noexcept;
-    void Run(const void *src, void *dst, const void *scale, float *variance,
-            bool saveStats, const float eps) const noexcept(false);
+    RMSNormalizationLayerFWD &operator=(const RMSNormalizationLayerFWD &other) noexcept(false);
+    RMSNormalizationLayerFWD &operator=(RMSNormalizationLayerFWD &&other) noexcept;
+    void Run(const void *src, void *dst, const void *scale, float *variance, bool saveStats, const float eps) const
+        noexcept(false);
     ~RMSNormalizationLayerFWD() noexcept;
+
 private:
     std::unique_ptr<Detail::RMSNormalizationLayerFWDImpl> pImpl;
 };
 
-} // KuDNN
+} // namespace KuDNN
 
 #endif // KUDNN_RMS_NORMALIZATION_HPP

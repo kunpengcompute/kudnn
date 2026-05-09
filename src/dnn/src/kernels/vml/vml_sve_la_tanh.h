@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -15,7 +15,7 @@
 
 #include "vml_sve_la_exp.h"
 
-#define VectorComputation_VSTANH_SP_TH     svdup_n_f32(0x1.154246p3f)
+#define VectorComputation_VSTANH_SP_TH svdup_n_f32(0x1.154246p3f)
 #define VectorComputation_VSTANH_SP_TH_NEG svdup_n_f32(-0x1.154246p3f)
 
 __attribute__((always_inline)) inline svfloat32_t SvTanhF32X(svfloat32_t x, svbool_t pg)
@@ -67,13 +67,13 @@ extern const struct VmlSveTanhfData G_VML_VSTANH_DATA;
 #define VectorComputation_TANHF_POLY_COEFFS_DEGREE4 G_VML_VSTANH_DATA.polyDegree4
 #define VectorComputation_TANHF_POLY_COEFFS_DEGREE5 G_VML_VSTANH_DATA.polyDegree5
 #define VectorComputation_TANHF_POLY_COEFFS_DEGREE6 G_VML_VSTANH_DATA.polyDegree6
-#define VectorComputation_TANHF_IDX_SHIFT           svdup_n_u32(G_VML_VSTANH_DATA.idxShift)
-#define VectorComputation_TANHF_IDX_BIAS            svdup_n_u32(G_VML_VSTANH_DATA.idxBias)
-#define VectorComputation_TANHF_IDX_MASK            svdup_n_u32(G_VML_VSTANH_DATA.idxMask)
-#define VectorComputation_TANHF_IDX_MIN             svdup_n_f32(G_VML_VSTANH_DATA.idxMin)
-#define VectorComputation_TANHF_IDX_MAX             svdup_n_f32(G_VML_VSTANH_DATA.idxMax)
-#define VectorComputation_TANHF_MIN                 svdup_n_f32(G_VML_VSTANH_DATA.min)
-#define VectorComputation_TANHF_MAX                 svdup_n_f32(G_VML_VSTANH_DATA.max)
+#define VectorComputation_TANHF_IDX_SHIFT svdup_n_u32(G_VML_VSTANH_DATA.idxShift)
+#define VectorComputation_TANHF_IDX_BIAS svdup_n_u32(G_VML_VSTANH_DATA.idxBias)
+#define VectorComputation_TANHF_IDX_MASK svdup_n_u32(G_VML_VSTANH_DATA.idxMask)
+#define VectorComputation_TANHF_IDX_MIN svdup_n_f32(G_VML_VSTANH_DATA.idxMin)
+#define VectorComputation_TANHF_IDX_MAX svdup_n_f32(G_VML_VSTANH_DATA.idxMax)
+#define VectorComputation_TANHF_MIN svdup_n_f32(G_VML_VSTANH_DATA.min)
+#define VectorComputation_TANHF_MAX svdup_n_f32(G_VML_VSTANH_DATA.max)
 
 inline svfloat32_t SveTanhF32Poly(svbool_t pg, svuint32_t idx, svfloat32_t r)
 {
@@ -96,9 +96,11 @@ __attribute__((always_inline)) inline svfloat32_t SvTanhF32XNew(svfloat32_t x, s
     svfloat32_t xAbs = svabs_f32_x(pg, x);
     svuint32_t sign = svand_u32_x(pg, svreinterpret_u32_f32(x), VectorComputation_FLOAT_SIGN_BIT);
 
-    svfloat32_t xAbsNew = svmin_f32_x(pg, svmax_f32_x(pg, xAbs, VectorComputation_TANHF_IDX_MIN), VectorComputation_TANHF_IDX_MAX);
+    svfloat32_t xAbsNew =
+        svmin_f32_x(pg, svmax_f32_x(pg, xAbs, VectorComputation_TANHF_IDX_MIN), VectorComputation_TANHF_IDX_MAX);
     svuint32_t uxAbsNew = svreinterpret_u32_f32(xAbsNew);
-    svuint32_t idx = svsub_u32_x(pg, svlsr_u32_x(pg, uxAbsNew, VectorComputation_TANHF_IDX_SHIFT), VectorComputation_TANHF_IDX_BIAS);
+    svuint32_t idx =
+        svsub_u32_x(pg, svlsr_u32_x(pg, uxAbsNew, VectorComputation_TANHF_IDX_SHIFT), VectorComputation_TANHF_IDX_BIAS);
 
     svfloat32_t r = svsub_f32_x(pg, xAbs, SvAndF32X(pg, xAbs, VectorComputation_TANHF_IDX_MASK));
     svfloat32_t p = SveTanhF32Poly(pg, idx, r);
@@ -108,8 +110,8 @@ __attribute__((always_inline)) inline svfloat32_t SvTanhF32XNew(svfloat32_t x, s
     return SvOrrF32X(pg, y, sign);
 }
 
-#define VectorComputation_TANH_RANGE                  svdup_n_f32(0x1.99999ap-5f)
-#define VectorComputation_TANH_NEG_ONE_THIRD          svdup_n_f32(-0x1.555556p-2f)
+#define VectorComputation_TANH_RANGE svdup_n_f32(0x1.99999ap-5f)
+#define VectorComputation_TANH_NEG_ONE_THIRD svdup_n_f32(-0x1.555556p-2f)
 
 __attribute__((always_inline)) inline svfloat32_t SvTanhF32XNew2(svfloat32_t x, svbool_t pg)
 {

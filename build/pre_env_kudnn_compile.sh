@@ -40,7 +40,7 @@ install_googletest() {
   if [[ ! -d "${GTEST_INSTALL_PATH}" ]]; then
     mkdir -p "${GTEST_INSTALL_PATH}"
   fi
- 
+
   cd "${GTEST_SRC_PATH}"
   echo "${GTEST_SRC_PATH}"
   export CC=clang

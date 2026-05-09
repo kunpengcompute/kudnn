@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -24,39 +24,39 @@
 #define unlikely(x) (x)
 #endif
 
-#define FLOAT_MANTISSA_BIT_LEN      23
-#define FLOAT_ABS_MASK              0x7fffffffU
-#define FLOAT_SIGN_BIT              0x80000000U
-#define FLOAT_INF_BIT               0x7f800000U
-#define FLOAT_NEG_INF_BIT           0xff800000U
-#define FLOAT_SUBNORMAL_BIT         0x00800000U
-#define FLOAT_NAN_BIT               0x7fc00000U
-#define FLOAT_EXP_BIAS              127
-#define FLOAT_EXP_MASK              0x7f800000U
-#define FLOAT_SIGN_EXP_MASK         0xff800000U
-#define FLOAT_MANTISSA_MASK         0x7fffffU
-#define FLOAT_SHIFT                 (0x1.8p23f)
-#define FLOAT_ZERO                  (0.0f)
-#define FLOAT_HALF                  (0.5f)
-#define FLOAT_TWO                   (2.0f)
-#define FLOAT_ONE                   (1.0f)
-#define FLOAT_NEG_ONE               (-1.0f)
-#define FLOAT_HALF_BIT              0x3f000000
+#define FLOAT_MANTISSA_BIT_LEN 23
+#define FLOAT_ABS_MASK 0x7fffffffU
+#define FLOAT_SIGN_BIT 0x80000000U
+#define FLOAT_INF_BIT 0x7f800000U
+#define FLOAT_NEG_INF_BIT 0xff800000U
+#define FLOAT_SUBNORMAL_BIT 0x00800000U
+#define FLOAT_NAN_BIT 0x7fc00000U
+#define FLOAT_EXP_BIAS 127
+#define FLOAT_EXP_MASK 0x7f800000U
+#define FLOAT_SIGN_EXP_MASK 0xff800000U
+#define FLOAT_MANTISSA_MASK 0x7fffffU
+#define FLOAT_SHIFT (0x1.8p23f)
+#define FLOAT_ZERO (0.0f)
+#define FLOAT_HALF (0.5f)
+#define FLOAT_TWO (2.0f)
+#define FLOAT_ONE (1.0f)
+#define FLOAT_NEG_ONE (-1.0f)
+#define FLOAT_HALF_BIT 0x3f000000
 
-#define F16_SHIFT                   (16)
-#define F16_ABS_MASK                0x7fffU
-#define F16_INF_BIT                 0x7c00U
-#define F16_NAN_BIT                 0x7e00U
-#define F16_NEG_INF_BIT             0xfc00U
-#define F16_SUBNORMAL_BIT           0x400U
+#define F16_SHIFT (16)
+#define F16_ABS_MASK 0x7fffU
+#define F16_INF_BIT 0x7c00U
+#define F16_NAN_BIT 0x7e00U
+#define F16_NEG_INF_BIT 0xfc00U
+#define F16_SUBNORMAL_BIT 0x400U
 
-#define LN2F                        (0x1.62e43p-1f)
+#define LN2F (0x1.62e43p-1f)
 
-#define PTR_BARRIER(ptr)                                                      \
-    ({                                                                        \
-        __typeof (ptr) ptrTmp = (ptr);                                        \
-        __asm("" : "+r"(ptrTmp));                                             \
-        ptrTmp;                                                               \
+#define PTR_BARRIER(ptr)              \
+    ({                                \
+        __typeof(ptr) ptrTmp = (ptr); \
+        __asm("" : "+r"(ptrTmp));     \
+        ptrTmp;                       \
     })
 
 inline double Frinta(double x)

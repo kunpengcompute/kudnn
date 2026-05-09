@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_SERVICE_HPP
 #define KUDNN_SERVICE_HPP
@@ -34,24 +33,24 @@ KUDNN_API_PUBLIC Shape GetShapeAccordingToLayout(const Shape &sh, Layout parLayo
 
 KUDNN_API_PUBLIC Shape FlushStrides(const Shape &dims, const Shape &strides) noexcept(false);
 
-template<typename...>
+template <typename...>
 struct IsAllSame : std::false_type {};
 
-template<>
+template <>
 struct IsAllSame<> : std::true_type {};
 
-template<typename T>
+template <typename T>
 struct IsAllSame<T> : std::true_type {};
 
-template<typename T>
+template <typename T>
 struct IsAllSame<T, T> : std::true_type {};
 
-template<typename T, typename... U>
+template <typename T, typename... U>
 struct IsAllSame<T, T, U...> : IsAllSame<T, U...> {};
 
-template <typename IntType,
-    typename std::enable_if<std::is_integral<typename std::remove_reference<IntType>::type>::value,
-    bool>::type = true>
+template <
+    typename IntType,
+    typename std::enable_if<std::is_integral<typename std::remove_reference<IntType>::type>::value, bool>::type = true>
 bool WillIntMultOverflow(IntType a, IntType b) noexcept
 {
     if ((a == 0) || (b == 0)) {
@@ -62,20 +61,20 @@ bool WillIntMultOverflow(IntType a, IntType b) noexcept
     }
 }
 
-template <typename IntType, typename ... Args,
-    typename std::enable_if<IsAllSame<IntType, Args...>::value, bool>::type = true>
-bool WillIntMultOverflow(IntType a, IntType b, Args ... args) noexcept
+template <typename IntType, typename... Args,
+          typename std::enable_if<IsAllSame<IntType, Args...>::value, bool>::type = true>
+bool WillIntMultOverflow(IntType a, IntType b, Args... args) noexcept
 {
     if (WillIntMultOverflow(a, b)) {
         return true;
     } else {
-        return WillIntMultOverflow(a * b, args ...);
+        return WillIntMultOverflow(a * b, args...);
     }
 }
 
 template <typename ForwardIt,
-    typename std::enable_if<std::is_integral<typename std::iterator_traits<ForwardIt>::value_type>::value,
-    bool>::type = true>
+          typename std::enable_if<std::is_integral<typename std::iterator_traits<ForwardIt>::value_type>::value,
+                                  bool>::type = true>
 bool WillIntMultOverflow(ForwardIt begin, ForwardIt end) noexcept
 {
     typename std::iterator_traits<ForwardIt>::value_type mult = 1;
@@ -104,7 +103,8 @@ struct AlignedAllocator {
     using size_type = ::KuDNN::SizeType;
     using difference_type = std::ptrdiff_t;
 
-    template <typename U> struct rebind {
+    template <typename U>
+    struct rebind {
         using other = AlignedAllocator<U, alignment>;
     };
 
@@ -113,7 +113,7 @@ struct AlignedAllocator {
         if (n > std::numeric_limits<SizeType>::max() / sizeof(T)) {
             throw BadArrayNewLength();
         }
-        return static_cast<T*>(AlignedAlloc(n * sizeof(T), alignment));
+        return static_cast<T *>(AlignedAlloc(n * sizeof(T), alignment));
     }
 
     void deallocate(T *p, SizeType n = 0) const noexcept
@@ -132,19 +132,18 @@ struct Deallocator {
 };
 
 template <typename T, SizeType alignment_1, typename U, SizeType alignment_2>
-constexpr bool operator == (const AlignedAllocator<T, alignment_1> &,
-    const AlignedAllocator<U, alignment_2> &) noexcept
+constexpr bool operator==(const AlignedAllocator<T, alignment_1> &, const AlignedAllocator<U, alignment_2> &) noexcept
 {
     return (alignment_1 == alignment_2) && std::is_same<T, U>::value;
 }
 template <typename T, SizeType alignment_1, typename U, SizeType alignment_2>
-constexpr bool operator != (const AlignedAllocator<T, alignment_1> &lhs,
-    const AlignedAllocator<U, alignment_2> &rhs) noexcept
+constexpr bool operator!=(const AlignedAllocator<T, alignment_1> &lhs,
+                          const AlignedAllocator<U, alignment_2> &rhs) noexcept
 {
     return !(lhs == rhs);
 }
 
-} // Service
-} // KuDNN
+} // namespace Service
+} // namespace KuDNN
 
 #endif // KUDNN_SERVICE_HPP

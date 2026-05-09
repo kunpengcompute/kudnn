@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -27,21 +27,21 @@
 
 namespace KuDNN {
 
-
 namespace Service {
 
-void ThrowOnStatus(Status s, const std::string& funcName) noexcept(false)
+void ThrowOnStatus(Status s, const std::string &funcName) noexcept(false)
 {
     switch (s) {
         case Status::UNSUPPORTED: {
-            throw Service::Unsupported {funcName + ": unsupported configuration of parameters"};
+            throw Service::Unsupported{funcName + ": unsupported configuration of parameters"};
             break;
         }
         case Status::BAD_ARGUMENTS: {
-            throw Service::LogicError {funcName + ": bad arguments' Shapes"};
+            throw Service::LogicError{funcName + ": bad arguments' Shapes"};
             break;
         }
-        default: {}
+        default: {
+        }
     }
 }
 
@@ -73,7 +73,6 @@ void ConvertFp32ToFp16(const float *src, __fp16 *dst, SizeType size)
         dst[i] = src[i];
     }
 }
-
 
 void ConvertFp32ToS32(const float *src, int32_t *dst, SizeType size)
 {
@@ -113,7 +112,6 @@ void ConvertFp32ToU8(const float *src, uint8_t *dst, SizeType size)
         }
     }
 }
-
 
 SizeType ArrayProduct(const Shape &arr, SizeType end, SizeType start) noexcept
 {
@@ -370,7 +368,7 @@ Shape GetShapeAccordingToLayout(const Shape &sh, Layout parLayout) noexcept
 Shape FlushStrides(const Shape &dims, const Shape &strides) noexcept(false)
 {
     if (dims.GetNumDims() != strides.GetNumDims()) {
-        throw Service::LogicError {"FlushStrides: dims and strides have different dimensionality"};
+        throw Service::LogicError{"FlushStrides: dims and strides have different dimensionality"};
     }
     Shape result;
     std::array<SizeType, MAX_DIMS> arr;
@@ -412,11 +410,10 @@ Shape BroadcastTo5D(const Shape &sh, bool isDims) noexcept(false)
             return Shape{sh[IDX_0], sh[IDX_1], sh[IDX_2], sh[IDX_3], sh[IDX_4]};
         }
         default: {
-            throw Service::LogicError {"BroadcastTo5D: nothing to broadcast"};
+            throw Service::LogicError{"BroadcastTo5D: nothing to broadcast"};
         }
     }
 }
-
 
 void *AlignedAlloc(SizeType n, SizeType alignment) noexcept(false)
 {
@@ -439,5 +436,5 @@ void Deallocate(void *p, SizeType n) noexcept
     free(p);
 }
 
-} // Service
-} // KuDNN
+} // namespace Service
+} // namespace KuDNN

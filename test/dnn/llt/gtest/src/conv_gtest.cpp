@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -162,9 +162,9 @@ static bool Conv2dBWDWeightFunc1(Shape &diffDstShape, Shape &srcShape, Shape &di
     T *diffBias = (T *)malloc(biaSize * sizeof(T));
     T *diffDst = (T *)malloc(dstSize * sizeof(T));
     T *src = (T *)malloc(srcSize * sizeof(T));
-    
+
     convBwdLayer1.Run(diffDst, src, diffWeights, diffBias);
-    
+
     return true;
 }
 
@@ -179,7 +179,7 @@ static bool Conv2dBWDDataFunc1(Shape &diffDstShape, Shape &weightsShape, Shape &
     const KuDNN::TensorInfo diffDstTensor = {diffDstShape, typeMap<T>::val, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo weightsTensor = {weightsShape, typeMap<T>::val, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo diffSrcTensor = {diffSrcShape, typeMap<T>::val, KuDNN::Layout::ABCD};
-    
+
     KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
 
     SizeType srcSize = N * IC * IH * IW;
@@ -299,7 +299,7 @@ static bool Conv3dBWDDataFunc1(Shape &diffDstShape, Shape &weightsShape, Shape &
     const KuDNN::TensorInfo diffDstTensor = {diffDstShape, typeMap<T>::val, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo weightsTensor = {weightsShape, typeMap<T>::val, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo diffSrcTensor = {diffSrcShape, typeMap<T>::val, KuDNN::Layout::ABCDE};
-    
+
     KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
 
     SizeType srcSize = N * IC * IH * IW * ID;
@@ -809,7 +809,7 @@ static void ForwardJITMoveConstructor1()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
 
-    KuDNN::ConvolutionJITFWD convFwdLayer1(0x1f, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL, dilates, 
+    KuDNN::ConvolutionJITFWD convFwdLayer1(0x1f, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL, dilates,
                                         KuDNN::Propagation::FORWARD_INFERENCE, 1 ,false);
     KuDNN::ConvolutionJITFWD convFwdLayer2(std::move(convFwdLayer1));
 }

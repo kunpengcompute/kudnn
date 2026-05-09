@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -31,9 +31,9 @@ namespace Vector {
 
 template <>
 struct StoreN<float, __fp16, 2> final { // 2 means that store two float regs from __fp16 regs
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, float *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, float *dst) noexcept
     {
         svbool_t pgFalse = svpfalse_b();
         svbool_t pgTrue = svptrue_b16();
@@ -53,9 +53,9 @@ struct StoreN<float, __fp16, 2> final { // 2 means that store two float regs fro
 
 template <>
 struct StoreN<float, __fp16, 4> final { // 4 means that store four float regs from __fp16 regs
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, float *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, float *dst) noexcept
     {
         svbool_t pgFalse = svpfalse_b();
         svbool_t pgTrue = svptrue_b16();
@@ -90,9 +90,10 @@ struct StoreN<float, __fp16, 4> final { // 4 means that store four float regs fr
 
 template <>
 struct StoreN<std::int32_t, __fp16, 2> final { // 2 means that store two std::int32_t regs from __fp16 regs
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, std::int32_t *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3,
+                   std::int32_t *dst) noexcept
     {
         svbool_t pgFalse = svpfalse_b();
         svbool_t pgTrue = svptrue_b16();
@@ -112,9 +113,10 @@ struct StoreN<std::int32_t, __fp16, 2> final { // 2 means that store two std::in
 
 template <>
 struct StoreN<std::int32_t, __fp16, 4> final { // 4 means that store four std::int32_t regs from __fp16 regs
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, std::int32_t *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3,
+                   std::int32_t *dst) noexcept
     {
         svfloat16_t zeros = svdup_n_f16(0.0f);
         svbool_t pgFalse = svpfalse_b();
@@ -128,7 +130,7 @@ struct StoreN<std::int32_t, __fp16, 4> final { // 4 means that store four std::i
             svfloat32_t st0 = svzip1_f32(vec0, vec1);
             svfloat32_t st1 = svzip2_f32(vec0, vec1);
             svst1_s32(pg0, dst, svcvt_s32_x(pg0, svrinti_f32_x(pg0, st0)));
-            svst1_s32(pg1, dst + Vector::Length<std::int32_t>(),  svcvt_s32_x(pg1, svrinti_f32_x(pg1, st1)));
+            svst1_s32(pg1, dst + Vector::Length<std::int32_t>(), svcvt_s32_x(pg1, svrinti_f32_x(pg1, st1)));
         }
         {
             svfloat32_t vec0 = svcvt_f32_f16_x(pgEven, out1);
@@ -149,9 +151,9 @@ struct StoreN<std::int32_t, __fp16, 4> final { // 4 means that store four std::i
 
 template <>
 struct StoreN<__bf16, __fp16, 1> final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __bf16 *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __bf16 *dst) noexcept
     {
         svbool_t pgFalse = svpfalse_b();
         svbool_t pgTrue = svptrue_b16();
@@ -177,9 +179,9 @@ struct StoreN<__bf16, __fp16, 1> final {
 
 template <>
 struct StoreN<__bf16, __fp16, 2> final { // 2 means that store two __bf16 regs from __fp16 regs
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __bf16 *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __bf16 *dst) noexcept
     {
         svbool_t pgFalse = svpfalse_b();
         svbool_t pgTrue = svptrue_b16();
@@ -222,9 +224,9 @@ struct StoreN<__bf16, __fp16, 2> final { // 2 means that store two __bf16 regs f
 
 template <>
 struct StoreN<__fp16, __fp16, 1> final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __fp16 *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __fp16 *dst) noexcept
     {
         svst1_f16(pg0, dst, out0);
         Service::Unused(pg1, out1, pg2, out2, pg3, out3);
@@ -233,9 +235,9 @@ struct StoreN<__fp16, __fp16, 1> final {
 
 template <>
 struct StoreN<__fp16, __fp16, 2> final { // 2 means that store two __fp16 regs from __fp16 regs
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __fp16 *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, __fp16 *dst) noexcept
     {
         svst1_f16(pg0, dst, out0);
         svst1_f16(pg1, dst + Vector::Length<__fp16>(), out1);
@@ -245,9 +247,10 @@ struct StoreN<__fp16, __fp16, 2> final { // 2 means that store two __fp16 regs f
 
 template <>
 struct StoreN<std::int8_t, __fp16, 1> final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, std::int8_t *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3,
+                   std::int8_t *dst) noexcept
     {
         svbool_t pgtrue = svptrue_b16();
         svint16_t stmp0 = svcvt_s16_x(pgtrue, svrinti_f16_x(pgtrue, out0));
@@ -278,15 +281,16 @@ struct StoreN<std::int8_t, __fp16, 1> final {
 
 template <>
 struct StoreN<std::uint8_t, __fp16, 1> final {
-    static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
-        const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3, std::uint8_t *dst) noexcept
+    static void Do(const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   const typename Vec<__fp16>::Type &out0, const typename Vec<__fp16>::Type &out1,
+                   const typename Vec<__fp16>::Type &out2, const typename Vec<__fp16>::Type &out3,
+                   std::uint8_t *dst) noexcept
     {
         svbool_t pgtrue = svptrue_b16();
 
         svuint16_t stmp0 = svcvt_u16_x(pgtrue, svrinti_f16_x(pgtrue, out0));
         svuint16_t stmp1 = svcvt_u16_x(pgtrue, svrinti_f16_x(pgtrue, out1));
-        
+
         stmp0 = svmin_n_u16_x(pgtrue, stmp0, std::numeric_limits<std::uint8_t>::max());
         stmp1 = svmin_n_u16_x(pgtrue, stmp1, std::numeric_limits<std::uint8_t>::max());
 
@@ -297,7 +301,7 @@ struct StoreN<std::uint8_t, __fp16, 1> final {
         t1 = svlsl_n_u16_x(pgtrue, t1, 8); // 8 bits is a size of 1 std::uint8_t elements
 
         t0 = svlsr_n_u16_x(pgtrue, t0, 8); // 8 bits is a size of 1 std::uint8_t elements
-        
+
         t0 = svorr_u16_x(pgtrue, t0, t1);
 
         svuint8_t outintreg = svreinterpret_u8(stmp0);
@@ -307,8 +311,8 @@ struct StoreN<std::uint8_t, __fp16, 1> final {
     }
 };
 
-} // Vector
-} // Detail
-} // KuDNN
+} // namespace Vector
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_VECTOR_MEM_STORE_COMPTYPE_F16_HPP

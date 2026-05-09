@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -177,7 +177,8 @@ void SubsImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
     return;
 }
 
-template <typename T> void MovImm(const XReg &dst, T imm)
+template <typename T>
+void MovImm(const XReg &dst, T imm)
 {
     bool flag = false;
     uint64_t bitPtn = static_cast<uint64_t>(imm);

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -15,12 +15,12 @@
 
 #include "vml_sve_la_exp.h"
 
-#define GELU_ERF_C0     svdup_f32(0x1.04f20cp-2f)
-#define GELU_ERF_C1     svdup_f32(-0x1.23531cp-2f)
-#define GELU_ERF_C2     svdup_f32(0x1.6be1c6p0f)
-#define GELU_ERF_C3     svdup_f32(-0x1.7401c6p0f)
-#define GELU_ERF_C4     svdup_f32(0x1.0fb844p0f)
-#define GELU_ERF_APPROX_CONST   svdup_f32(0x1.4f740ap-2f)
+#define GELU_ERF_C0 svdup_f32(0x1.04f20cp-2f)
+#define GELU_ERF_C1 svdup_f32(-0x1.23531cp-2f)
+#define GELU_ERF_C2 svdup_f32(0x1.6be1c6p0f)
+#define GELU_ERF_C3 svdup_f32(-0x1.7401c6p0f)
+#define GELU_ERF_C4 svdup_f32(0x1.0fb844p0f)
+#define GELU_ERF_APPROX_CONST svdup_f32(0x1.4f740ap-2f)
 
 // erf = sign * (1 - r * t * exp(-x*x))
 __attribute__((always_inline)) inline svfloat32_t SvErfF32X(svfloat32_t x, svbool_t pg)
@@ -52,12 +52,12 @@ __attribute__((always_inline)) inline svfloat32_t SvErfF32X(svfloat32_t x, svboo
 #define VectorComputation_ERF_TBL_SIZE 0x1000U
 extern const float G_ERF_TBL[VectorComputation_ERF_TBL_SIZE];
 extern const float G_ERF_EXP_TBL[VectorComputation_ERF_TBL_SIZE];
-#define VectorComputation_VSERF_MAX       svdup_n_f32(0x1.f5a002p1f)
-#define VectorComputation_VSERF_SHIFT     svdup_n_f32(0x1p+14f)
-#define VectorComputation_VSERF_IDXMASK   svdup_n_u32(0xfffU)
-#define VectorComputation_VSERF_TALOR_C1  svdup_n_f32(-0x1.555556p-2f)
-#define VML_VSERF_ERFTABLE  G_ERF_TBL
-#define VML_VSERF_EXPTABLE  G_ERF_EXP_TBL
+#define VectorComputation_VSERF_MAX svdup_n_f32(0x1.f5a002p1f)
+#define VectorComputation_VSERF_SHIFT svdup_n_f32(0x1p+14f)
+#define VectorComputation_VSERF_IDXMASK svdup_n_u32(0xfffU)
+#define VectorComputation_VSERF_TALOR_C1 svdup_n_f32(-0x1.555556p-2f)
+#define VML_VSERF_ERFTABLE G_ERF_TBL
+#define VML_VSERF_EXPTABLE G_ERF_EXP_TBL
 
 __attribute__((always_inline)) inline svfloat32_t SvErfF32XNew(svfloat32_t x, svbool_t pg)
 {

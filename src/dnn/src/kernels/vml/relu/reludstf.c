@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -37,7 +37,8 @@ void ReluDstSveBWDF32(const int64_t len, const float alpha, const float *src, co
     int64_t loopReluDstf = svcntw();
     svfloat32_t va = svdup_n_f32(alpha);
 
-    for (; i <= len - loopReluDstf * VML_VectorComputation_UNFOLD_N; i += loopReluDstf * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopReluDstf * VML_VectorComputation_UNFOLD_N;
+         i += loopReluDstf * VML_VectorComputation_UNFOLD_N) {
         ReluMainKernelBwdF32(va, src + i, dd + i, ds + i, loopReluDstf);
     }
     for (; i < len; i += loopReluDstf) {

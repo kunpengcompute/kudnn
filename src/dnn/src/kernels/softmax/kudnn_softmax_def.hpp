@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -24,13 +24,13 @@ namespace Softmax {
 
 namespace Helpers {
 
-template<typename T>
+template <typename T>
 inline constexpr T MIN_VAL = -std::numeric_limits<T>::infinity();
 
-template<>
+template <>
 inline constexpr __fp16 MIN_VAL<__fp16> = -65504.0f;
 
-} // Helpers
+} // namespace Helpers
 
 template <typename CompType, typename InType, typename OutType>
 struct SoftmaxLastFWD final {
@@ -39,15 +39,16 @@ struct SoftmaxLastFWD final {
         return Vector::UnrollLength<InType, CompType, OutType>();
     }
     static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        typename Vector::Vec<CompType>::Type &compVar0, typename Vector::Vec<CompType>::Type &compVar1,
-        typename Vector::Vec<CompType>::Type &compVar2, typename Vector::Vec<CompType>::Type &compVar3) noexcept
+                   typename Vector::Vec<CompType>::Type &compVar0, typename Vector::Vec<CompType>::Type &compVar1,
+                   typename Vector::Vec<CompType>::Type &compVar2,
+                   typename Vector::Vec<CompType>::Type &compVar3) noexcept
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
         svbool_t ldPG2;
         svbool_t ldPG3;
-        Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
-            ldPG0, ldPG1, ldPG2, ldPG3, loopIdx, loopRange);
+        Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(ldPG0, ldPG1, ldPG2, ldPG3,
+                                                                                       loopIdx, loopRange);
         typename Vector::Vec<CompType>::Type data0;
         typename Vector::Vec<CompType>::Type data1;
         typename Vector::Vec<CompType>::Type data2;
@@ -58,23 +59,23 @@ struct SoftmaxLastFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
+        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(opPG0, opPG1, opPG2, opPG3,
+                                                                                         loopIdx, loopRange);
         Vector::MaxMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, compVar0, compVar1, compVar2, compVar3,
-            data0, data1, data2, data3, compVar0, compVar1, compVar2, compVar3);
+            opPG0, opPG1, opPG2, opPG3, compVar0, compVar1, compVar2, compVar3, data0, data1, data2, data3, compVar0,
+            compVar1, compVar2, compVar3);
     }
     static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, bool isLogsoftmax, CompType &spaceMax,
-        typename Vector::Vec<CompType>::Type &accumVar0, typename Vector::Vec<CompType>::Type &accumVar1,
-        typename Vector::Vec<CompType>::Type &accumVar2, typename Vector::Vec<CompType>::Type &accumVar3,
-        OutType *dst) noexcept
+                   typename Vector::Vec<CompType>::Type &accumVar0, typename Vector::Vec<CompType>::Type &accumVar1,
+                   typename Vector::Vec<CompType>::Type &accumVar2, typename Vector::Vec<CompType>::Type &accumVar3,
+                   OutType *dst) noexcept
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
         svbool_t ldPG2;
         svbool_t ldPG3;
-        Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
-            ldPG0, ldPG1, ldPG2, ldPG3, loopIdx, loopRange);
+        Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(ldPG0, ldPG1, ldPG2, ldPG3,
+                                                                                       loopIdx, loopRange);
         typename Vector::Vec<CompType>::Type data0;
         typename Vector::Vec<CompType>::Type data1;
         typename Vector::Vec<CompType>::Type data2;
@@ -85,17 +86,17 @@ struct SoftmaxLastFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
+        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(opPG0, opPG1, opPG2, opPG3,
+                                                                                         loopIdx, loopRange);
         Vector::SubnXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-            spaceMax, spaceMax, spaceMax, spaceMax, data0, data1, data2, data3);
+            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, spaceMax, spaceMax, spaceMax, spaceMax, data0,
+            data1, data2, data3);
         svbool_t stPG0;
         svbool_t stPG1;
         svbool_t stPG2;
         svbool_t stPG3;
-        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
-            stPG0, stPG1, stPG2, stPG3, loopIdx, loopRange);
+        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(stPG0, stPG1, stPG2, stPG3,
+                                                                                        loopIdx, loopRange);
         if (isLogsoftmax) {
             Vector::StoreN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
                 stPG0, stPG1, stPG2, stPG3, data0, data1, data2, data3, dst + loopIdx);
@@ -107,18 +108,17 @@ struct SoftmaxLastFWD final {
                 stPG0, stPG1, stPG2, stPG3, data0, data1, data2, data3, dst + loopIdx);
         }
         Vector::AddMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, accumVar0, accumVar1, accumVar2, accumVar3,
-            data0, data1, data2, data3, accumVar0, accumVar1, accumVar2, accumVar3);
+            opPG0, opPG1, opPG2, opPG3, accumVar0, accumVar1, accumVar2, accumVar3, data0, data1, data2, data3,
+            accumVar0, accumVar1, accumVar2, accumVar3);
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, CompType sum, bool isLogsoftmax,
-        OutType *dst) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, CompType sum, bool isLogsoftmax, OutType *dst) noexcept
     {
         svbool_t stPG0;
         svbool_t stPG1;
         svbool_t stPG2;
         svbool_t stPG3;
-        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
-            stPG0, stPG1, stPG2, stPG3, loopIdx, loopRange);
+        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(stPG0, stPG1, stPG2, stPG3,
+                                                                                        loopIdx, loopRange);
         typename Vector::Vec<CompType>::Type data0;
         typename Vector::Vec<CompType>::Type data1;
         typename Vector::Vec<CompType>::Type data2;
@@ -129,16 +129,14 @@ struct SoftmaxLastFWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
+        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(opPG0, opPG1, opPG2, opPG3,
+                                                                                         loopIdx, loopRange);
         if (isLogsoftmax) {
             Vector::AddnXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-                sum, sum, sum, sum, data0, data1, data2, data3);
+                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, sum, sum, sum, sum, data0, data1, data2, data3);
         } else {
             Vector::MulnXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-                sum, sum, sum, sum, data0, data1, data2, data3);
+                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, sum, sum, sum, sum, data0, data1, data2, data3);
         }
         Vector::StoreN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
             stPG0, stPG1, stPG2, stPG3, data0, data1, data2, data3, dst + loopIdx);
@@ -146,8 +144,8 @@ struct SoftmaxLastFWD final {
 };
 
 template <typename CompType, typename InType, typename OutType>
-void EvaluateLastAxisFWD(const InType *src, OutType *dst, SizeType axisSize,
-    SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept
+void EvaluateLastAxisFWD(const InType *src, OutType *dst, SizeType axisSize, SizeType outerSize,
+                         SoftmaxAlgorithmKind algorithm) noexcept
 {
     bool isLogsoftmax = (algorithm == SoftmaxAlgorithmKind::LOGSOFTMAX);
     for (SizeType ou = 0; ou < outerSize; ++ou) {
@@ -158,8 +156,8 @@ void EvaluateLastAxisFWD(const InType *src, OutType *dst, SizeType axisSize,
         typename Vector::Vec<CompType>::Type compVar3;
         Vector::DupFloatN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
             Helpers::MIN_VAL<CompType>, compVar0, compVar1, compVar2, compVar3);
-        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastFWD<CompType, InType, OutType>{},
-            src + offset, compVar0, compVar1, compVar2, compVar3);
+        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastFWD<CompType, InType, OutType>{}, src + offset, compVar0,
+                                  compVar1, compVar2, compVar3);
         svbool_t globalOpPG0;
         svbool_t globalOpPG1;
         svbool_t globalOpPG2;
@@ -174,14 +172,14 @@ void EvaluateLastAxisFWD(const InType *src, OutType *dst, SizeType axisSize,
         typename Vector::Vec<CompType>::Type accumVar3;
         Vector::DupFloatN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
             0.0f, accumVar0, accumVar1, accumVar2, accumVar3);
-        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastFWD<CompType, InType, OutType>{},
-            src + offset, isLogsoftmax, spaceMax, accumVar0, accumVar1, accumVar2, accumVar3, dst + offset);
+        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastFWD<CompType, InType, OutType>{}, src + offset, isLogsoftmax,
+                                  spaceMax, accumVar0, accumVar1, accumVar2, accumVar3, dst + offset);
         CompType sum = Vector::AddvN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
             globalOpPG0, globalOpPG1, globalOpPG2, globalOpPG3, accumVar0, accumVar1, accumVar2, accumVar3);
         sum = (sum != static_cast<CompType>(0)) ? (1.0f / sum) : 1.0f;
-        sum = isLogsoftmax ?  std::log(sum) : sum;
-        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastFWD<CompType, InType, OutType>{},
-            sum, isLogsoftmax, dst + offset);
+        sum = isLogsoftmax ? std::log(sum) : sum;
+        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastFWD<CompType, InType, OutType>{}, sum, isLogsoftmax,
+                                  dst + offset);
     }
 }
 
@@ -191,39 +189,39 @@ struct SoftmaxCrossFWD final {
     {
         return 1;
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, SizeType innerSize,
-        svbool_t &ldPG0, svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3,
-        typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
-        typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
-        svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        typename Vector::Vec<CompType>::Type &spaceMax0, typename Vector::Vec<CompType>::Type &spaceMax1,
-        typename Vector::Vec<CompType>::Type &spaceMax2, typename Vector::Vec<CompType>::Type &spaceMax3) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, SizeType innerSize, svbool_t &ldPG0,
+                   svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3, typename Vector::Vec<CompType>::Type &data0,
+                   typename Vector::Vec<CompType>::Type &data1, typename Vector::Vec<CompType>::Type &data2,
+                   typename Vector::Vec<CompType>::Type &data3, svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2,
+                   svbool_t &opPG3, typename Vector::Vec<CompType>::Type &spaceMax0,
+                   typename Vector::Vec<CompType>::Type &spaceMax1, typename Vector::Vec<CompType>::Type &spaceMax2,
+                   typename Vector::Vec<CompType>::Type &spaceMax3) noexcept
     {
         Service::Unused(loopRange);
         Vector::LoadN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
             src + loopIdx * innerSize, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3);
         Vector::MaxXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, spaceMax0, spaceMax1, spaceMax2, spaceMax3,
-            data0, data1, data2, data3, spaceMax0, spaceMax1, spaceMax2, spaceMax3);
+            opPG0, opPG1, opPG2, opPG3, spaceMax0, spaceMax1, spaceMax2, spaceMax3, data0, data1, data2, data3,
+            spaceMax0, spaceMax1, spaceMax2, spaceMax3);
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        bool isLogsoftmax, SizeType innerSize,
-        svbool_t &ldPG0, svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3,
-        typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
-        typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
-        svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        typename Vector::Vec<CompType>::Type &spaceMax0, typename Vector::Vec<CompType>::Type &spaceMax1,
-        typename Vector::Vec<CompType>::Type &spaceMax2, typename Vector::Vec<CompType>::Type &spaceMax3,
-        svbool_t &stPG0, svbool_t &stPG1, svbool_t &stPG2, svbool_t &stPG3,
-        typename Vector::Vec<CompType>::Type &sum0, typename Vector::Vec<CompType>::Type &sum1,
-        typename Vector::Vec<CompType>::Type &sum2, typename Vector::Vec<CompType>::Type &sum3, OutType *dst) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src, bool isLogsoftmax, SizeType innerSize,
+                   svbool_t &ldPG0, svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3,
+                   typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
+                   typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
+                   svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
+                   typename Vector::Vec<CompType>::Type &spaceMax0, typename Vector::Vec<CompType>::Type &spaceMax1,
+                   typename Vector::Vec<CompType>::Type &spaceMax2, typename Vector::Vec<CompType>::Type &spaceMax3,
+                   svbool_t &stPG0, svbool_t &stPG1, svbool_t &stPG2, svbool_t &stPG3,
+                   typename Vector::Vec<CompType>::Type &sum0, typename Vector::Vec<CompType>::Type &sum1,
+                   typename Vector::Vec<CompType>::Type &sum2, typename Vector::Vec<CompType>::Type &sum3,
+                   OutType *dst) noexcept
     {
         Service::Unused(loopRange);
         Vector::LoadN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
             src + loopIdx * innerSize, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3);
         Vector::SubXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-            spaceMax0, spaceMax1, spaceMax2, spaceMax3, data0, data1, data2, data3);
+            opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, spaceMax0, spaceMax1, spaceMax2, spaceMax3, data0,
+            data1, data2, data3);
         if (isLogsoftmax) {
             Vector::StoreN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
                 stPG0, stPG1, stPG2, stPG3, data0, data1, data2, data3, dst + loopIdx * innerSize);
@@ -238,24 +236,24 @@ struct SoftmaxCrossFWD final {
             opPG0, opPG1, opPG2, opPG3, sum0, sum1, sum2, sum3, data0, data1, data2, data3, sum0, sum1, sum2, sum3);
     }
     static void Do(SizeType loopIdx, SizeType loopRange, SizeType innerSize, bool isLogsoftmax,
-        typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
-        typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
-        svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        typename Vector::Vec<CompType>::Type &sum0, typename Vector::Vec<CompType>::Type &sum1,
-        typename Vector::Vec<CompType>::Type &sum2, typename Vector::Vec<CompType>::Type &sum3,
-        svbool_t &stPG0, svbool_t &stPG1, svbool_t &stPG2, svbool_t &stPG3, OutType *dst) noexcept
+                   typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
+                   typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
+                   svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
+                   typename Vector::Vec<CompType>::Type &sum0, typename Vector::Vec<CompType>::Type &sum1,
+                   typename Vector::Vec<CompType>::Type &sum2, typename Vector::Vec<CompType>::Type &sum3,
+                   svbool_t &stPG0, svbool_t &stPG1, svbool_t &stPG2, svbool_t &stPG3, OutType *dst) noexcept
     {
         Service::Unused(loopRange);
         Vector::LoadN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
             dst + loopIdx * innerSize, stPG0, stPG1, stPG2, stPG3, data0, data1, data2, data3);
         if (isLogsoftmax) {
             Vector::SubXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-                sum0, sum1, sum2, sum3, data0, data1, data2, data3);
+                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, sum0, sum1, sum2, sum3, data0, data1, data2,
+                data3);
         } else {
             Vector::DivXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3,
-                sum0, sum1, sum2, sum3, data0, data1, data2, data3);
+                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, sum0, sum1, sum2, sum3, data0, data1, data2,
+                data3);
         }
         Vector::StoreN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
             stPG0, stPG1, stPG2, stPG3, data0, data1, data2, data3, dst + loopIdx * innerSize);
@@ -263,8 +261,8 @@ struct SoftmaxCrossFWD final {
 };
 
 template <typename CompType, typename InType, typename OutType>
-void EvaluateCrossAxisFWD(const InType *src, OutType *dst,
-    SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept
+void EvaluateCrossAxisFWD(const InType *src, OutType *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize,
+                          SoftmaxAlgorithmKind algorithm) noexcept
 {
     bool isLogsoftmax = (algorithm == SoftmaxAlgorithmKind::LOGSOFTMAX);
     SizeType loopInc = Vector::UnrollLength<InType, CompType, OutType>();
@@ -281,8 +279,8 @@ void EvaluateCrossAxisFWD(const InType *src, OutType *dst,
             typename Vector::Vec<CompType>::Type sum1;
             typename Vector::Vec<CompType>::Type sum2;
             typename Vector::Vec<CompType>::Type sum3;
-            Vector::DupFloatN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
-                0.0f, sum0, sum1, sum2, sum3);
+            Vector::DupFloatN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(0.0f, sum0, sum1,
+                                                                                                       sum2, sum3);
             typename Vector::Vec<CompType>::Type data0;
             typename Vector::Vec<CompType>::Type data1;
             typename Vector::Vec<CompType>::Type data2;
@@ -291,35 +289,34 @@ void EvaluateCrossAxisFWD(const InType *src, OutType *dst,
             svbool_t ldPG1;
             svbool_t ldPG2;
             svbool_t ldPG3;
-            Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, CompType, OutType>()>::Do(
-                ldPG0, ldPG1, ldPG2, ldPG3, in, innerSize);
+            Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, CompType, OutType>()>::Do(ldPG0, ldPG1, ldPG2, ldPG3,
+                                                                                           in, innerSize);
             svbool_t opPG0;
             svbool_t opPG1;
             svbool_t opPG2;
             svbool_t opPG3;
-            Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, in, innerSize);
+            Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(opPG0, opPG1, opPG2, opPG3,
+                                                                                             in, innerSize);
             svbool_t stPG0;
             svbool_t stPG1;
             svbool_t stPG2;
             svbool_t stPG3;
-            Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
-                stPG0, stPG1, stPG2, stPG3, in, innerSize);
-            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossFWD<CompType, InType, OutType>{},
-                src + offset, innerSize, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3,
-                opPG0, opPG1, opPG2, opPG3, spaceMax0, spaceMax1, spaceMax2, spaceMax3);
-            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossFWD<CompType, InType, OutType>{},
-                src + offset, isLogsoftmax, innerSize, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3,
-                opPG0, opPG1, opPG2, opPG3, spaceMax0, spaceMax1, spaceMax2, spaceMax3,
-                stPG0, stPG1, stPG2, stPG3, sum0, sum1, sum2, sum3, dst + offset);
+            Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(stPG0, stPG1, stPG2, stPG3,
+                                                                                            in, innerSize);
+            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossFWD<CompType, InType, OutType>{}, src + offset, innerSize,
+                                      ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3, opPG0, opPG1, opPG2,
+                                      opPG3, spaceMax0, spaceMax1, spaceMax2, spaceMax3);
+            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossFWD<CompType, InType, OutType>{}, src + offset,
+                                      isLogsoftmax, innerSize, ldPG0, ldPG1, ldPG2, ldPG3, data0, data1, data2, data3,
+                                      opPG0, opPG1, opPG2, opPG3, spaceMax0, spaceMax1, spaceMax2, spaceMax3, stPG0,
+                                      stPG1, stPG2, stPG3, sum0, sum1, sum2, sum3, dst + offset);
             if (isLogsoftmax) {
                 Vector::LogN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
                     opPG0, opPG1, opPG2, opPG3, sum0, sum1, sum2, sum3, sum0, sum1, sum2, sum3);
             }
-            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossFWD<CompType, InType, OutType>{},
-                innerSize, isLogsoftmax, data0, data1, data2, data3,
-                opPG0, opPG1, opPG2, opPG3, sum0, sum1, sum2, sum3,
-                stPG0, stPG1, stPG2, stPG3, dst + offset);
+            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossFWD<CompType, InType, OutType>{}, innerSize, isLogsoftmax,
+                                      data0, data1, data2, data3, opPG0, opPG1, opPG2, opPG3, sum0, sum1, sum2, sum3,
+                                      stPG0, stPG1, stPG2, stPG3, dst + offset);
         }
     }
 }
@@ -331,8 +328,9 @@ struct SoftmaxLastBWD final {
         return Vector::UnrollLength<InType, CompType, OutType>();
     }
     static void Do(SizeType loopIdx, SizeType loopRange, const OutType *dst, const OutType *dstDiff, bool isLogsoftmax,
-        typename Vector::Vec<CompType>::Type &accumVar0, typename Vector::Vec<CompType>::Type &accumVar1,
-        typename Vector::Vec<CompType>::Type &accumVar2, typename Vector::Vec<CompType>::Type &accumVar3) noexcept
+                   typename Vector::Vec<CompType>::Type &accumVar0, typename Vector::Vec<CompType>::Type &accumVar1,
+                   typename Vector::Vec<CompType>::Type &accumVar2,
+                   typename Vector::Vec<CompType>::Type &accumVar3) noexcept
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
@@ -346,16 +344,16 @@ struct SoftmaxLastBWD final {
         typename Vector::Vec<CompType>::Type rhs1;
         typename Vector::Vec<CompType>::Type rhs2;
         typename Vector::Vec<CompType>::Type rhs3;
-        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
-            ldPG0, ldPG1, ldPG2, ldPG3, loopIdx, loopRange);
+        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(ldPG0, ldPG1, ldPG2, ldPG3,
+                                                                                        loopIdx, loopRange);
         Vector::LoadN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
             dstDiff + loopIdx, ldPG0, ldPG1, ldPG2, ldPG3, rhs0, rhs1, rhs2, rhs3);
         svbool_t opPG0;
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
+        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(opPG0, opPG1, opPG2, opPG3,
+                                                                                         loopIdx, loopRange);
         if (!isLogsoftmax) {
             Vector::LoadN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
                 dst + loopIdx, ldPG0, ldPG1, ldPG2, ldPG3, lhs0, lhs1, lhs2, lhs3);
@@ -363,19 +361,18 @@ struct SoftmaxLastBWD final {
                 opPG0, opPG1, opPG2, opPG3, lhs0, lhs1, lhs2, lhs3, rhs0, rhs1, rhs2, rhs3, rhs0, rhs1, rhs2, rhs3);
         }
         Vector::AddMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, accumVar0, accumVar1, accumVar2, accumVar3,
-            rhs0, rhs1, rhs2, rhs3, accumVar0, accumVar1, accumVar2, accumVar3);
+            opPG0, opPG1, opPG2, opPG3, accumVar0, accumVar1, accumVar2, accumVar3, rhs0, rhs1, rhs2, rhs3, accumVar0,
+            accumVar1, accumVar2, accumVar3);
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, const OutType *dst, bool isLogsoftmax,
-        const OutType *dstDiff, CompType &sbr,
-        InType *srcDiff) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const OutType *dst, bool isLogsoftmax, const OutType *dstDiff,
+                   CompType &sbr, InType *srcDiff) noexcept
     {
         svbool_t ldPG0;
         svbool_t ldPG1;
         svbool_t ldPG2;
         svbool_t ldPG3;
-        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
-            ldPG0, ldPG1, ldPG2, ldPG3, loopIdx, loopRange);
+        Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(ldPG0, ldPG1, ldPG2, ldPG3,
+                                                                                        loopIdx, loopRange);
         typename Vector::Vec<CompType>::Type lhs0;
         typename Vector::Vec<CompType>::Type lhs1;
         typename Vector::Vec<CompType>::Type lhs2;
@@ -392,8 +389,8 @@ struct SoftmaxLastBWD final {
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
-        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
+        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(opPG0, opPG1, opPG2, opPG3,
+                                                                                         loopIdx, loopRange);
         if (!isLogsoftmax) {
             Vector::SubnXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
                 opPG0, opPG1, opPG2, opPG3, rhs0, rhs1, rhs2, rhs3, sbr, sbr, sbr, sbr, rhs0, rhs1, rhs2, rhs3);
@@ -411,16 +408,16 @@ struct SoftmaxLastBWD final {
         svbool_t stPG1;
         svbool_t stPG2;
         svbool_t stPG3;
-        Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
-            stPG0, stPG1, stPG2, stPG3, loopIdx, loopRange);
+        Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(stPG0, stPG1, stPG2, stPG3,
+                                                                                       loopIdx, loopRange);
         Vector::StoreN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
             stPG0, stPG1, stPG2, stPG3, rhs0, rhs1, rhs2, rhs3, srcDiff + loopIdx);
     }
 };
 
 template <typename CompType, typename InType, typename OutType>
-void EvaluateLastAxisBWD(const OutType *dst, const OutType *dstDiff, InType *srcDiff,
-    SizeType axisSize, SizeType outerSize, SizeType axisNum, SoftmaxAlgorithmKind algorithm) noexcept
+void EvaluateLastAxisBWD(const OutType *dst, const OutType *dstDiff, InType *srcDiff, SizeType axisSize,
+                         SizeType outerSize, SizeType axisNum, SoftmaxAlgorithmKind algorithm) noexcept
 {
     bool isLogsoftmax = (algorithm == SoftmaxAlgorithmKind::LOGSOFTMAX);
     const SizeType ouStride = axisNum > 0 ? axisSize : 1;
@@ -432,18 +429,18 @@ void EvaluateLastAxisBWD(const OutType *dst, const OutType *dstDiff, InType *src
         typename Vector::Vec<CompType>::Type accumVar3;
         Vector::DupFloatN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
             0.0f, accumVar0, accumVar1, accumVar2, accumVar3);
-        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastBWD<CompType, InType, OutType>{},
-            dst + offset, dstDiff + offset, isLogsoftmax, accumVar0, accumVar1, accumVar2, accumVar3);
+        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastBWD<CompType, InType, OutType>{}, dst + offset, dstDiff + offset,
+                                  isLogsoftmax, accumVar0, accumVar1, accumVar2, accumVar3);
         svbool_t sbrPG0;
         svbool_t sbrPG1;
         svbool_t sbrPG2;
         svbool_t sbrPG3;
-        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-            sbrPG0, sbrPG1, sbrPG2, sbrPG3, 0, axisSize);
+        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(sbrPG0, sbrPG1, sbrPG2, sbrPG3,
+                                                                                         0, axisSize);
         CompType sbr = Vector::AddvN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
             sbrPG0, sbrPG1, sbrPG2, sbrPG3, accumVar0, accumVar1, accumVar2, accumVar3);
-        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastBWD<CompType, InType, OutType>{},
-            dst + offset, isLogsoftmax, dstDiff + offset, sbr, srcDiff + offset);
+        Service::UnrollFor::Do<1>(axisSize, SoftmaxLastBWD<CompType, InType, OutType>{}, dst + offset, isLogsoftmax,
+                                  dstDiff + offset, sbr, srcDiff + offset);
     }
 }
 
@@ -453,16 +450,15 @@ struct SoftmaxCrossBWD final {
     {
         return 1;
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, const OutType *dst, const OutType *diffDst,
-        bool isLogsoftmax, SizeType innerSize,
-        svbool_t &ldPG0, svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3,
-        typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
-        typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
-        typename Vector::Vec<CompType>::Type &diffData0, typename Vector::Vec<CompType>::Type &diffData1,
-        typename Vector::Vec<CompType>::Type &diffData2, typename Vector::Vec<CompType>::Type &diffData3,
-        svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        typename Vector::Vec<CompType>::Type &sbr0, typename Vector::Vec<CompType>::Type &sbr1,
-        typename Vector::Vec<CompType>::Type &sbr2, typename Vector::Vec<CompType>::Type &sbr3) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const OutType *dst, const OutType *diffDst, bool isLogsoftmax,
+                   SizeType innerSize, svbool_t &ldPG0, svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3,
+                   typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
+                   typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
+                   typename Vector::Vec<CompType>::Type &diffData0, typename Vector::Vec<CompType>::Type &diffData1,
+                   typename Vector::Vec<CompType>::Type &diffData2, typename Vector::Vec<CompType>::Type &diffData3,
+                   svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
+                   typename Vector::Vec<CompType>::Type &sbr0, typename Vector::Vec<CompType>::Type &sbr1,
+                   typename Vector::Vec<CompType>::Type &sbr2, typename Vector::Vec<CompType>::Type &sbr3) noexcept
     {
         Service::Unused(loopRange);
         Vector::LoadN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
@@ -471,25 +467,24 @@ struct SoftmaxCrossBWD final {
             diffDst + loopIdx * innerSize, ldPG0, ldPG1, ldPG2, ldPG3, diffData0, diffData1, diffData2, diffData3);
         if (isLogsoftmax) {
             Vector::AddXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, sbr0, sbr1, sbr2, sbr3, diffData0, diffData1, diffData2, diffData3,
-                sbr0, sbr1, sbr2, sbr3);
+                opPG0, opPG1, opPG2, opPG3, sbr0, sbr1, sbr2, sbr3, diffData0, diffData1, diffData2, diffData3, sbr0,
+                sbr1, sbr2, sbr3);
         } else {
             Vector::MlaXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, sbr0, sbr1, sbr2, sbr3, diffData0, diffData1, diffData2, diffData3,
-                data0, data1, data2, data3, sbr0, sbr1, sbr2, sbr3);
+                opPG0, opPG1, opPG2, opPG3, sbr0, sbr1, sbr2, sbr3, diffData0, diffData1, diffData2, diffData3, data0,
+                data1, data2, data3, sbr0, sbr1, sbr2, sbr3);
         }
     }
-    static void Do(SizeType loopIdx, SizeType loopRange, const OutType *dst, const OutType *diffDst,
-        bool isLogsoftmax, SizeType innerSize,
-        svbool_t &ldPG0, svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3,
-        typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
-        typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
-        typename Vector::Vec<CompType>::Type &diffData0, typename Vector::Vec<CompType>::Type &diffData1,
-        typename Vector::Vec<CompType>::Type &diffData2, typename Vector::Vec<CompType>::Type &diffData3,
-        svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
-        typename Vector::Vec<CompType>::Type &sbr0, typename Vector::Vec<CompType>::Type &sbr1,
-        typename Vector::Vec<CompType>::Type &sbr2, typename Vector::Vec<CompType>::Type &sbr3,
-        svbool_t &stPG0, svbool_t &stPG1, svbool_t &stPG2, svbool_t &stPG3, InType *diffSrc) noexcept
+    static void Do(SizeType loopIdx, SizeType loopRange, const OutType *dst, const OutType *diffDst, bool isLogsoftmax,
+                   SizeType innerSize, svbool_t &ldPG0, svbool_t &ldPG1, svbool_t &ldPG2, svbool_t &ldPG3,
+                   typename Vector::Vec<CompType>::Type &data0, typename Vector::Vec<CompType>::Type &data1,
+                   typename Vector::Vec<CompType>::Type &data2, typename Vector::Vec<CompType>::Type &data3,
+                   typename Vector::Vec<CompType>::Type &diffData0, typename Vector::Vec<CompType>::Type &diffData1,
+                   typename Vector::Vec<CompType>::Type &diffData2, typename Vector::Vec<CompType>::Type &diffData3,
+                   svbool_t &opPG0, svbool_t &opPG1, svbool_t &opPG2, svbool_t &opPG3,
+                   typename Vector::Vec<CompType>::Type &sbr0, typename Vector::Vec<CompType>::Type &sbr1,
+                   typename Vector::Vec<CompType>::Type &sbr2, typename Vector::Vec<CompType>::Type &sbr3,
+                   svbool_t &stPG0, svbool_t &stPG1, svbool_t &stPG2, svbool_t &stPG3, InType *diffSrc) noexcept
     {
         Service::Unused(loopRange);
         Vector::LoadN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
@@ -500,18 +495,18 @@ struct SoftmaxCrossBWD final {
             Vector::ExpN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
                 opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, data0, data1, data2, data3);
             Vector::MulXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, sbr0, sbr1, sbr2, sbr3,
-                data0, data1, data2, data3);
+                opPG0, opPG1, opPG2, opPG3, data0, data1, data2, data3, sbr0, sbr1, sbr2, sbr3, data0, data1, data2,
+                data3);
             Vector::SubXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, diffData0, diffData1, diffData2, diffData3,
-                data0, data1, data2, data3, diffData0, diffData1, diffData2, diffData3);
+                opPG0, opPG1, opPG2, opPG3, diffData0, diffData1, diffData2, diffData3, data0, data1, data2, data3,
+                diffData0, diffData1, diffData2, diffData3);
         } else {
             Vector::SubXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, diffData0, diffData1, diffData2, diffData3,
-                sbr0, sbr1, sbr2, sbr3, diffData0, diffData1, diffData2, diffData3);
+                opPG0, opPG1, opPG2, opPG3, diffData0, diffData1, diffData2, diffData3, sbr0, sbr1, sbr2, sbr3,
+                diffData0, diffData1, diffData2, diffData3);
             Vector::MulXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, diffData0, diffData1, diffData2, diffData3,
-                data0, data1, data2, data3, diffData0, diffData1, diffData2, diffData3);
+                opPG0, opPG1, opPG2, opPG3, diffData0, diffData1, diffData2, diffData3, data0, data1, data2, data3,
+                diffData0, diffData1, diffData2, diffData3);
         }
         Vector::StoreN<InType, CompType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
             stPG0, stPG1, stPG2, stPG3, diffData0, diffData1, diffData2, diffData3, diffSrc + loopIdx * innerSize);
@@ -519,8 +514,8 @@ struct SoftmaxCrossBWD final {
 };
 
 template <typename CompType, typename InType, typename OutType>
-void EvaluateCrossAxisBWD(const OutType *dst, const OutType *dstDiff, InType *srcDiff,
-    SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept
+void EvaluateCrossAxisBWD(const OutType *dst, const OutType *dstDiff, InType *srcDiff, SizeType innerSize,
+                          SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept
 {
     bool isLogsoftmax = (algorithm == SoftmaxAlgorithmKind::LOGSOFTMAX);
     SizeType loopInc = Vector::UnrollLength<InType, CompType, OutType>();
@@ -545,35 +540,35 @@ void EvaluateCrossAxisBWD(const OutType *dst, const OutType *dstDiff, InType *sr
             svbool_t ldPG1;
             svbool_t ldPG2;
             svbool_t ldPG3;
-            Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(
-                ldPG0, ldPG1, ldPG2, ldPG3, in, innerSize);
+            Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType>()>::Do(ldPG0, ldPG1, ldPG2, ldPG3,
+                                                                                            in, innerSize);
             svbool_t opPG0;
             svbool_t opPG1;
             svbool_t opPG2;
             svbool_t opPG3;
-            Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(
-                opPG0, opPG1, opPG2, opPG3, in, innerSize);
+            Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType>()>::Do(opPG0, opPG1, opPG2, opPG3,
+                                                                                             in, innerSize);
             svbool_t stPG0;
             svbool_t stPG1;
             svbool_t stPG2;
             svbool_t stPG3;
-            Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(
-                stPG0, stPG1, stPG2, stPG3, in, innerSize);
-            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossBWD<CompType, InType, OutType>{},
-                dst + offset, dstDiff + offset, isLogsoftmax, innerSize, ldPG0, ldPG1, ldPG2, ldPG3,
-                data0, data1, data2, data3,
-                diffData0, diffData1, diffData2, diffData3, opPG0, opPG1, opPG2, opPG3, sbr0, sbr1, sbr2, sbr3);
-            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossBWD<CompType, InType, OutType>{},
-                dst + offset, dstDiff + offset, isLogsoftmax, innerSize, ldPG0, ldPG1, ldPG2, ldPG3,
-                data0, data1, data2, data3,
-                diffData0, diffData1, diffData2, diffData3, opPG0, opPG1, opPG2, opPG3, sbr0, sbr1, sbr2, sbr3,
-                stPG0, stPG1, stPG2, stPG3, srcDiff + offset);
+            Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType>()>::Do(stPG0, stPG1, stPG2, stPG3,
+                                                                                           in, innerSize);
+            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossBWD<CompType, InType, OutType>{}, dst + offset,
+                                      dstDiff + offset, isLogsoftmax, innerSize, ldPG0, ldPG1, ldPG2, ldPG3, data0,
+                                      data1, data2, data3, diffData0, diffData1, diffData2, diffData3, opPG0, opPG1,
+                                      opPG2, opPG3, sbr0, sbr1, sbr2, sbr3);
+            Service::UnrollFor::Do<1>(axisSize, SoftmaxCrossBWD<CompType, InType, OutType>{}, dst + offset,
+                                      dstDiff + offset, isLogsoftmax, innerSize, ldPG0, ldPG1, ldPG2, ldPG3, data0,
+                                      data1, data2, data3, diffData0, diffData1, diffData2, diffData3, opPG0, opPG1,
+                                      opPG2, opPG3, sbr0, sbr1, sbr2, sbr3, stPG0, stPG1, stPG2, stPG3,
+                                      srcDiff + offset);
         }
     }
 }
 
-} // Softmax
-} // Detail
-} // KuDNN
+} // namespace Softmax
+} // namespace Detail
+} // namespace KuDNN
 
 #endif //  KUDNN_SOFTMAX_DEF_HPP

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_SHAPE_HPP
 #define KUDNN_SHAPE_HPP
@@ -57,13 +56,13 @@ struct Shape final {
         CheckNumDims(numDims);
         CheckMemoryLimit();
     }
-    Shape(const std::initializer_list<SizeType>& list) noexcept(false)
+    Shape(const std::initializer_list<SizeType> &list) noexcept(false)
     {
         ResetShape(list);
     }
 
     template <typename... Ts>
-    Shape& ResetShape(Ts... dims) noexcept(false)
+    Shape &ResetShape(Ts... dims) noexcept(false)
     {
         CheckNumDims(sizeof...(dims));
         numDims = sizeof...(dims);
@@ -73,7 +72,7 @@ struct Shape final {
         }
         return *this;
     }
-    Shape& ResetShape(const std::initializer_list<SizeType>& list) noexcept(false)
+    Shape &ResetShape(const std::initializer_list<SizeType> &list) noexcept(false)
     {
         CheckNumDims(list.size());
         numDims = list.size();
@@ -86,7 +85,7 @@ struct Shape final {
         return *this;
     }
     template <typename T>
-    Shape& ResetShape(T *ptr, const SizeType size) noexcept(false)
+    Shape &ResetShape(T *ptr, const SizeType size) noexcept(false)
     {
         if (ptr == nullptr) {
             throw Service::LogicError("Shape: ptr is nullptr");
@@ -102,9 +101,9 @@ struct Shape final {
         return *this;
     }
 
-    Shape& operator+=(const Shape &adder) noexcept(false)
+    Shape &operator+=(const Shape &adder) noexcept(false)
     {
-        if (adder.GetNumDims() !=  this->GetNumDims()) {
+        if (adder.GetNumDims() != this->GetNumDims()) {
             throw Service::LogicError("Shape: different size of base and adder shapes");
         }
         for (SizeType i = 0; i < adder.GetNumDims(); ++i) {
@@ -112,7 +111,7 @@ struct Shape final {
         }
         return *this;
     }
-    
+
     Shape operator+(const Shape &adder) noexcept(false)
     {
         if (adder.GetNumDims() != this->GetNumDims()) {
@@ -133,7 +132,7 @@ struct Shape final {
         return dimsArray[id];
     }
 
-    SizeType& operator[](SizeType id) noexcept(false)
+    SizeType &operator[](SizeType id) noexcept(false)
     {
         if (id >= numDims) {
             throw Service::LogicError("Shape: index >= num_dims");
@@ -168,7 +167,7 @@ private:
     void CheckMemoryLimit() const noexcept(false)
     {
         long long totalSize = GetTotalDimsSize();
-        long long limit = 3 * 1024 * 1024 * 1024ULL;  // 4GB memory for a single matrix
+        long long limit = 3 * 1024 * 1024 * 1024ULL; // 4GB memory for a single matrix
         if (totalSize * 4 > limit) {
             throw Service::LogicError("Shape: exceeded available memory limit ");
         }
@@ -195,6 +194,6 @@ inline bool operator!=(const Shape &lhs, const Shape &rhs) noexcept
     return !(lhs == rhs);
 }
 
-} // KuDNN
+} // namespace KuDNN
 
 #endif // KUDNN_SHAPE_HPP

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -24,6 +24,7 @@ namespace KuDNN {
 struct JitConvMatrixComputationKernel : public ARMCG::JitGenerator {
     explicit JitConvMatrixComputationKernel(const KudnnConvJitConfT &ajcp) : jcp(ajcp) {}
     KudnnConvJitConfT jcp;
+
 public:
     const char *Name() const override
     {
@@ -33,6 +34,7 @@ public:
     {
         return __FILE__;
     }
+
 private:
     using Reg64T = const ARMCG::XReg;
 

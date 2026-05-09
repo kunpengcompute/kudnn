@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -59,13 +59,11 @@ public:
                 newReorderedDims[IDX_0] = 1;
                 newReorderedDims[IDX_1] = srcInfo.GetDims()[IDX_0];
                 newReorderedDims[IDX_2] = srcInfo.GetDims()[IDX_1];
-            } else
-            if (srcInfo.GetLayout() == Layout::BA) {
+            } else if (srcInfo.GetLayout() == Layout::BA) {
                 newReorderedDims[IDX_0] = 1;
                 newReorderedDims[IDX_1] = srcInfo.GetDims()[IDX_1];
                 newReorderedDims[IDX_2] = srcInfo.GetDims()[IDX_0];
-            } else
-            if (srcInfo.GetStandardABXLayout() == srcInfo.GetLayout()) {
+            } else if (srcInfo.GetStandardABXLayout() == srcInfo.GetLayout()) {
                 newReorderedDims[IDX_0] = srcInfo.GetDims()[IDX_0];
                 newReorderedDims[IDX_1] = srcInfo.GetDims()[IDX_1];
                 newReorderedDims[IDX_2] = Service::ArrayProduct(srcInfo.GetDims(), srcInfo.GetNumDims(), IDX_2);
@@ -78,34 +76,28 @@ public:
             strideIn = newReorderedDims[IDX_2];
             strideOut = newReorderedDims[IDX_1];
         }
-        
+
         Parallelizable::Initialize(GetOptNumThreads(), reorderedDims);
     }
 
     void IsFastReorder(const TensorInfo &srcInfo, const TensorInfo &dstInfo)
     {
 #ifdef KUDNNL_920Pro
-        bool isFastType = (srcInfo.GetType() == dstInfo.GetType() &&
-                    srcInfo.GetType() != Element::TypeT::F16 &&
-                    srcInfo.GetType() != Element::TypeT::BF16);
+        bool isFastType = (srcInfo.GetType() == dstInfo.GetType() && srcInfo.GetType() != Element::TypeT::F16 &&
+                           srcInfo.GetType() != Element::TypeT::BF16);
 #else
-        bool isFastType = (srcInfo.GetType() == Element::TypeT::F32 &&
-                    dstInfo.GetType() == Element::TypeT::F32);
+        bool isFastType = (srcInfo.GetType() == Element::TypeT::F32 && dstInfo.GetType() == Element::TypeT::F32);
 #endif
         bool isAXBToABX = (srcInfo.GetStandardAXBLayout() == srcInfo.GetLayout()) &&
-            (dstInfo.GetStandardABXLayout() == dstInfo.GetLayout()) &&
-            (srcInfo.GetNumDims() > DIM_2) &&
-            srcInfo.IsDense() && dstInfo.IsDense();
+                          (dstInfo.GetStandardABXLayout() == dstInfo.GetLayout()) && (srcInfo.GetNumDims() > DIM_2) &&
+                          srcInfo.IsDense() && dstInfo.IsDense();
         bool isABXToAXB = (srcInfo.GetStandardABXLayout() == srcInfo.GetLayout()) &&
-            (dstInfo.GetStandardAXBLayout() == dstInfo.GetLayout()) &&
-            (srcInfo.GetNumDims() > DIM_2) &&
-            srcInfo.IsDense() && dstInfo.IsDense();
-        bool isABToBA = (srcInfo.GetLayout() == Layout::AB) &&
-            (dstInfo.GetLayout() == Layout::BA) &&
-            srcInfo.IsDense() && dstInfo.IsDense();
-        bool isBAToAB = (srcInfo.GetLayout() == Layout::BA) &&
-            (dstInfo.GetLayout() == Layout::AB) &&
-            srcInfo.IsDense() && dstInfo.IsDense();
+                          (dstInfo.GetStandardAXBLayout() == dstInfo.GetLayout()) && (srcInfo.GetNumDims() > DIM_2) &&
+                          srcInfo.IsDense() && dstInfo.IsDense();
+        bool isABToBA = (srcInfo.GetLayout() == Layout::AB) && (dstInfo.GetLayout() == Layout::BA) &&
+                        srcInfo.IsDense() && dstInfo.IsDense();
+        bool isBAToAB = (srcInfo.GetLayout() == Layout::BA) && (dstInfo.GetLayout() == Layout::AB) &&
+                        srcInfo.IsDense() && dstInfo.IsDense();
         if (isFastType && (isAXBToABX || isABXToAXB || isABToBA || isBAToAB)) {
             fastReorder = true;
         } else {
@@ -116,18 +108,16 @@ public:
     }
 
     template <typename InType, typename OutType>
-    void Evaluate(const Shape &start, const Shape &end,
-        const void *src, void *dst) const noexcept
+    void Evaluate(const Shape &start, const Shape &end, const void *src, void *dst) const noexcept
     {
         const InType *typedSrc = static_cast<const InType *>(src);
         OutType *typedDst = static_cast<OutType *>(dst);
-        Reorder::EvaluateReorder(start, end, typedSrc, typedDst,
-            reorderedStridesSrc, reorderedStridesDst,
-            fastReorder, strideIn, strideOut);
+        Reorder::EvaluateReorder(start, end, typedSrc, typedDst, reorderedStridesSrc, reorderedStridesDst, fastReorder,
+                                 strideIn, strideOut);
     }
 
-    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides,
-        const void *src, void *dst) const noexcept(false)
+    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, const void *src, void *dst) const
+        noexcept(false)
     {
         Shape start = batchStrides;
         SizeType array[MAX_DIMS];
@@ -171,13 +161,13 @@ public:
             }
             case Element::TypeT::BF16: {
                 if (dstType == Element::TypeT::F32) {
-                    Evaluate< __bf16, float>(start, end, src, dst);
+                    Evaluate<__bf16, float>(start, end, src, dst);
                 } else if (dstType == Element::TypeT::F16) {
                     Evaluate<__bf16, __fp16>(start, end, src, dst);
                 } else if (dstType == Element::TypeT::BF16) {
-                    Evaluate< __bf16, __bf16>(start, end, src, dst);
+                    Evaluate<__bf16, __bf16>(start, end, src, dst);
                 } else if (dstType == Element::TypeT::S8) {
-                    Evaluate< __bf16, std::int8_t>(start, end, src, dst);
+                    Evaluate<__bf16, std::int8_t>(start, end, src, dst);
                 } else if (dstType == Element::TypeT::U8) {
                     Evaluate<__bf16, std::uint8_t>(start, end, src, dst);
                 } else if (dstType == Element::TypeT::S32) {
@@ -241,17 +231,17 @@ public:
 
     void RunSequential(const Shape &batchSplitDims, const void *src, void *dst) const noexcept(false)
     {
-        SizeType batchStrides[MAX_DIMS] = { 0, 0, 0, 0, 0 };
+        SizeType batchStrides[MAX_DIMS] = {0, 0, 0, 0, 0};
         RunSequential(batchSplitDims, Shape{batchStrides, batchSplitDims.GetNumDims()}, src, dst);
     }
 
     void Run(const void *src, void *dst) noexcept(false)
     {
         if ((src == nullptr) || (dst == nullptr)) {
-            throw Service::LogicError {"Reorder Layer: one of input matrices is nullptr"};
+            throw Service::LogicError{"Reorder Layer: one of input matrices is nullptr"};
         }
         if (src == dst) {
-            throw Service::LogicError {"Reorder Layer: src == dst"};
+            throw Service::LogicError{"Reorder Layer: src == dst"};
         }
         Threading::BatchThreader(*this, src, dst);
     }
@@ -281,19 +271,23 @@ private:
     }
 };
 
-} // Detail
+} // namespace Detail
 
 ReorderLayer::~ReorderLayer() noexcept {}
 
 ReorderLayer::ReorderLayer(const TensorInfo &srcInfo, const TensorInfo &dstInfo) noexcept(false)
-    : pImpl(new Detail::ReorderLayerImpl(srcInfo, dstInfo)) {}
+    : pImpl(new Detail::ReorderLayerImpl(srcInfo, dstInfo))
+{
+}
 
 ReorderLayer::ReorderLayer(const ReorderLayer &other) noexcept(false)
-    : pImpl(new Detail::ReorderLayerImpl{*(other.pImpl.get())}) {}
+    : pImpl(new Detail::ReorderLayerImpl{*(other.pImpl.get())})
+{
+}
 
 ReorderLayer::ReorderLayer(ReorderLayer &&other) noexcept : pImpl(std::move(other.pImpl)) {}
 
-ReorderLayer& ReorderLayer::operator=(const ReorderLayer &other) noexcept(false)
+ReorderLayer &ReorderLayer::operator=(const ReorderLayer &other) noexcept(false)
 {
     if (this != &other) {
         this->pImpl.reset(new Detail::ReorderLayerImpl{*(other.pImpl.get())});
@@ -301,7 +295,7 @@ ReorderLayer& ReorderLayer::operator=(const ReorderLayer &other) noexcept(false)
     return *this;
 }
 
-ReorderLayer& ReorderLayer::operator=(ReorderLayer &&other) noexcept
+ReorderLayer &ReorderLayer::operator=(ReorderLayer &&other) noexcept
 {
     if (this != &other) {
         this->pImpl = std::move(other.pImpl);
@@ -325,4 +319,4 @@ Status ReorderLayer::ValidateInput(const TensorInfo &srcInfo, const TensorInfo &
     return Status::SUCCESS;
 }
 
-} // KuDNN
+} // namespace KuDNN

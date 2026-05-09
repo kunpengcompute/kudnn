@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -42,7 +42,8 @@ void SqrtDstSveBWDBF16(const int64_t len, const __bf16 *src, const __bf16 *dd, _
     int64_t i = 0;
     int64_t loopSqrtDsth = svcnth();
 
-    for (; i <= len - loopSqrtDsth * VML_VectorComputation_UNFOLD_N; i += loopSqrtDsth * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopSqrtDsth * VML_VectorComputation_UNFOLD_N;
+         i += loopSqrtDsth * VML_VectorComputation_UNFOLD_N) {
         SqrtMainKernelBwdBF16(src + i, dd + i, ds + i, loopSqrtDsth);
     }
     for (; i < len; i += loopSqrtDsth) {

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -32,7 +32,8 @@ void LinearSveF32(const int64_t len, const float alpha, const float beta, const 
     svfloat32_t va = svdup_n_f32(alpha);
     svfloat32_t vb = svdup_n_f32(beta);
 
-    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N; i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N;
+         i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
         LinearMainKernelF32(va, src + i, vb, dst + i, loopLinearf);
     }
     for (; i < len; i += loopLinearf) {
@@ -69,7 +70,8 @@ void LinearSveF16(const int64_t len, const float alpha, const float beta, const 
     svfloat32_t va = svdup_n_f32(alpha);
     svfloat32_t vb = svdup_n_f32(beta);
 
-    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N; i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N;
+         i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
         LinearMainKernelF16(va, src + i, vb, dst + i, loopLinearf);
     }
     for (; i < len; i += loopLinearf) {
@@ -122,7 +124,8 @@ void LinearSveBF16(const int64_t len, const float alpha, const float beta, const
     svfloat32_t va = svdup_n_f32(alpha);
     svfloat32_t vb = svdup_n_f32(beta);
 
-    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N; i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N;
+         i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
         LinearMainKernelBF16(va, src + i, vb, dst + i, loopLinearf);
     }
 

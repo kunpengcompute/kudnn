@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -35,7 +35,8 @@ void ClipV2SveFWDF16(const int64_t len, const float alpha, const float beta, con
     int64_t i;
     int64_t loopClipV2h = svcnth();
 
-    for (i = 0; i <= len - loopClipV2h * VML_VectorComputation_UNFOLD_N; i += loopClipV2h * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopClipV2h * VML_VectorComputation_UNFOLD_N;
+         i += loopClipV2h * VML_VectorComputation_UNFOLD_N) {
         ClipV2MainKernelFwdF16(alpha, beta, src + i, dst + i, loopClipV2h);
     }
     for (; i < len; i += loopClipV2h) {
@@ -50,8 +51,8 @@ void ClipV2SveFWDF16(const int64_t len, const float alpha, const float beta, con
 #undef VML_VectorComputation_UNFOLD_N
 #define VML_VectorComputation_UNFOLD_N 6
 
-static void ClipV2MainKernelBwdF16(svfloat32_t va, svfloat32_t vb,
-                                   const __fp16 *src, const __fp16 *dd, __fp16 *ds, int step)
+static void ClipV2MainKernelBwdF16(svfloat32_t va, svfloat32_t vb, const __fp16 *src, const __fp16 *dd, __fp16 *ds,
+                                   int step)
 {
     svbool_t pgB32 = svptrue_b32();
     svbool_t pgB16 = svptrue_b16();
@@ -78,8 +79,8 @@ static void ClipV2MainKernelBwdF16(svfloat32_t va, svfloat32_t vb,
     CONVERT_STORE_FP32_TO_FP16(ds, pgB16, resEven, resOdd, step);
 }
 
-void ClipV2SveBWDF16(const int64_t len, const float alpha, const float beta,
-                     const __fp16 *src, const __fp16 *dd, __fp16 *ds)
+void ClipV2SveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+                     __fp16 *ds)
 {
     int64_t i = 0;
     int64_t loopClipV2h = svcnth();
@@ -110,7 +111,7 @@ void ClipV2SveBWDF16(const int64_t len, const float alpha, const float beta,
 
         // convert back to fp16
         svfloat16_t res = svcvt_f16_f32_x(pgB32, resEven); /* resEven(f16) */
-        x = CvtOddF16F32(resOdd, pgB32); /* resOdd(f16) */
+        x = CvtOddF16F32(resOdd, pgB32);                   /* resOdd(f16) */
         res = svsel_f16(pgB32, res, x);
 
         svst1_f16(pgB16, ds + i, res);

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -25,26 +25,26 @@
 
 namespace KuDNN {
 
-inline NormalizationFlags operator & (const NormalizationFlags &lhs, const NormalizationFlags &rhs)
+inline NormalizationFlags operator&(const NormalizationFlags &lhs, const NormalizationFlags &rhs)
 {
     return static_cast<NormalizationFlags>(static_cast<std::uint32_t>(lhs) & static_cast<std::uint32_t>(rhs));
 }
 
-inline NormalizationFlags operator | (const NormalizationFlags &lhs, const NormalizationFlags &rhs)
+inline NormalizationFlags operator|(const NormalizationFlags &lhs, const NormalizationFlags &rhs)
 {
     return static_cast<NormalizationFlags>(static_cast<std::uint32_t>(lhs) | static_cast<std::uint32_t>(rhs));
 }
 
-inline NormalizationFlags &operator |= (NormalizationFlags &lhs, const NormalizationFlags &rhs)
+inline NormalizationFlags &operator|=(NormalizationFlags &lhs, const NormalizationFlags &rhs)
 {
     lhs = lhs | rhs;
     return lhs;
 }
 
-inline NormalizationFlags &operator &= (NormalizationFlags &lhs, const NormalizationFlags &rhs)
+inline NormalizationFlags &operator&=(NormalizationFlags &lhs, const NormalizationFlags &rhs)
 {
     lhs = lhs & rhs;
     return lhs;
 }
 
-} // KuDNN
+} // namespace KuDNN

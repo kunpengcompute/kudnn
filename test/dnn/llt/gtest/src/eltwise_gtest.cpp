@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -274,7 +274,7 @@ TEST(EltwiseGTests, BackwardFunc4DF32_allKind)
     const KuDNN::TensorInfo srcTensor = {{8, 11, 17, 23}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo diffDstTensor = {{8, 11, 17, 23}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo diffSrcTensor = {{8, 11, 17, 23}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    
+
     for(auto algKind : getAllActivationFunctions())
     {
         try {
@@ -308,7 +308,7 @@ TEST(EltwiseGTests, BackwardFunc5DF32_allKind)
     const KuDNN::TensorInfo srcTensor = {{8, 11, 17, 23, 34}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCED};
     const KuDNN::TensorInfo diffDstTensor = {{8, 11, 17, 23, 34}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCED};
     const KuDNN::TensorInfo diffSrcTensor = {{8, 11, 17, 23, 34}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCED};
-    
+
     for(auto algKind : getAllActivationFunctions())
     {
         try {

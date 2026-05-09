@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,8 +20,7 @@
 #include "src/cg_reg.hpp"
 #include "../../include/service/kudnn_service.hpp"
 
-#define MAX_CODENAME_LEN \
-    (MAX_FNAME_LEN - sizeof(DUMP_BASE_FNAME) - sizeof(DUMP_EXT_FNAME))
+#define MAX_CODENAME_LEN (MAX_FNAME_LEN - sizeof(DUMP_BASE_FNAME) - sizeof(DUMP_EXT_FNAME))
 
 namespace ARMCG {
 
@@ -52,13 +51,10 @@ protected:
 };
 
 // Callee-saved registers
-constexpr Operand::Code ABI_SAVE_GPR_REGS[]
-        = {Operand::Code::X16, Operand::Code::X17,
-           Operand::Code::X19, Operand::Code::X20,
-           Operand::Code::X21, Operand::Code::X22,
-           Operand::Code::X23, Operand::Code::X24,
-           Operand::Code::X25, Operand::Code::X26,
-           Operand::Code::X27, Operand::Code::X28};
+constexpr Operand::Code ABI_SAVE_GPR_REGS[] = {Operand::Code::X16, Operand::Code::X17, Operand::Code::X19,
+                                               Operand::Code::X20, Operand::Code::X21, Operand::Code::X22,
+                                               Operand::Code::X23, Operand::Code::X24, Operand::Code::X25,
+                                               Operand::Code::X26, Operand::Code::X27, Operand::Code::X28};
 
 // See "Procedure Call Standsard for the ARM 64-bit Architecture (AArch64)"
 const XReg ABI_PARAM1(static_cast<uint32_t>(Operand::Code::X0));
@@ -71,7 +67,9 @@ const XReg ABI_PARAM7(static_cast<uint32_t>(Operand::Code::X6));
 const XReg ABI_PARAM8(static_cast<uint32_t>(Operand::Code::X7));
 const XReg ABI_NOT_PARAM1(static_cast<uint32_t>(Operand::Code::X15));
 
-class JitGenerator : public CodeGenerator, public CCompatible {
+class JitGenerator
+    : public CodeGenerator
+    , public CCompatible {
 public:
     using CCompatible::operator new;
     using CCompatible::operator new[];
@@ -98,8 +96,7 @@ public:
     const PReg P_NOT_128 = p14;
     const PReg pAllOne = p0;
 
-    const std::vector<XReg> xTmpVec
-            = {X_TMP_0, X_TMP_1, X_TMP_2, X_TMP_3, X_TMP_4};
+    const std::vector<XReg> xTmpVec = {X_TMP_0, X_TMP_1, X_TMP_2, X_TMP_3, X_TMP_4};
     const int xTmpVecSize = xTmpVec.size();
 
     const XReg param1 = ABI_PARAM1;
@@ -130,8 +127,7 @@ public:
         }
         for (size_t i = 0; i < numAbiSaveGprRegs; i += VAL_2) {
             Stp(XReg(static_cast<uint32_t>(ABI_SAVE_GPR_REGS[i])),
-                XReg(static_cast<uint32_t>(ABI_SAVE_GPR_REGS[i + VAL_1])),
-                PostPtr(x9, xregLen * VAL_2));
+                XReg(static_cast<uint32_t>(ABI_SAVE_GPR_REGS[i + VAL_1])), PostPtr(x9, xregLen * VAL_2));
         }
 
         if (sveLen != SveLen::VectorComputation_NONE) { /* VectorComputation is available. */
@@ -164,8 +160,7 @@ public:
 
         for (size_t i = 0; i < numAbiSaveGprRegs; i += VAL_2) {
             Ldp(XReg(static_cast<uint32_t>(ABI_SAVE_GPR_REGS[i])),
-                XReg(static_cast<uint32_t>(ABI_SAVE_GPR_REGS[i + 1])),
-                PostPtr(x9, xregLen * VAL_2));
+                XReg(static_cast<uint32_t>(ABI_SAVE_GPR_REGS[i + 1])), PostPtr(x9, xregLen * VAL_2));
         }
 
         Add(sp, sp, static_cast<int64_t>(preservedStackSize) - VAL_16);
@@ -187,8 +182,7 @@ public:
     }
 
     template <typename T>
-     XReg AddrOff(const  XReg &base, const T off,
-            const  XReg &addr, const  XReg &xTmp)
+    XReg AddrOff(const XReg &base, const T off, const XReg &addr, const XReg &xTmp)
     {
         if (off == 0) {
             return base;
@@ -199,25 +193,47 @@ public:
     }
 
     template <typename PRegBHSD, typename T>
-    void SetPreg(const PRegBHSD &p, T tailSize,
-            const XReg xTmp0 = XReg(DUMMY_IDX),
-            const XReg xTmp1 = XReg(DUMMY_IDX))
+    void SetPreg(const PRegBHSD &p, T tailSize, const XReg xTmp0 = XReg(DUMMY_IDX), const XReg xTmp1 = XReg(DUMMY_IDX))
     {
         assert(tailSize <= VAL_64); // Implemented only for "VectorComputation size <=  512"
 
         switch (tailSize) {
-            case VAL_0: Pfalse(PRegB(p.getIdx())); return;
-            case VAL_1: Ptrue(p, Pattern::VL1); return;
-            case VAL_2: Ptrue(p, Pattern::VL2); return;
-            case VAL_3: Ptrue(p, Pattern::VL3); return;
-            case VAL_4: Ptrue(p, Pattern::VL4); return;
-            case VAL_5: Ptrue(p, Pattern::VL5); return;
-            case VAL_6: Ptrue(p, Pattern::VL6); return;
-            case VAL_7: Ptrue(p, Pattern::VL7); return;
-            case VAL_8: Ptrue(p, Pattern::VL8); return;
-            case VAL_16: Ptrue(p, Pattern::VL16); return;
-            case VAL_32: Ptrue(p, Pattern::VL32); return;
-            case VAL_64: Ptrue(p, Pattern::VL64); return;
+            case VAL_0:
+                Pfalse(PRegB(p.getIdx()));
+                return;
+            case VAL_1:
+                Ptrue(p, Pattern::VL1);
+                return;
+            case VAL_2:
+                Ptrue(p, Pattern::VL2);
+                return;
+            case VAL_3:
+                Ptrue(p, Pattern::VL3);
+                return;
+            case VAL_4:
+                Ptrue(p, Pattern::VL4);
+                return;
+            case VAL_5:
+                Ptrue(p, Pattern::VL5);
+                return;
+            case VAL_6:
+                Ptrue(p, Pattern::VL6);
+                return;
+            case VAL_7:
+                Ptrue(p, Pattern::VL7);
+                return;
+            case VAL_8:
+                Ptrue(p, Pattern::VL8);
+                return;
+            case VAL_16:
+                Ptrue(p, Pattern::VL16);
+                return;
+            case VAL_32:
+                Ptrue(p, Pattern::VL32);
+                return;
+            case VAL_64:
+                Ptrue(p, Pattern::VL64);
+                return;
         }
 
         assert(xTmp0.GetIdx() != DUMMY_IDX && xTmp1.GetIdx() != DUMMY_IDX);
@@ -238,9 +254,7 @@ public:
      * Only supported for Xmm and Ymm.
      */
     template <CPUISAT isa>
-    void RuntimeTailProcess(const XReg &regTail,
-            const XReg &regTmp,
-            const std::function<void(int)> &tailProcess)
+    void RuntimeTailProcess(const XReg &regTail, const XReg &regTmp, const std::function<void(int)> &tailProcess)
     {
         constexpr int simdWYmm = BIT_8;
         constexpr int f32Bits = sizeof(float) * BIT_8;
@@ -277,7 +291,9 @@ public:
     JitGenerator &operator=(const JitGenerator &) = delete;
 
     explicit JitGenerator(void *codePtr = nullptr, size_t codeSize = CODE_SIZE_256_1024, bool useAutogrow = true)
-        : CodeGenerator(codeSize, (codePtr == nullptr && useAutogrow) ? AUTO_GROW : codePtr) {}
+        : CodeGenerator(codeSize, (codePtr == nullptr && useAutogrow) ? AUTO_GROW : codePtr)
+    {
+    }
     ~JitGenerator() override {}
 
     virtual const char *Name() const = 0;
@@ -323,8 +339,7 @@ public:
         }
     }
 
-    void RegisterJitCode(const void *code, size_t codeSize,
-        const char *codeName, const char *sourceFileName)
+    void RegisterJitCode(const void *code, size_t codeSize, const char *codeName, const char *sourceFileName)
     {
         // The #ifdef guards are required to avoid generating a function that only
         // consists of lock and unlock code
@@ -365,18 +380,15 @@ private:
 
     const size_t xregLen = 8;
     const size_t vregLenPreserve = 8; // Only bottom 8byte must be preserved.
-    const size_t vregToPreserve = 8; // VREG8 - VREG15
+    const size_t vregToPreserve = 8;  // VREG8 - VREG15
 
-    const size_t numAbiSaveGprRegs
-            = sizeof(ABI_SAVE_GPR_REGS) / sizeof(ABI_SAVE_GPR_REGS[0]);
+    const size_t numAbiSaveGprRegs = sizeof(ABI_SAVE_GPR_REGS) / sizeof(ABI_SAVE_GPR_REGS[0]);
 
-    const size_t preservedStackSize = xregLen * (2 + numAbiSaveGprRegs)
-            + vregLenPreserve * vregToPreserve;
+    const size_t preservedStackSize = xregLen * (2 + numAbiSaveGprRegs) + vregLenPreserve * vregToPreserve;
 
-    const size_t sizeOfAbiSaveRegs = numAbiSaveGprRegs * x0.GetBit() / 8
-            + vregToPreserve * vregLenPreserve;
+    const size_t sizeOfAbiSaveRegs = numAbiSaveGprRegs * x0.GetBit() / 8 + vregToPreserve * vregLenPreserve;
 };
 
-} // ARMCG
+} // namespace ARMCG
 
 #endif // CG_JIT_GENERATOR_HPP

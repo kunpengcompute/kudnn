@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,16 +13,16 @@
 #ifndef VML_POW_H
 #define VML_POW_H
 
-#define MAX_POWXF_SP_TH_HI      10.0f
-#define MAX_POWXF_SP_TH_LO      FLOAT_ZERO
+#define MAX_POWXF_SP_TH_HI 10.0f
+#define MAX_POWXF_SP_TH_LO FLOAT_ZERO
 
-#define POWF_X_TH_LO            FLOAT_SUBNORMAL_BIT
-#define POWF_X_TH_HI            FLOAT_INF_BIT
-#define POWF_X_TH               (FLOAT_INF_BIT - FLOAT_SUBNORMAL_BIT)
+#define POWF_X_TH_LO FLOAT_SUBNORMAL_BIT
+#define POWF_X_TH_HI FLOAT_INF_BIT
+#define POWF_X_TH (FLOAT_INF_BIT - FLOAT_SUBNORMAL_BIT)
 
-#define POWF_LOG2_BIT_N         5U
-#define POWF_LOG2_N             (1 << (POWF_LOG2_BIT_N - 1))
-#define POWF_LOG2_POLY_N        POWF_LOG2_N
+#define POWF_LOG2_BIT_N 5U
+#define POWF_LOG2_N (1 << (POWF_LOG2_BIT_N - 1))
+#define POWF_LOG2_POLY_N POWF_LOG2_N
 
 extern const float G_VML_VSPOW_LOG2_TAB_VectorComputation[POWF_LOG2_N * 0x2];
 extern const float G_VML_VSPOW_LOG2_POLY_LOW_TAB_VectorComputation[POWF_LOG2_POLY_N * 0x2];

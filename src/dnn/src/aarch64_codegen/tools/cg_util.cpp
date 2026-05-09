@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -22,7 +22,6 @@
 #include <sys/auxv.h>
 #include <sys/prctl.h>
 #include <unistd.h>
-
 
 #include "src/cg_error.hpp"
 #include "src/cg_arm_const.hpp"
@@ -81,7 +80,7 @@ public:
     }
 
 private:
-int GetFilePathMaxTailNumPlus1(const char *path)
+    int GetFilePathMaxTailNumPlus1(const char *path)
     {
         char dirPath[MAX_PATH_LEN];
         char filePattern[MAX_PATH_LEN];
@@ -224,31 +223,26 @@ int GetFilePathMaxTailNumPlus1(const char *path)
     static constexpr int BUF_SIZE = 1024;
     const char *pathMidrEL1 = "/sys/devices/system/cpu/cpu0/regs/identification/midr_el1";
     const struct CacheInfoV2 cacheInfoDict[2] = {
-        {
-            CG_MIDR_EL1(0x46, 0x1, 0xf, 0x1, 0x0), // A64FX
-            {
-                {Arm64CacheType::SEPARATE, {1024 * 64, 1024 * 64, 0}, {1, 1, 0}}, // L1
-                {Arm64CacheType::UNIFIED, {0, 0, 1024 * 1024 * 8}, {0, 0, 12}},   // L2
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L3
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L4
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L5
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L6
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}  // L7
-            }
-        },
-        {
-            CG_MIDR_EL1(0x46, 0x2, 0xf, 0x1, 0x0), // A64FX
-            {
-                {Arm64CacheType::SEPARATE, {1024 * 64, 1024 * 64, 0}, {1, 1, 0}}, // L1
-                {Arm64CacheType::UNIFIED, {0, 0, 1024 * 1024 * 8}, {0, 0, 12}},   // L2
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L3
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L4
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L5
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}, // L6
-                {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}  // L7
-            }
-        }
-    };
+        {CG_MIDR_EL1(0x46, 0x1, 0xf, 0x1, 0x0), // A64FX
+         {
+             {Arm64CacheType::SEPARATE, {1024 * 64, 1024 * 64, 0}, {1, 1, 0}}, // L1
+             {Arm64CacheType::UNIFIED, {0, 0, 1024 * 1024 * 8}, {0, 0, 12}},   // L2
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L3
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L4
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L5
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L6
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}                  // L7
+         }},
+        {CG_MIDR_EL1(0x46, 0x2, 0xf, 0x1, 0x0), // A64FX
+         {
+             {Arm64CacheType::SEPARATE, {1024 * 64, 1024 * 64, 0}, {1, 1, 0}}, // L1
+             {Arm64CacheType::UNIFIED, {0, 0, 1024 * 1024 * 8}, {0, 0, 12}},   // L2
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L3
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L4
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L5
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}},                 // L6
+             {Arm64CacheType::NO_CACHE, {0, 0, 0}, {0, 0, 0}}                  // L7
+         }}};
 };
 
 void CpuInfo::DumpCacheInfo() const
@@ -256,15 +250,9 @@ void CpuInfo::DumpCacheInfo() const
     printf("numCores=%d\n", numCores_[1]); // phisical cores
     for (size_t i = 0; i < MAX_CACHE_LEVEL; i++) {
         auto cache = &cacheInfo_.levelCache[i];
-        printf("L%zu, %d, %u, %u, %u, %u, %u, %u\n",
-            i + 1,
-            static_cast<int>(cache->type),
-            cache->size[0],
-            cache->size[1],
-            cache->size[OFFSET_TWO],
-            cache->sharingCores[0],
-            cache->sharingCores[1],
-            cache->sharingCores[OFFSET_TWO]);
+        printf("L%zu, %d, %u, %u, %u, %u, %u, %u\n", i + 1, static_cast<int>(cache->type), cache->size[0],
+               cache->size[1], cache->size[OFFSET_TWO], cache->sharingCores[0], cache->sharingCores[1],
+               cache->sharingCores[OFFSET_TWO]);
     }
 }
 

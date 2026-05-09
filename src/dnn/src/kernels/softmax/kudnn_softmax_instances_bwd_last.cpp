@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,11 +16,11 @@ namespace KuDNN {
 namespace Detail {
 namespace Softmax {
 
-template
-void EvaluateLastAxisBWD<COMP_TYPE, IN_TYPE, OUT_TYPE>(
-    const OUT_TYPE *dst, const OUT_TYPE *dstDiff, IN_TYPE *srcDiff,
-    SizeType axisSize, SizeType outerSize, SizeType axisNum, SoftmaxAlgorithmKind algorithm) noexcept;
+template void EvaluateLastAxisBWD<COMP_TYPE, IN_TYPE, OUT_TYPE>(const OUT_TYPE *dst, const OUT_TYPE *dstDiff,
+                                                                IN_TYPE *srcDiff, SizeType axisSize, SizeType outerSize,
+                                                                SizeType axisNum,
+                                                                SoftmaxAlgorithmKind algorithm) noexcept;
 
-} // Softmax
-} // Detail
-} // KuDNN
+} // namespace Softmax
+} // namespace Detail
+} // namespace KuDNN

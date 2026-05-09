@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -31,9 +31,8 @@ namespace Vector {
 
 template <>
 struct DupN<float, float, 1> final {
-    static void Do(const float &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const float &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         Service::Unused(in1, in2, in3);
@@ -42,9 +41,8 @@ struct DupN<float, float, 1> final {
 
 template <>
 struct DupN<float, float, 2> final { // 2 means that duplication two time for one src
-    static void Do(const float &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const float &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -54,9 +52,8 @@ struct DupN<float, float, 2> final { // 2 means that duplication two time for on
 
 template <>
 struct DupN<float, float, 4> final { // 4 means that duplication four time for one src
-    static void Do(const float &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const float &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -67,9 +64,9 @@ struct DupN<float, float, 4> final { // 4 means that duplication four time for o
 
 template <>
 struct DupN<std::int32_t, std::int32_t, 1> final {
-    static void Do(const std::int32_t &src,
-        typename Vec<std::int32_t>::Type &in0, typename Vec<std::int32_t>::Type &in1,
-        typename Vec<std::int32_t>::Type &in2, typename Vec<std::int32_t>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<std::int32_t>::Type &in0,
+                   typename Vec<std::int32_t>::Type &in1, typename Vec<std::int32_t>::Type &in2,
+                   typename Vec<std::int32_t>::Type &in3) noexcept
     {
         in0 = svdup_n_s32(src);
         Service::Unused(in1, in2, in3);
@@ -78,9 +75,9 @@ struct DupN<std::int32_t, std::int32_t, 1> final {
 
 template <>
 struct DupN<std::int32_t, std::int32_t, 2> final { // 2 means that duplication two time for one src
-    static void Do(const std::int32_t &src,
-        typename Vec<std::int32_t>::Type &in0, typename Vec<std::int32_t>::Type &in1,
-        typename Vec<std::int32_t>::Type &in2, typename Vec<std::int32_t>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<std::int32_t>::Type &in0,
+                   typename Vec<std::int32_t>::Type &in1, typename Vec<std::int32_t>::Type &in2,
+                   typename Vec<std::int32_t>::Type &in3) noexcept
     {
         in0 = svdup_n_s32(src);
         in1 = svdup_n_s32(src);
@@ -90,9 +87,9 @@ struct DupN<std::int32_t, std::int32_t, 2> final { // 2 means that duplication t
 
 template <>
 struct DupN<std::int32_t, std::int32_t, 4> final { // 4 means that duplication four time for one src
-    static void Do(const std::int32_t &src,
-        typename Vec<std::int32_t>::Type &in0, typename Vec<std::int32_t>::Type &in1,
-        typename Vec<std::int32_t>::Type &in2, typename Vec<std::int32_t>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<std::int32_t>::Type &in0,
+                   typename Vec<std::int32_t>::Type &in1, typename Vec<std::int32_t>::Type &in2,
+                   typename Vec<std::int32_t>::Type &in3) noexcept
     {
         in0 = svdup_n_s32(src);
         in1 = svdup_n_s32(src);
@@ -103,9 +100,8 @@ struct DupN<std::int32_t, std::int32_t, 4> final { // 4 means that duplication f
 
 template <>
 struct DupN<__bf16, float, 1> final {
-    static void Do(const __bf16 &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const __bf16 &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(vcvtah_f32_bf16(src));
         in1 = svdup_n_f32(vcvtah_f32_bf16(src));
@@ -115,9 +111,8 @@ struct DupN<__bf16, float, 1> final {
 
 template <>
 struct DupN<__bf16, float, 2> final { // 2 means that duplication two time for one src
-    static void Do(const __bf16 &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const __bf16 &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(vcvtah_f32_bf16(src));
         in1 = svdup_n_f32(vcvtah_f32_bf16(src));
@@ -128,9 +123,8 @@ struct DupN<__bf16, float, 2> final { // 2 means that duplication two time for o
 
 template <>
 struct DupN<__fp16, float, 1> final {
-    static void Do(const __fp16 &src,
-    typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-    typename Vec<float>::Type &in3) noexcept
+    static void Do(const __fp16 &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -140,9 +134,8 @@ struct DupN<__fp16, float, 1> final {
 
 template <>
 struct DupN<__fp16, float, 2> final { // 2 means that duplication two time for one src
-    static void Do(const __fp16 &src,
-    typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-    typename Vec<float>::Type &in3) noexcept
+    static void Do(const __fp16 &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -153,9 +146,8 @@ struct DupN<__fp16, float, 2> final { // 2 means that duplication two time for o
 
 template <>
 struct DupN<std::int8_t, float, 1> final {
-    static void Do(const std::int8_t &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int8_t &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -166,9 +158,8 @@ struct DupN<std::int8_t, float, 1> final {
 
 template <>
 struct DupN<std::uint8_t, float, 1> final {
-    static void Do(const std::uint8_t &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::uint8_t &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -179,9 +170,8 @@ struct DupN<std::uint8_t, float, 1> final {
 
 template <>
 struct DupN<std::int32_t, float, 1> final {
-    static void Do(const std::int32_t &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         Service::Unused(in1, in2, in3);
@@ -190,9 +180,8 @@ struct DupN<std::int32_t, float, 1> final {
 
 template <>
 struct DupN<std::int32_t, float, 2> final { // 2 means that duplication two time for one src
-    static void Do(const std::int32_t &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -202,9 +191,8 @@ struct DupN<std::int32_t, float, 2> final { // 2 means that duplication two time
 
 template <>
 struct DupN<std::int32_t, float, 4> final { // 4 means that duplication four time for one src
-    static void Do(const std::int32_t &src,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
-        typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svdup_n_f32(src);
         in1 = svdup_n_f32(src);
@@ -217,9 +205,8 @@ struct DupN<std::int32_t, float, 4> final { // 4 means that duplication four tim
 
 template <>
 struct DupN<float, __fp16, 2> final { // 2 means that duplication two time for one src
-    static void Do(const float &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const float &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         Service::Unused(in1, in2, in3);
@@ -228,9 +215,8 @@ struct DupN<float, __fp16, 2> final { // 2 means that duplication two time for o
 
 template <>
 struct DupN<float, __fp16, 4> final { // 4 means that duplication four time for one src
-    static void Do(const float &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const float &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         in1 = svdup_n_f16(src);
@@ -240,9 +226,8 @@ struct DupN<float, __fp16, 4> final { // 4 means that duplication four time for 
 
 template <>
 struct DupN<__bf16, __fp16, 1> final {
-    static void Do(const __bf16 &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __bf16 &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(vcvtah_f32_bf16(src));
         Service::Unused(in1, in2, in3);
@@ -251,9 +236,8 @@ struct DupN<__bf16, __fp16, 1> final {
 
 template <>
 struct DupN<__bf16, __fp16, 2> final { // 2 means that duplication two time for one src
-    static void Do(const __bf16 &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __bf16 &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(vcvtah_f32_bf16(src));
         in1 = svdup_n_f16(vcvtah_f32_bf16(src));
@@ -263,9 +247,8 @@ struct DupN<__bf16, __fp16, 2> final { // 2 means that duplication two time for 
 
 template <>
 struct DupN<__fp16, __fp16, 1> final {
-    static void Do(const __fp16 &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __fp16 &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         Service::Unused(in1, in2, in3);
@@ -274,9 +257,8 @@ struct DupN<__fp16, __fp16, 1> final {
 
 template <>
 struct DupN<__fp16, __fp16, 2> final { // 2 means that duplication two time for one src
-    static void Do(const __fp16 &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __fp16 &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         in1 = svdup_n_f16(src);
@@ -286,9 +268,8 @@ struct DupN<__fp16, __fp16, 2> final { // 2 means that duplication two time for 
 
 template <>
 struct DupN<std::int8_t, __fp16, 1> final {
-    static void Do(const std::int8_t &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::int8_t &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         in1 = svdup_n_f16(src);
@@ -298,9 +279,8 @@ struct DupN<std::int8_t, __fp16, 1> final {
 
 template <>
 struct DupN<std::uint8_t, __fp16, 1> final {
-    static void Do(const std::uint8_t &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::uint8_t &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         in1 = svdup_n_f16(src);
@@ -310,9 +290,8 @@ struct DupN<std::uint8_t, __fp16, 1> final {
 
 template <>
 struct DupN<std::int32_t, __fp16, 2> final { // 2 means that duplication two times for one src
-    static void Do(const std::int32_t &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         Service::Unused(in1, in2, in3);
@@ -321,9 +300,8 @@ struct DupN<std::int32_t, __fp16, 2> final { // 2 means that duplication two tim
 
 template <>
 struct DupN<std::int32_t, __fp16, 4> final { // 4 means that duplication four times for one src
-    static void Do(const std::int32_t &src,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
-        typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::int32_t &src, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svdup_n_f16(src);
         in1 = svdup_n_f16(src);
@@ -331,8 +309,8 @@ struct DupN<std::int32_t, __fp16, 4> final { // 4 means that duplication four ti
     }
 };
 
-} // Vector
-} // Detail
-} // KuDNN
+} // namespace Vector
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_VECTOR_MEM_DUP_HPP

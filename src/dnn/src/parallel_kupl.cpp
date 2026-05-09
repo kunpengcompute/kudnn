@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -35,7 +35,7 @@ void KuplBackend ::parallel_for(int64_t total, int numThreads, const std::functi
         Service::Unused(tnum);
         // kupl 的 range 是切分后的范围
         for (int64_t i = nd_range->nd_range[0].lower; i < nd_range->nd_range[0].upper;
-            i += nd_range->nd_range[0].step) {
+             i += nd_range->nd_range[0].step) {
             fn(i);
         }
     });
@@ -45,5 +45,5 @@ int KuplBackend ::get_default_num_threads()
 {
     return kupl_get_num_executors();
 }
-}
-}
+} // namespace Threading
+} // namespace KuDNN

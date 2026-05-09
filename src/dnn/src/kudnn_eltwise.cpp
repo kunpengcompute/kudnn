@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -330,123 +330,170 @@ static constexpr SizeType OTHER_ELE_NUM_DEFAULT = 15000;
 
 namespace Detail {
 
-    const std::unordered_map<ActivationFunction, std::tuple<void *, void *, void *>> eltFuncFwdMap = {
-        {ActivationFunction::ABS, std::make_tuple(reinterpret_cast<void *>(AbsLaSveFWDF32),
-            reinterpret_cast<void *>(AbsLaSveFWDF16), reinterpret_cast<void *>(AbsLaSveFWDBF16))},
-        {ActivationFunction::EXP, std::make_tuple(reinterpret_cast<void *>(ExpLaSveFWDF32),
-            reinterpret_cast<void *>(ExpLaSveFWDF16), reinterpret_cast<void *>(ExpLaSveFWDBF16))},
-        {ActivationFunction::GELU_ERF, std::make_tuple(reinterpret_cast<void *>(GeluErfLaSveFWDF32),
-            reinterpret_cast<void *>(GeluErfLaSveFWDF16), reinterpret_cast<void *>(GeluErfLaSveFWDBF16))},
-        {ActivationFunction::GELU_TANH, std::make_tuple(reinterpret_cast<void *>(GeluTanhLaSveFWDF32),
-            reinterpret_cast<void *>(GeluTanhLaSveFWDF16), reinterpret_cast<void *>(GeluTanhLaSveFWDBF16))},
-        {ActivationFunction::LOG, std::make_tuple(reinterpret_cast<void *>(LnLaSveFWDF32),
-            reinterpret_cast<void *>(LnLaSveFWDF16), reinterpret_cast<void *>(LnLaSveFWDBF16))},
-        {ActivationFunction::SIGMOID, std::make_tuple(reinterpret_cast<void *>(SigmoidSveFWDF32),
-            reinterpret_cast<void *>(SigmoidSveFWDF16), reinterpret_cast<void *>(SigmoidSveFWDBF16))},
-        {ActivationFunction::MISH, std::make_tuple(reinterpret_cast<void *>(MishLaSveFWDF32),
-            reinterpret_cast<void *>(MishLaSveFWDF16), reinterpret_cast<void *>(MishLaSveFWDBF16))},
-        {ActivationFunction::ROUND, std::make_tuple(reinterpret_cast<void *>(NearbyintSveFWDF32),
-            reinterpret_cast<void *>(NearbyintSveFWDF16), reinterpret_cast<void *>(NearbyintSveFWDBF16))},
-        {ActivationFunction::SQRT, std::make_tuple(reinterpret_cast<void *>(SqrtLaSveFWDF32),
-            reinterpret_cast<void *>(SqrtLaSveFWDF16), reinterpret_cast<void *>(SqrtLaSveFWDBF16))},
-        {ActivationFunction::SQUARE, std::make_tuple(reinterpret_cast<void *>(SqrLaSveFWDF32),
-            reinterpret_cast<void *>(SqrLaSveFWDF16), reinterpret_cast<void *>(SqrLaSveFWDBF16))},
-        {ActivationFunction::TANH, std::make_tuple(reinterpret_cast<void *>(TanhLaSveFWDF32),
-            reinterpret_cast<void *>(TanhLaSveFWDF16), reinterpret_cast<void *>(TanhLaSveFWDBF16))},
-        {ActivationFunction::ELU, std::make_tuple(reinterpret_cast<void *>(EluLaSveFWDF32),
-            reinterpret_cast<void *>(EluLaSveFWDF16), reinterpret_cast<void *>(EluLaSveFWDBF16))},
-        {ActivationFunction::ELU_DST, std::make_tuple(reinterpret_cast<void *>(EluDstSveFWDF32),
-            reinterpret_cast<void *>(EluDstSveFWDF16), reinterpret_cast<void *>(EluDstSveFWDBF16))},
-        {ActivationFunction::RELU, std::make_tuple(reinterpret_cast<void *>(ReluSveFWDF32),
-            reinterpret_cast<void *>(ReluSveFWDF16), reinterpret_cast<void *>(ReluSveFWDBF16))},
-        {ActivationFunction::SRELU, std::make_tuple(reinterpret_cast<void *>(SoftReluLaSveFWDF32),
-            reinterpret_cast<void *>(SoftReluLaSveFWDF16), reinterpret_cast<void *>(SoftReluLaSveFWDBF16))},
-        {ActivationFunction::SWISH, std::make_tuple(reinterpret_cast<void *>(SwishLaSveFWDF32),
-            reinterpret_cast<void *>(SwishLaSveFWDF16), reinterpret_cast<void *>(SwishLaSveFWDBF16))},
-        {ActivationFunction::CLIP, std::make_tuple(reinterpret_cast<void *>(ClipSveFWDF32),
-            reinterpret_cast<void *>(ClipSveFWDF16), reinterpret_cast<void *>(ClipSveFWDBF16))},
-        {ActivationFunction::CLIP_V2, std::make_tuple(reinterpret_cast<void *>(ClipV2SveFWDF32),
-            reinterpret_cast<void *>(ClipV2SveFWDF16), reinterpret_cast<void *>(ClipV2SveFWDBF16))},
-        {ActivationFunction::HARDSIGMOID, std::make_tuple(reinterpret_cast<void *>(HardSigmoidLaSveFWDF32),
-            reinterpret_cast<void *>(HardSigmoidLaSveFWDF16), reinterpret_cast<void *>(HardSigmoidLaSveFWDBF16))},
-        {ActivationFunction::HARDSWISH, std::make_tuple(reinterpret_cast<void *>(HardSwishSveFWDF32),
-            reinterpret_cast<void *>(HardSwishSveFWDF16), reinterpret_cast<void *>(HardSwishSveFWDBF16))},
-        {ActivationFunction::LINEAR, std::make_tuple(reinterpret_cast<void *>(LinearSveF32),
-            reinterpret_cast<void *>(LinearSveF16), reinterpret_cast<void *>(LinearSveBF16))},
-        {ActivationFunction::POW, std::make_tuple(reinterpret_cast<void *>(PowxaLaSveFWDF32),
-            reinterpret_cast<void *>(PowxaLaSveFWDF16), reinterpret_cast<void *>(PowxaLaSveFWDBF16))},
-    };
+const std::unordered_map<ActivationFunction, std::tuple<void *, void *, void *>> eltFuncFwdMap = {
+    {ActivationFunction::ABS,
+     std::make_tuple(reinterpret_cast<void *>(AbsLaSveFWDF32), reinterpret_cast<void *>(AbsLaSveFWDF16),
+                     reinterpret_cast<void *>(AbsLaSveFWDBF16))},
+    {ActivationFunction::EXP,
+     std::make_tuple(reinterpret_cast<void *>(ExpLaSveFWDF32), reinterpret_cast<void *>(ExpLaSveFWDF16),
+                     reinterpret_cast<void *>(ExpLaSveFWDBF16))},
+    {ActivationFunction::GELU_ERF,
+     std::make_tuple(reinterpret_cast<void *>(GeluErfLaSveFWDF32), reinterpret_cast<void *>(GeluErfLaSveFWDF16),
+                     reinterpret_cast<void *>(GeluErfLaSveFWDBF16))},
+    {ActivationFunction::GELU_TANH,
+     std::make_tuple(reinterpret_cast<void *>(GeluTanhLaSveFWDF32), reinterpret_cast<void *>(GeluTanhLaSveFWDF16),
+                     reinterpret_cast<void *>(GeluTanhLaSveFWDBF16))},
+    {ActivationFunction::LOG,
+     std::make_tuple(reinterpret_cast<void *>(LnLaSveFWDF32), reinterpret_cast<void *>(LnLaSveFWDF16),
+                     reinterpret_cast<void *>(LnLaSveFWDBF16))},
+    {ActivationFunction::SIGMOID,
+     std::make_tuple(reinterpret_cast<void *>(SigmoidSveFWDF32), reinterpret_cast<void *>(SigmoidSveFWDF16),
+                     reinterpret_cast<void *>(SigmoidSveFWDBF16))},
+    {ActivationFunction::MISH,
+     std::make_tuple(reinterpret_cast<void *>(MishLaSveFWDF32), reinterpret_cast<void *>(MishLaSveFWDF16),
+                     reinterpret_cast<void *>(MishLaSveFWDBF16))},
+    {ActivationFunction::ROUND,
+     std::make_tuple(reinterpret_cast<void *>(NearbyintSveFWDF32), reinterpret_cast<void *>(NearbyintSveFWDF16),
+                     reinterpret_cast<void *>(NearbyintSveFWDBF16))},
+    {ActivationFunction::SQRT,
+     std::make_tuple(reinterpret_cast<void *>(SqrtLaSveFWDF32), reinterpret_cast<void *>(SqrtLaSveFWDF16),
+                     reinterpret_cast<void *>(SqrtLaSveFWDBF16))},
+    {ActivationFunction::SQUARE,
+     std::make_tuple(reinterpret_cast<void *>(SqrLaSveFWDF32), reinterpret_cast<void *>(SqrLaSveFWDF16),
+                     reinterpret_cast<void *>(SqrLaSveFWDBF16))},
+    {ActivationFunction::TANH,
+     std::make_tuple(reinterpret_cast<void *>(TanhLaSveFWDF32), reinterpret_cast<void *>(TanhLaSveFWDF16),
+                     reinterpret_cast<void *>(TanhLaSveFWDBF16))},
+    {ActivationFunction::ELU,
+     std::make_tuple(reinterpret_cast<void *>(EluLaSveFWDF32), reinterpret_cast<void *>(EluLaSveFWDF16),
+                     reinterpret_cast<void *>(EluLaSveFWDBF16))},
+    {ActivationFunction::ELU_DST,
+     std::make_tuple(reinterpret_cast<void *>(EluDstSveFWDF32), reinterpret_cast<void *>(EluDstSveFWDF16),
+                     reinterpret_cast<void *>(EluDstSveFWDBF16))},
+    {ActivationFunction::RELU,
+     std::make_tuple(reinterpret_cast<void *>(ReluSveFWDF32), reinterpret_cast<void *>(ReluSveFWDF16),
+                     reinterpret_cast<void *>(ReluSveFWDBF16))},
+    {ActivationFunction::SRELU,
+     std::make_tuple(reinterpret_cast<void *>(SoftReluLaSveFWDF32), reinterpret_cast<void *>(SoftReluLaSveFWDF16),
+                     reinterpret_cast<void *>(SoftReluLaSveFWDBF16))},
+    {ActivationFunction::SWISH,
+     std::make_tuple(reinterpret_cast<void *>(SwishLaSveFWDF32), reinterpret_cast<void *>(SwishLaSveFWDF16),
+                     reinterpret_cast<void *>(SwishLaSveFWDBF16))},
+    {ActivationFunction::CLIP,
+     std::make_tuple(reinterpret_cast<void *>(ClipSveFWDF32), reinterpret_cast<void *>(ClipSveFWDF16),
+                     reinterpret_cast<void *>(ClipSveFWDBF16))},
+    {ActivationFunction::CLIP_V2,
+     std::make_tuple(reinterpret_cast<void *>(ClipV2SveFWDF32), reinterpret_cast<void *>(ClipV2SveFWDF16),
+                     reinterpret_cast<void *>(ClipV2SveFWDBF16))},
+    {ActivationFunction::HARDSIGMOID,
+     std::make_tuple(reinterpret_cast<void *>(HardSigmoidLaSveFWDF32), reinterpret_cast<void *>(HardSigmoidLaSveFWDF16),
+                     reinterpret_cast<void *>(HardSigmoidLaSveFWDBF16))},
+    {ActivationFunction::HARDSWISH,
+     std::make_tuple(reinterpret_cast<void *>(HardSwishSveFWDF32), reinterpret_cast<void *>(HardSwishSveFWDF16),
+                     reinterpret_cast<void *>(HardSwishSveFWDBF16))},
+    {ActivationFunction::LINEAR,
+     std::make_tuple(reinterpret_cast<void *>(LinearSveF32), reinterpret_cast<void *>(LinearSveF16),
+                     reinterpret_cast<void *>(LinearSveBF16))},
+    {ActivationFunction::POW,
+     std::make_tuple(reinterpret_cast<void *>(PowxaLaSveFWDF32), reinterpret_cast<void *>(PowxaLaSveFWDF16),
+                     reinterpret_cast<void *>(PowxaLaSveFWDBF16))},
+};
 
-    const std::unordered_map<ActivationFunction, std::tuple<void *, void *, void *>> eltFuncBwdMap = {
-        {ActivationFunction::ABS, std::make_tuple(reinterpret_cast<void *>(AbsLaSveBWDF32),
-            reinterpret_cast<void *>(AbsLaSveBWDF16), reinterpret_cast<void *>(AbsLaSveBWDBF16))},
-        {ActivationFunction::EXP, std::make_tuple(reinterpret_cast<void *>(ExpLaSveBWDF32),
-            reinterpret_cast<void *>(ExpLaSveBWDF16), reinterpret_cast<void *>(ExpLaSveBWDBF16))},
-        {ActivationFunction::EXP_DST, std::make_tuple(reinterpret_cast<void *>(ExpLaDstSveBWDF32),
-            reinterpret_cast<void *>(ExpLaDstSveBWDF16), reinterpret_cast<void *>(ExpLaDstSveBWDBF16))},
-        {ActivationFunction::GELU_ERF, std::make_tuple(reinterpret_cast<void *>(GeluErfLaSveBWDF32),
-            reinterpret_cast<void *>(GeluErfLaSveBWDF16), reinterpret_cast<void *>(GeluErfLaSveBWDBF16))},
-        {ActivationFunction::GELU_TANH, std::make_tuple(reinterpret_cast<void *>(GeluTanhLaSveBWDF32),
-            reinterpret_cast<void *>(GeluTanhLaSveBWDF16), reinterpret_cast<void *>(GeluTanhLaSveBWDBF16))},
-        {ActivationFunction::LOG, std::make_tuple(reinterpret_cast<void *>(LnLaSveBWDF32),
-            reinterpret_cast<void *>(LnLaSveBWDF16), reinterpret_cast<void *>(LnLaSveBWDBF16))},
-        {ActivationFunction::LOGISTIC_DST, std::make_tuple(reinterpret_cast<void *>(LogisticDstSveBWDF32),
-            reinterpret_cast<void *>(LogisticDstSveBWDF16), reinterpret_cast<void *>(LogisticDstSveBWDBF16))},
-        {ActivationFunction::SIGMOID, std::make_tuple(reinterpret_cast<void *>(SigmoidSveBWDF32),
-            reinterpret_cast<void *>(SigmoidSveBWDF16), reinterpret_cast<void *>(SigmoidSveBWDBF16))},
-        {ActivationFunction::MISH, std::make_tuple(reinterpret_cast<void *>(MishLaSveBWDF32),
-            reinterpret_cast<void *>(MishLaSveBWDF16), reinterpret_cast<void *>(MishLaSveBWDBF16))},
-        {ActivationFunction::SQRT, std::make_tuple(reinterpret_cast<void *>(SqrtLaSveBWDF32),
-            reinterpret_cast<void *>(SqrtLaSveBWDF16), reinterpret_cast<void *>(SqrtLaSveBWDBF16))},
-        {ActivationFunction::SQRT_DST, std::make_tuple(reinterpret_cast<void *>(SqrtDstSveBWDF32),
-            reinterpret_cast<void *>(SqrtDstSveBWDF16), reinterpret_cast<void *>(SqrtDstSveBWDBF16))},
-        {ActivationFunction::SQUARE, std::make_tuple(reinterpret_cast<void *>(SqrLaSveBWDF32),
-            reinterpret_cast<void *>(SqrLaSveBWDF16), reinterpret_cast<void *>(SqrLaSveBWDBF16))},
-        {ActivationFunction::TANH, std::make_tuple(reinterpret_cast<void *>(TanhLaSveBWDF32),
-            reinterpret_cast<void *>(TanhLaSveBWDF16), reinterpret_cast<void *>(TanhLaSveBWDBF16))},
-        {ActivationFunction::TANH_DST, std::make_tuple(reinterpret_cast<void *>(TanhDstSveBWDF32),
-            reinterpret_cast<void *>(TanhDstSveBWDF16), reinterpret_cast<void *>(TanhDstSveBWDBF16))},
-        {ActivationFunction::ELU, std::make_tuple(reinterpret_cast<void *>(EluLaSveBWDF32),
-            reinterpret_cast<void *>(EluLaSveBWDF16), reinterpret_cast<void *>(EluLaSveBWDBF16))},
-        {ActivationFunction::ELU_DST, std::make_tuple(reinterpret_cast<void *>(EluDstSveBWDF32),
-            reinterpret_cast<void *>(EluDstSveBWDF16), reinterpret_cast<void *>(EluDstSveBWDBF16))},
-        {ActivationFunction::RELU, std::make_tuple(reinterpret_cast<void *>(ReluSveBWDF32),
-            reinterpret_cast<void *>(ReluSveBWDF16), reinterpret_cast<void *>(ReluSveBWDBF16))},
-        {ActivationFunction::RELU_DST, std::make_tuple(reinterpret_cast<void *>(ReluDstSveBWDF32),
-            reinterpret_cast<void *>(ReluDstSveBWDF16), reinterpret_cast<void *>(ReluDstSveBWDBF16))},
-        {ActivationFunction::SRELU, std::make_tuple(reinterpret_cast<void *>(SoftReluLaSveBWDF32),
-            reinterpret_cast<void *>(SoftReluLaSveBWDF16), reinterpret_cast<void *>(SoftReluLaSveBWDBF16))},
-        {ActivationFunction::SWISH, std::make_tuple(reinterpret_cast<void *>(SwishLaSveBWDF32),
-            reinterpret_cast<void *>(SwishLaSveBWDF16), reinterpret_cast<void *>(SwishLaSveBWDBF16))},
-        {ActivationFunction::CLIP, std::make_tuple(reinterpret_cast<void *>(ClipSveBWDF32),
-            reinterpret_cast<void *>(ClipSveBWDF16), reinterpret_cast<void *>(ClipSveBWDBF16))},
-        {ActivationFunction::CLIP_V2, std::make_tuple(reinterpret_cast<void *>(ClipV2SveBWDF32),
-            reinterpret_cast<void *>(ClipV2SveBWDF16), reinterpret_cast<void *>(ClipV2SveBWDBF16))},
-        {ActivationFunction::CLIP_V2_DST, std::make_tuple(reinterpret_cast<void *>(ClipV2DstSveBWDF32),
-            reinterpret_cast<void *>(ClipV2DstSveBWDF16), reinterpret_cast<void *>(ClipV2DstSveBWDBF16))},
-        {ActivationFunction::HARDSIGMOID, std::make_tuple(reinterpret_cast<void *>(HardSigmoidLaSveBWDF32),
-            reinterpret_cast<void *>(HardSigmoidLaSveBWDF16), reinterpret_cast<void *>(HardSigmoidLaSveBWDBF16))},
-        {ActivationFunction::HARDSWISH, std::make_tuple(reinterpret_cast<void *>(HardSwishSveBWDF32),
-            reinterpret_cast<void *>(HardSwishSveBWDF16), reinterpret_cast<void *>(HardSwishSveBWDBF16))},
-        {ActivationFunction::POW, std::make_tuple(reinterpret_cast<void *>(PowxaLaSveBWDF32),
-            reinterpret_cast<void *>(PowxaLaSveBWDF16), reinterpret_cast<void *>(PowxaLaSveBWDBF16))},
-    };
+const std::unordered_map<ActivationFunction, std::tuple<void *, void *, void *>> eltFuncBwdMap = {
+    {ActivationFunction::ABS,
+     std::make_tuple(reinterpret_cast<void *>(AbsLaSveBWDF32), reinterpret_cast<void *>(AbsLaSveBWDF16),
+                     reinterpret_cast<void *>(AbsLaSveBWDBF16))},
+    {ActivationFunction::EXP,
+     std::make_tuple(reinterpret_cast<void *>(ExpLaSveBWDF32), reinterpret_cast<void *>(ExpLaSveBWDF16),
+                     reinterpret_cast<void *>(ExpLaSveBWDBF16))},
+    {ActivationFunction::EXP_DST,
+     std::make_tuple(reinterpret_cast<void *>(ExpLaDstSveBWDF32), reinterpret_cast<void *>(ExpLaDstSveBWDF16),
+                     reinterpret_cast<void *>(ExpLaDstSveBWDBF16))},
+    {ActivationFunction::GELU_ERF,
+     std::make_tuple(reinterpret_cast<void *>(GeluErfLaSveBWDF32), reinterpret_cast<void *>(GeluErfLaSveBWDF16),
+                     reinterpret_cast<void *>(GeluErfLaSveBWDBF16))},
+    {ActivationFunction::GELU_TANH,
+     std::make_tuple(reinterpret_cast<void *>(GeluTanhLaSveBWDF32), reinterpret_cast<void *>(GeluTanhLaSveBWDF16),
+                     reinterpret_cast<void *>(GeluTanhLaSveBWDBF16))},
+    {ActivationFunction::LOG,
+     std::make_tuple(reinterpret_cast<void *>(LnLaSveBWDF32), reinterpret_cast<void *>(LnLaSveBWDF16),
+                     reinterpret_cast<void *>(LnLaSveBWDBF16))},
+    {ActivationFunction::LOGISTIC_DST,
+     std::make_tuple(reinterpret_cast<void *>(LogisticDstSveBWDF32), reinterpret_cast<void *>(LogisticDstSveBWDF16),
+                     reinterpret_cast<void *>(LogisticDstSveBWDBF16))},
+    {ActivationFunction::SIGMOID,
+     std::make_tuple(reinterpret_cast<void *>(SigmoidSveBWDF32), reinterpret_cast<void *>(SigmoidSveBWDF16),
+                     reinterpret_cast<void *>(SigmoidSveBWDBF16))},
+    {ActivationFunction::MISH,
+     std::make_tuple(reinterpret_cast<void *>(MishLaSveBWDF32), reinterpret_cast<void *>(MishLaSveBWDF16),
+                     reinterpret_cast<void *>(MishLaSveBWDBF16))},
+    {ActivationFunction::SQRT,
+     std::make_tuple(reinterpret_cast<void *>(SqrtLaSveBWDF32), reinterpret_cast<void *>(SqrtLaSveBWDF16),
+                     reinterpret_cast<void *>(SqrtLaSveBWDBF16))},
+    {ActivationFunction::SQRT_DST,
+     std::make_tuple(reinterpret_cast<void *>(SqrtDstSveBWDF32), reinterpret_cast<void *>(SqrtDstSveBWDF16),
+                     reinterpret_cast<void *>(SqrtDstSveBWDBF16))},
+    {ActivationFunction::SQUARE,
+     std::make_tuple(reinterpret_cast<void *>(SqrLaSveBWDF32), reinterpret_cast<void *>(SqrLaSveBWDF16),
+                     reinterpret_cast<void *>(SqrLaSveBWDBF16))},
+    {ActivationFunction::TANH,
+     std::make_tuple(reinterpret_cast<void *>(TanhLaSveBWDF32), reinterpret_cast<void *>(TanhLaSveBWDF16),
+                     reinterpret_cast<void *>(TanhLaSveBWDBF16))},
+    {ActivationFunction::TANH_DST,
+     std::make_tuple(reinterpret_cast<void *>(TanhDstSveBWDF32), reinterpret_cast<void *>(TanhDstSveBWDF16),
+                     reinterpret_cast<void *>(TanhDstSveBWDBF16))},
+    {ActivationFunction::ELU,
+     std::make_tuple(reinterpret_cast<void *>(EluLaSveBWDF32), reinterpret_cast<void *>(EluLaSveBWDF16),
+                     reinterpret_cast<void *>(EluLaSveBWDBF16))},
+    {ActivationFunction::ELU_DST,
+     std::make_tuple(reinterpret_cast<void *>(EluDstSveBWDF32), reinterpret_cast<void *>(EluDstSveBWDF16),
+                     reinterpret_cast<void *>(EluDstSveBWDBF16))},
+    {ActivationFunction::RELU,
+     std::make_tuple(reinterpret_cast<void *>(ReluSveBWDF32), reinterpret_cast<void *>(ReluSveBWDF16),
+                     reinterpret_cast<void *>(ReluSveBWDBF16))},
+    {ActivationFunction::RELU_DST,
+     std::make_tuple(reinterpret_cast<void *>(ReluDstSveBWDF32), reinterpret_cast<void *>(ReluDstSveBWDF16),
+                     reinterpret_cast<void *>(ReluDstSveBWDBF16))},
+    {ActivationFunction::SRELU,
+     std::make_tuple(reinterpret_cast<void *>(SoftReluLaSveBWDF32), reinterpret_cast<void *>(SoftReluLaSveBWDF16),
+                     reinterpret_cast<void *>(SoftReluLaSveBWDBF16))},
+    {ActivationFunction::SWISH,
+     std::make_tuple(reinterpret_cast<void *>(SwishLaSveBWDF32), reinterpret_cast<void *>(SwishLaSveBWDF16),
+                     reinterpret_cast<void *>(SwishLaSveBWDBF16))},
+    {ActivationFunction::CLIP,
+     std::make_tuple(reinterpret_cast<void *>(ClipSveBWDF32), reinterpret_cast<void *>(ClipSveBWDF16),
+                     reinterpret_cast<void *>(ClipSveBWDBF16))},
+    {ActivationFunction::CLIP_V2,
+     std::make_tuple(reinterpret_cast<void *>(ClipV2SveBWDF32), reinterpret_cast<void *>(ClipV2SveBWDF16),
+                     reinterpret_cast<void *>(ClipV2SveBWDBF16))},
+    {ActivationFunction::CLIP_V2_DST,
+     std::make_tuple(reinterpret_cast<void *>(ClipV2DstSveBWDF32), reinterpret_cast<void *>(ClipV2DstSveBWDF16),
+                     reinterpret_cast<void *>(ClipV2DstSveBWDBF16))},
+    {ActivationFunction::HARDSIGMOID,
+     std::make_tuple(reinterpret_cast<void *>(HardSigmoidLaSveBWDF32), reinterpret_cast<void *>(HardSigmoidLaSveBWDF16),
+                     reinterpret_cast<void *>(HardSigmoidLaSveBWDBF16))},
+    {ActivationFunction::HARDSWISH,
+     std::make_tuple(reinterpret_cast<void *>(HardSwishSveBWDF32), reinterpret_cast<void *>(HardSwishSveBWDF16),
+                     reinterpret_cast<void *>(HardSwishSveBWDBF16))},
+    {ActivationFunction::POW,
+     std::make_tuple(reinterpret_cast<void *>(PowxaLaSveBWDF32), reinterpret_cast<void *>(PowxaLaSveBWDF16),
+                     reinterpret_cast<void *>(PowxaLaSveBWDBF16))},
+};
 
 class ActivationLayerImplFWD final : public Parallelizable {
 public:
-    ActivationLayerImplFWD(const TensorInfo &srcInfo, const TensorInfo &dstInfo,
-        ActivationFunction kind, float alpha, float beta) noexcept(false)
-        : activationKind(kind), srcType(srcInfo.GetType()), dstType(dstInfo.GetType()),
-        alphaInfo(alpha), betaInfo(beta)
+    ActivationLayerImplFWD(const TensorInfo &srcInfo, const TensorInfo &dstInfo, ActivationFunction kind, float alpha,
+                           float beta) noexcept(false)
+        : activationKind(kind), srcType(srcInfo.GetType()), dstType(dstInfo.GetType()), alphaInfo(alpha), betaInfo(beta)
     {
-        Service::ThrowOnStatus(ActivationLayerFWD::ValidateInput(
-            srcInfo, dstInfo, kind, alphaInfo, betaInfo), "Activation layer");
-        reorderedDims = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetDims(),
-            srcInfo.GetLayout()));
-        reorderedStridesSrc = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetStrides(),
-            srcInfo.GetLayout()));
-        reorderedStridesDst  = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dstInfo.GetStrides(),
-            dstInfo.GetLayout()));
+        Service::ThrowOnStatus(ActivationLayerFWD::ValidateInput(srcInfo, dstInfo, kind, alphaInfo, betaInfo),
+                               "Activation layer");
+        reorderedDims =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetDims(), srcInfo.GetLayout()));
+        reorderedStridesSrc =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetStrides(), srcInfo.GetLayout()));
+        reorderedStridesDst =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dstInfo.GetStrides(), dstInfo.GetLayout()));
         Parallelizable::Initialize(GetOptNumThreads(), reorderedDims);
     }
 
@@ -468,9 +515,8 @@ public:
             }
 
             void *tmp = Service::AlignedAlloc(batchSplitDims.GetTotalDimsSize() * sizeof(float));
-            ReorderLayer rSrc({
-                batchSplitDims, calSrcType, Layout::ABCDE}, {
-                batchSplitDims, Element::TypeT::F32, Layout::ABCDE});
+            ReorderLayer rSrc({batchSplitDims, calSrcType, Layout::ABCDE},
+                              {batchSplitDims, Element::TypeT::F32, Layout::ABCDE});
             rSrc.Run(calSrc, tmp);
             calSrc = tmp;
             calDst = Service::AlignedAlloc(batchSplitDims.GetTotalDimsSize() * sizeof(float));
@@ -478,40 +524,40 @@ public:
         }
 
         if (Service::OneOf(activationKind, ActivationFunction::ABS, ActivationFunction::EXP,
-            ActivationFunction::GELU_ERF, ActivationFunction::GELU_TANH, ActivationFunction::LOG,
-            ActivationFunction::SIGMOID, ActivationFunction::MISH, ActivationFunction::ROUND,
-            ActivationFunction::SQRT, ActivationFunction::SQUARE, ActivationFunction::TANH)) {
+                           ActivationFunction::GELU_ERF, ActivationFunction::GELU_TANH, ActivationFunction::LOG,
+                           ActivationFunction::SIGMOID, ActivationFunction::MISH, ActivationFunction::ROUND,
+                           ActivationFunction::SQRT, ActivationFunction::SQUARE, ActivationFunction::TANH)) {
             if (calSrcType == Element::TypeT::F32) {
                 reinterpret_cast<EltwiseFwdFuncF32X>(std::get<0x0>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()),
-                    static_cast<const float *>(calSrc), static_cast<float *>(calDst));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), static_cast<const float *>(calSrc),
+                    static_cast<float *>(calDst));
             } else if (calSrcType == Element::TypeT::F16) {
                 reinterpret_cast<EltwiseFwdFuncF16X>(std::get<0x1>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()),
-                    static_cast<const __fp16 *>(calSrc), static_cast<__fp16 *>(calDst));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), static_cast<const __fp16 *>(calSrc),
+                    static_cast<__fp16 *>(calDst));
             } else if (calSrcType == Element::TypeT::BF16) {
                 reinterpret_cast<EltwiseFwdFuncBF16X>(std::get<0x2>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()),
-                    static_cast<const __bf16 *>(calSrc), static_cast<__bf16 *>(calDst));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), static_cast<const __bf16 *>(calSrc),
+                    static_cast<__bf16 *>(calDst));
             }
         } else if (Service::OneOf(activationKind, ActivationFunction::ELU, ActivationFunction::ELU_DST,
-            ActivationFunction::RELU, ActivationFunction::SRELU, ActivationFunction::SWISH)) {
+                                  ActivationFunction::RELU, ActivationFunction::SRELU, ActivationFunction::SWISH)) {
             if (calSrcType == Element::TypeT::F32) {
                 reinterpret_cast<EltwiseFwdFuncF32AX>(std::get<0x0>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo,
-                    static_cast<const float *>(calSrc), static_cast<float *>(calDst));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, static_cast<const float *>(calSrc),
+                    static_cast<float *>(calDst));
             } else if (calSrcType == Element::TypeT::F16) {
                 reinterpret_cast<EltwiseFwdFuncF16AX>(std::get<0x1>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo,
-                    static_cast<const __fp16 *>(calSrc), static_cast<__fp16 *>(calDst));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, static_cast<const __fp16 *>(calSrc),
+                    static_cast<__fp16 *>(calDst));
             } else if (calSrcType == Element::TypeT::BF16) {
                 reinterpret_cast<EltwiseFwdFuncBF16AX>(std::get<0x2>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo,
-                    static_cast<const __bf16 *>(calSrc), static_cast<__bf16 *>(calDst));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, static_cast<const __bf16 *>(calSrc),
+                    static_cast<__bf16 *>(calDst));
             }
         } else if (Service::OneOf(activationKind, ActivationFunction::CLIP, ActivationFunction::CLIP_V2,
-            ActivationFunction::HARDSIGMOID, ActivationFunction::HARDSWISH, ActivationFunction::LINEAR,
-            ActivationFunction::POW)) {
+                                  ActivationFunction::HARDSIGMOID, ActivationFunction::HARDSWISH,
+                                  ActivationFunction::LINEAR, ActivationFunction::POW)) {
             if (calSrcType == Element::TypeT::F32) {
                 reinterpret_cast<EltwiseFwdFuncF32ABX>(std::get<0x0>(item->second))(
                     static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, betaInfo,
@@ -531,17 +577,16 @@ public:
             srcType != dstType) {
             Service::Deallocate(const_cast<void *>(calSrc));
 
-            ReorderLayer rDst({
-                batchSplitDims, Element::TypeT::F32, Layout::ABCDE}, {
-                batchSplitDims, dstType, Layout::ABCDE});
+            ReorderLayer rDst({batchSplitDims, Element::TypeT::F32, Layout::ABCDE},
+                              {batchSplitDims, dstType, Layout::ABCDE});
             rDst.Run(calDst, dst);
             Service::Deallocate(calDst);
             return;
         }
     }
 
-    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, const void *src,
-        void *dst) const noexcept(false)
+    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, const void *src, void *dst) const
+        noexcept(false)
     {
         SizeType strideSrc = 0;
         SizeType strideDst = 0;
@@ -550,13 +595,13 @@ public:
             strideDst += batchStrides[i] * reorderedStridesDst[i] * dstType.GetSize();
         }
         RunSequential(batchSplitDims, static_cast<const std::byte *>(src) + strideSrc,
-            static_cast<std::byte *>(dst) + strideDst);
+                      static_cast<std::byte *>(dst) + strideDst);
     }
 
     void Run(const void *src, void *dst) noexcept(false)
     {
         if ((src == nullptr) || (dst == nullptr)) {
-            throw Service::LogicError {"Activation Layer: one of input matrices is nullptr"};
+            throw Service::LogicError{"Activation Layer: one of input matrices is nullptr"};
         }
         Threading::BatchThreader(*this, src, dst);
     }
@@ -584,16 +629,16 @@ private:
                     return (totalSize + SIGMOID_FWD_ELE_NUM_STEP1 - 1) / SIGMOID_FWD_ELE_NUM_STEP1;
                 }
                 return std::min((totalSize + SIGMOID_FWD_ELE_NUM_STEP2 - 1) / SIGMOID_FWD_ELE_NUM_STEP2,
-                    ELE_THREADS_1NUMA);
+                                ELE_THREADS_1NUMA);
 #else
                 if (totalSize < SIGMOID_FWD_ELE_NUM_1) {
                     return std::min((totalSize + SIGMOID_FWD_ELE_NUM_STEP1 - 1) / SIGMOID_FWD_ELE_NUM_STEP1,
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SIGMOID_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + SIGMOID_FWD_ELE_NUM_STEP2 - 1) / SIGMOID_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
 #endif
                 break;
@@ -601,7 +646,7 @@ private:
             case ActivationFunction::RELU: {
                 if (totalSize < RELU_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + RELU_FWD_ELE_NUM_STEP1 - 1) / RELU_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < RELU_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < RELU_FWD_ELE_NUM_3) {
@@ -614,19 +659,19 @@ private:
             case ActivationFunction::LINEAR: {
                 if (totalSize < LINEAR_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + LINEAR_FWD_ELE_NUM_STEP1 - 1) / LINEAR_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < LINEAR_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + LINEAR_FWD_ELE_NUM_STEP2 - 1) / LINEAR_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::ABS: {
                 if (totalSize < ABS_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + ABS_FWD_ELE_NUM_STEP1 - 1) / ABS_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < ABS_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < ABS_FWD_ELE_NUM_3) {
@@ -639,24 +684,24 @@ private:
             case ActivationFunction::CLIP: {
                 if (totalSize < CLIP_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + CLIP_FWD_ELE_NUM_STEP1 - 1) / CLIP_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < CLIP_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + CLIP_FWD_ELE_NUM_STEP2 - 1) / CLIP_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::CLIP_V2: {
                 if (totalSize < CLIP_V2_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + CLIP_V2_FWD_ELE_NUM_STEP1 - 1) / CLIP_V2_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < CLIP_V2_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + CLIP_V2_FWD_ELE_NUM_STEP2 - 1) / CLIP_V2_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
@@ -665,8 +710,7 @@ private:
                 if (totalSize < ELU_FWD_ELE_NUM) {
                     return 1;
                 }
-                return std::min((totalSize + ELU_FWD_ELE_NUM_STEP - 1) / ELU_FWD_ELE_NUM_STEP,
-                    ELE_THREADS_1NUMA);
+                return std::min((totalSize + ELU_FWD_ELE_NUM_STEP - 1) / ELU_FWD_ELE_NUM_STEP, ELE_THREADS_1NUMA);
 #else
                 if (totalSize < ELU_FWD_ELE_NUM_1) {
                     return (totalSize + ELU_FWD_ELE_NUM_STEP1 - 1) / ELU_FWD_ELE_NUM_STEP1;
@@ -676,7 +720,7 @@ private:
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + ELU_FWD_ELE_NUM_STEP2 - 1) / ELU_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
 #endif
                 break;
@@ -684,10 +728,10 @@ private:
             case ActivationFunction::EXP: {
                 if (totalSize < EXP_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + EXP_FWD_ELE_NUM_STEP1 - 1) / EXP_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else {
                     return std::min(((totalSize + EXP_FWD_ELE_NUM_STEP2 - 1) / EXP_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
@@ -700,43 +744,43 @@ private:
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + GELU_ERF_FWD_ELE_NUM_STEP2 - 1) / GELU_ERF_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::GELU_TANH: {
                 if (totalSize < GELU_TANH_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + GELU_TANH_FWD_ELE_NUM_STEP1 - 1) / GELU_TANH_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < GELU_TANH_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + GELU_TANH_FWD_ELE_NUM_STEP2 - 1) / GELU_TANH_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::HARDSIGMOID: {
                 if (totalSize < HARDSIGMOID_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + HARDSIGMOID_FWD_ELE_NUM_STEP1 - 1) / HARDSIGMOID_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < HARDSIGMOID_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + HARDSIGMOID_FWD_ELE_NUM_STEP2 - 1) / HARDSIGMOID_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::HARDSWISH: {
                 if (totalSize < HARDSWISH_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + HARDSWISH_FWD_ELE_NUM_STEP1 - 1) / HARDSWISH_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < HARDSWISH_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + HARDSWISH_FWD_ELE_NUM_STEP2 - 1) / HARDSWISH_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
@@ -749,7 +793,7 @@ private:
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + LOG_FWD_ELE_NUM_STEP2 - 1) / LOG_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
@@ -762,14 +806,14 @@ private:
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + MISH_FWD_ELE_NUM_STEP2 - 1) / MISH_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::POW: {
                 if (totalSize < POW_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + POW_FWD_ELE_NUM_STEP1 - 1) / POW_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < POW_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < POW_FWD_ELE_NUM_3) {
@@ -782,24 +826,24 @@ private:
             case ActivationFunction::ROUND: {
                 if (totalSize < ROUND_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + ROUND_FWD_ELE_NUM_STEP1 - 1) / ROUND_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < ROUND_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + ROUND_FWD_ELE_NUM_STEP2 - 1) / ROUND_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::SRELU: {
                 if (totalSize < SRELU_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + SRELU_FWD_ELE_NUM_STEP1 - 1) / SRELU_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SRELU_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + SRELU_FWD_ELE_NUM_STEP2 - 1) / SRELU_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
@@ -816,12 +860,12 @@ private:
             case ActivationFunction::SQUARE: {
                 if (totalSize < SQUARE_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + SQUARE_FWD_ELE_NUM_STEP1 - 1) / SQUARE_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SQUARE_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + SQUARE_FWD_ELE_NUM_STEP2 - 1) / SQUARE_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
@@ -834,19 +878,19 @@ private:
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + SWISH_FWD_ELE_NUM_STEP2 - 1) / SWISH_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::TANH: {
                 if (totalSize < TANH_FWD_ELE_NUM_1) {
                     return std::min(((totalSize + TANH_FWD_ELE_NUM_STEP1 - 1) / TANH_FWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < TANH_FWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + TANH_FWD_ELE_NUM_STEP2 - 1) / TANH_FWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
@@ -860,39 +904,42 @@ private:
 class ActivationLayerImplBWD final : public Parallelizable {
 public:
     ActivationLayerImplBWD(const TensorInfo &dsInfo, const TensorInfo &ddInfo, const TensorInfo &srcInfo,
-        ActivationFunction kind, float alpha, float beta) noexcept(false)
-        : activationKind(kind), dsType(dsInfo.GetType()), ddType(ddInfo.GetType()), srcType(srcInfo.GetType()),
-        alphaInfo(alpha), betaInfo(beta)
+                           ActivationFunction kind, float alpha, float beta) noexcept(false)
+        : activationKind(kind),
+          dsType(dsInfo.GetType()),
+          ddType(ddInfo.GetType()),
+          srcType(srcInfo.GetType()),
+          alphaInfo(alpha),
+          betaInfo(beta)
     {
         if (kind == ActivationFunction::LINEAR) {
             betaInfo = 0.0f;
         }
-        Service::ThrowOnStatus(ActivationLayerBWD::ValidateInput(
-            dsInfo, ddInfo, srcInfo, kind, alphaInfo, betaInfo), "Activation layer");
-        reorderedDims = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetDims(),
-            srcInfo.GetLayout()));
-        reorderedStridesDs  = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dsInfo.GetStrides(),
-            dsInfo.GetLayout()));
-        reorderedStridesDd  = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(ddInfo.GetStrides(),
-            ddInfo.GetLayout()));
-        reorderedStridesSrc = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetStrides(),
-            srcInfo.GetLayout()));
+        Service::ThrowOnStatus(ActivationLayerBWD::ValidateInput(dsInfo, ddInfo, srcInfo, kind, alphaInfo, betaInfo),
+                               "Activation layer");
+        reorderedDims =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetDims(), srcInfo.GetLayout()));
+        reorderedStridesDs =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(dsInfo.GetStrides(), dsInfo.GetLayout()));
+        reorderedStridesDd =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(ddInfo.GetStrides(), ddInfo.GetLayout()));
+        reorderedStridesSrc =
+            Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetStrides(), srcInfo.GetLayout()));
         Parallelizable::Initialize(GetOptNumThreads(), reorderedDims);
     }
 
-    void RunSequential(const Shape &batchSplitDims, void *ds,
-        const void *dd, const void *src) const noexcept(false)
+    void RunSequential(const Shape &batchSplitDims, void *ds, const void *dd, const void *src) const noexcept(false)
     {
         if (activationKind == ActivationFunction::LINEAR) {
             if (srcType == Element::TypeT::F32) {
                 LinearSveF32(static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, betaInfo,
-                    static_cast<const float *>(dd), static_cast<float *>(ds));
+                             static_cast<const float *>(dd), static_cast<float *>(ds));
             } else if (srcType == Element::TypeT::F16) {
                 LinearSveF16(static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, betaInfo,
-                    static_cast<const __fp16 *>(dd), static_cast<__fp16 *>(ds));
+                             static_cast<const __fp16 *>(dd), static_cast<__fp16 *>(ds));
             } else if (srcType == Element::TypeT::BF16) {
                 LinearSveBF16(static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, betaInfo,
-                    static_cast<const __bf16 *>(dd), static_cast<__bf16 *>(ds));
+                              static_cast<const __bf16 *>(dd), static_cast<__bf16 *>(ds));
             }
         }
 
@@ -902,42 +949,42 @@ public:
         }
 
         if (Service::OneOf(activationKind, ActivationFunction::ABS, ActivationFunction::EXP,
-            ActivationFunction::EXP_DST, ActivationFunction::GELU_ERF, ActivationFunction::GELU_TANH,
-            ActivationFunction::LOG, ActivationFunction::LOGISTIC_DST, ActivationFunction::SIGMOID,
-            ActivationFunction::MISH, ActivationFunction::SQRT, ActivationFunction::SQRT_DST,
-            ActivationFunction::SQUARE, ActivationFunction::TANH, ActivationFunction::TANH_DST)) {
+                           ActivationFunction::EXP_DST, ActivationFunction::GELU_ERF, ActivationFunction::GELU_TANH,
+                           ActivationFunction::LOG, ActivationFunction::LOGISTIC_DST, ActivationFunction::SIGMOID,
+                           ActivationFunction::MISH, ActivationFunction::SQRT, ActivationFunction::SQRT_DST,
+                           ActivationFunction::SQUARE, ActivationFunction::TANH, ActivationFunction::TANH_DST)) {
             if (srcType == Element::TypeT::F32) {
                 reinterpret_cast<EltwiseBwdFuncF32X>(std::get<0x0>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()),
-                    static_cast<const float *>(src), static_cast<const float *>(dd), static_cast<float *>(ds));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), static_cast<const float *>(src),
+                    static_cast<const float *>(dd), static_cast<float *>(ds));
             } else if (srcType == Element::TypeT::F16) {
                 reinterpret_cast<EltwiseBwdFuncF16X>(std::get<0x1>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()),
-                    static_cast<const __fp16 *>(src), static_cast<const __fp16 *>(dd), static_cast<__fp16 *>(ds));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), static_cast<const __fp16 *>(src),
+                    static_cast<const __fp16 *>(dd), static_cast<__fp16 *>(ds));
             } else if (srcType == Element::TypeT::BF16) {
                 reinterpret_cast<EltwiseBwdFuncBF16X>(std::get<0x2>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()),
-                    static_cast<const __bf16 *>(src), static_cast<const __bf16 *>(dd), static_cast<__bf16 *>(ds));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), static_cast<const __bf16 *>(src),
+                    static_cast<const __bf16 *>(dd), static_cast<__bf16 *>(ds));
             }
         } else if (Service::OneOf(activationKind, ActivationFunction::ELU, ActivationFunction::ELU_DST,
-            ActivationFunction::RELU, ActivationFunction::RELU_DST, ActivationFunction::SRELU,
-            ActivationFunction::SWISH)) {
+                                  ActivationFunction::RELU, ActivationFunction::RELU_DST, ActivationFunction::SRELU,
+                                  ActivationFunction::SWISH)) {
             if (srcType == Element::TypeT::F32) {
                 reinterpret_cast<EltwiseBwdFuncF32AX>(std::get<0x0>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo,
-                    static_cast<const float *>(src), static_cast<const float *>(dd), static_cast<float *>(ds));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, static_cast<const float *>(src),
+                    static_cast<const float *>(dd), static_cast<float *>(ds));
             } else if (srcType == Element::TypeT::F16) {
                 reinterpret_cast<EltwiseBwdFuncF16AX>(std::get<0x1>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo,
-                    static_cast<const __fp16 *>(src), static_cast<const __fp16 *>(dd), static_cast<__fp16 *>(ds));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, static_cast<const __fp16 *>(src),
+                    static_cast<const __fp16 *>(dd), static_cast<__fp16 *>(ds));
             } else if (srcType == Element::TypeT::BF16) {
                 reinterpret_cast<EltwiseBwdFuncBF16AX>(std::get<0x2>(item->second))(
-                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo,
-                    static_cast<const __bf16 *>(src), static_cast<const __bf16 *>(dd), static_cast<__bf16 *>(ds));
+                    static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, static_cast<const __bf16 *>(src),
+                    static_cast<const __bf16 *>(dd), static_cast<__bf16 *>(ds));
             }
         } else if (Service::OneOf(activationKind, ActivationFunction::CLIP, ActivationFunction::CLIP_V2,
-            ActivationFunction::CLIP_V2_DST, ActivationFunction::HARDSIGMOID, ActivationFunction::HARDSWISH,
-            ActivationFunction::POW)) {
+                                  ActivationFunction::CLIP_V2_DST, ActivationFunction::HARDSIGMOID,
+                                  ActivationFunction::HARDSWISH, ActivationFunction::POW)) {
             if (srcType == Element::TypeT::F32) {
                 reinterpret_cast<EltwiseBwdFuncF32ABX>(std::get<0x0>(item->second))(
                     static_cast<int>(batchSplitDims.GetTotalDimsSize()), alphaInfo, betaInfo,
@@ -954,8 +1001,8 @@ public:
         }
     }
 
-    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, void *ds,
-        const void *dd, const void *src) const noexcept(false)
+    void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides, void *ds, const void *dd,
+                       const void *src) const noexcept(false)
     {
         SizeType strideDs = 0;
         SizeType strideDd = 0;
@@ -966,13 +1013,13 @@ public:
             strideSrc += batchStrides[i] * reorderedStridesSrc[i] * srcType.GetSize();
         }
         RunSequential(batchSplitDims, static_cast<std::byte *>(ds) + strideDs,
-            static_cast<const std::byte *>(dd) + strideDd, static_cast<const std::byte *>(src) + strideSrc);
+                      static_cast<const std::byte *>(dd) + strideDd, static_cast<const std::byte *>(src) + strideSrc);
     }
 
     void Run(void *ds, const void *dd, const void *src) noexcept(false)
     {
         if ((ds == nullptr) || (dd == nullptr) || (src == nullptr)) {
-            throw Service::LogicError {"Activation Layer: one of input matrices is nullptr"};
+            throw Service::LogicError{"Activation Layer: one of input matrices is nullptr"};
         }
         Threading::BatchThreader(*this, ds, dd, src);
     }
@@ -996,19 +1043,19 @@ private:
             case ActivationFunction::SIGMOID: {
                 if (totalSize < SIGMOID_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + SIGMOID_BWD_ELE_NUM_STEP1 - 1) / SIGMOID_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SIGMOID_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + SIGMOID_BWD_ELE_NUM_STEP2 - 1) / SIGMOID_BWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::RELU: {
                 if (totalSize < RELU_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + RELU_BWD_ELE_NUM_STEP1 - 1) / RELU_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < RELU_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < RELU_BWD_ELE_NUM_3) {
@@ -1021,19 +1068,19 @@ private:
             case ActivationFunction::LINEAR: {
                 if (totalSize < LINEAR_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + LINEAR_BWD_ELE_NUM_STEP1 - 1) / LINEAR_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < LINEAR_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + LINEAR_BWD_ELE_NUM_STEP2 - 1) / LINEAR_BWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
                 break;
             }
             case ActivationFunction::ABS: {
                 if (totalSize < ABS_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + ABS_BWD_ELE_NUM_STEP1 - 1) / ABS_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < ABS_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < ABS_BWD_ELE_NUM_3) {
@@ -1046,7 +1093,7 @@ private:
             case ActivationFunction::CLIP: {
                 if (totalSize < CLIP_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + CLIP_BWD_ELE_NUM_STEP1 - 1) / CLIP_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < CLIP_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < CLIP_BWD_ELE_NUM_3) {
@@ -1059,7 +1106,7 @@ private:
             case ActivationFunction::CLIP_V2: {
                 if (totalSize < CLIP_V2_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + CLIP_V2_BWD_ELE_NUM_STEP1 - 1) / CLIP_V2_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < CLIP_V2_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < CLIP_V2_BWD_ELE_NUM_3) {
@@ -1074,12 +1121,11 @@ private:
                 if (totalSize < ELU_BWD_ELE_NUM) {
                     return 1;
                 }
-                return std::min((totalSize + ELU_BWD_ELE_NUM_STEP - 1) / ELU_BWD_ELE_NUM_STEP,
-                    ELE_THREADS_1NUMA);
+                return std::min((totalSize + ELU_BWD_ELE_NUM_STEP - 1) / ELU_BWD_ELE_NUM_STEP, ELE_THREADS_1NUMA);
 #else
                 if (totalSize < ELU_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + ELU_BWD_ELE_NUM_STEP1 - 1) / ELU_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < ELU_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < ELU_BWD_ELE_NUM_3) {
@@ -1093,7 +1139,7 @@ private:
             case ActivationFunction::EXP: {
                 if (totalSize < EXP_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + EXP_BWD_ELE_NUM_STEP1 - 1) / EXP_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < EXP_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
@@ -1104,7 +1150,7 @@ private:
             case ActivationFunction::GELU_ERF: {
                 if (totalSize < GELU_ERF_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + GELU_ERF_BWD_ELE_NUM_STEP1 - 1) / GELU_ERF_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < GELU_ERF_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < GELU_ERF_BWD_ELE_NUM_3) {
@@ -1117,7 +1163,7 @@ private:
             case ActivationFunction::GELU_TANH: {
                 if (totalSize < GELU_TANH_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + GELU_TANH_BWD_ELE_NUM_STEP1 - 1) / GELU_TANH_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < GELU_TANH_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < GELU_TANH_BWD_ELE_NUM_3) {
@@ -1136,7 +1182,7 @@ private:
                     return (totalSize + HARDSIGMOID_BWD_ELE_NUM_STEP1 - 1) / HARDSIGMOID_BWD_ELE_NUM_STEP1;
                 }
                 return std::min((totalSize + HARDSIGMOID_BWD_ELE_NUM_STEP2 - 1) / HARDSIGMOID_BWD_ELE_NUM_STEP2,
-                    ELE_THREADS_1NUMA);
+                                ELE_THREADS_1NUMA);
 #else
                 if (totalSize < HARDSIGMOID_BWD_ELE_NUM_1) {
                     return (totalSize + HARDSIGMOID_BWD_ELE_NUM_STEP1 - 1) / HARDSIGMOID_BWD_ELE_NUM_STEP1;
@@ -1158,11 +1204,11 @@ private:
                     return 1;
                 }
                 return std::min((totalSize + HARDSWISH_BWD_ELE_NUM_STEP - 1) / HARDSWISH_BWD_ELE_NUM_STEP,
-                    ELE_THREADS_1NUMA);
+                                ELE_THREADS_1NUMA);
 #else
                 if (totalSize < HARDSWISH_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + HARDSWISH_BWD_ELE_NUM_STEP1 - 1) / HARDSWISH_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < HARDSWISH_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < HARDSWISH_BWD_ELE_NUM_3) {
@@ -1176,7 +1222,7 @@ private:
             case ActivationFunction::LOG: {
                 if (totalSize < LOG_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + LOG_BWD_ELE_NUM_STEP1 - 1) / LOG_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < LOG_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < LOG_BWD_ELE_NUM_3) {
@@ -1189,7 +1235,7 @@ private:
             case ActivationFunction::MISH: {
                 if (totalSize < MISH_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + MISH_BWD_ELE_NUM_STEP1 - 1) / MISH_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < MISH_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < MISH_BWD_ELE_NUM_3) {
@@ -1202,7 +1248,7 @@ private:
             case ActivationFunction::POW: {
                 if (totalSize < POW_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + POW_BWD_ELE_NUM_STEP1 - 1) / POW_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < POW_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < POW_BWD_ELE_NUM_3) {
@@ -1217,17 +1263,16 @@ private:
                 if (totalSize < SRELU_BWD_ELE_NUM) {
                     return 1;
                 }
-                return std::min((totalSize + SRELU_BWD_ELE_NUM_STEP - 1) / SRELU_BWD_ELE_NUM_STEP,
-                    ELE_THREADS_1NUMA);
+                return std::min((totalSize + SRELU_BWD_ELE_NUM_STEP - 1) / SRELU_BWD_ELE_NUM_STEP, ELE_THREADS_1NUMA);
 #else
                 if (totalSize < SRELU_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + SRELU_BWD_ELE_NUM_STEP1 - 1) / SRELU_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SRELU_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
                     return std::min(((totalSize + SRELU_BWD_ELE_NUM_STEP2 - 1) / SRELU_BWD_ELE_NUM_STEP2),
-                        static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
+                                    static_cast<KuDNN::SizeType>(DEFAULT_MAX_NUM_THREADS));
                 }
 #endif
                 break;
@@ -1235,7 +1280,7 @@ private:
             case ActivationFunction::SQRT: {
                 if (totalSize < SQRT_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + SQRT_BWD_ELE_NUM_STEP1 - 1) / SQRT_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SQRT_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
@@ -1246,7 +1291,7 @@ private:
             case ActivationFunction::SQUARE: {
                 if (totalSize < SQUARE_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + SQUARE_BWD_ELE_NUM_STEP1 - 1) / SQUARE_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SQUARE_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < SQUARE_BWD_ELE_NUM_3) {
@@ -1261,12 +1306,11 @@ private:
                 if (totalSize < SWISH_BWD_ELE_NUM) {
                     return 1;
                 }
-                return std::min((totalSize + SWISH_BWD_ELE_NUM_STEP - 1) / SWISH_BWD_ELE_NUM_STEP,
-                    ELE_THREADS_1NUMA);
+                return std::min((totalSize + SWISH_BWD_ELE_NUM_STEP - 1) / SWISH_BWD_ELE_NUM_STEP, ELE_THREADS_1NUMA);
 #else
                 if (totalSize < SWISH_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + SWISH_BWD_ELE_NUM_STEP1 - 1) / SWISH_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < SWISH_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < SWISH_BWD_ELE_NUM_3) {
@@ -1282,12 +1326,11 @@ private:
                 if (totalSize < TANH_BWD_ELE_NUM) {
                     return 1;
                 }
-                return std::min((totalSize + TANH_BWD_ELE_NUM_STEP - 1) / TANH_BWD_ELE_NUM_STEP,
-                    ELE_THREADS_1NUMA);
+                return std::min((totalSize + TANH_BWD_ELE_NUM_STEP - 1) / TANH_BWD_ELE_NUM_STEP, ELE_THREADS_1NUMA);
 #else
                 if (totalSize < TANH_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + TANH_BWD_ELE_NUM_STEP1 - 1) / TANH_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < TANH_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < TANH_BWD_ELE_NUM_3) {
@@ -1301,7 +1344,7 @@ private:
             case ActivationFunction::CLIP_V2_DST: {
                 if (totalSize < CLIP_V2_DST_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + CLIP_V2_DST_BWD_ELE_NUM_STEP1 - 1) / CLIP_V2_DST_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < CLIP_V2_DST_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < CLIP_V2_DST_BWD_ELE_NUM_3) {
@@ -1314,7 +1357,7 @@ private:
             case ActivationFunction::ELU_DST: {
                 if (totalSize < ELU_DST_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + ELU_DST_BWD_ELE_NUM_STEP1 - 1) / ELU_DST_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < ELU_DST_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < ELU_DST_BWD_ELE_NUM_3) {
@@ -1341,7 +1384,7 @@ private:
             case ActivationFunction::LOGISTIC_DST: {
                 if (totalSize < LOGISTIC_DST_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + LOGISTIC_DST_BWD_ELE_NUM_STEP1 - 1) / LOGISTIC_DST_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < LOGISTIC_DST_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else {
@@ -1352,7 +1395,7 @@ private:
             case ActivationFunction::RELU_DST: {
                 if (totalSize < RELU_DST_BWD_ELE_NUM_1) {
                     return std::min(((totalSize + RELU_DST_BWD_ELE_NUM_STEP1 - 1) / RELU_DST_BWD_ELE_NUM_STEP1),
-                        ELE_THREADS_1NUMA);
+                                    ELE_THREADS_1NUMA);
                 } else if (totalSize < RELU_DST_BWD_ELE_NUM_2) {
                     return ELE_THREADS_2NUMA;
                 } else if (totalSize < RELU_DST_BWD_ELE_NUM_3) {
@@ -1395,21 +1438,24 @@ private:
     }
 };
 
-} // Detail
+} // namespace Detail
 
 ActivationLayerFWD::~ActivationLayerFWD() noexcept {}
 
-ActivationLayerFWD::ActivationLayerFWD(const TensorInfo &srcInfo, const TensorInfo &dstInfo,
-    ActivationFunction kind, float alpha, float beta) noexcept(false)
-    : pImpl(new Detail::ActivationLayerImplFWD(srcInfo, dstInfo, kind, alpha, beta)) {}
+ActivationLayerFWD::ActivationLayerFWD(const TensorInfo &srcInfo, const TensorInfo &dstInfo, ActivationFunction kind,
+                                       float alpha, float beta) noexcept(false)
+    : pImpl(new Detail::ActivationLayerImplFWD(srcInfo, dstInfo, kind, alpha, beta))
+{
+}
 
 ActivationLayerFWD::ActivationLayerFWD(const ActivationLayerFWD &other) noexcept(false)
-    : pImpl(new Detail::ActivationLayerImplFWD{*(other.pImpl.get())}) {}
+    : pImpl(new Detail::ActivationLayerImplFWD{*(other.pImpl.get())})
+{
+}
 
-ActivationLayerFWD::ActivationLayerFWD(ActivationLayerFWD &&other) noexcept
-    : pImpl(std::move(other.pImpl)) {}
+ActivationLayerFWD::ActivationLayerFWD(ActivationLayerFWD &&other) noexcept : pImpl(std::move(other.pImpl)) {}
 
-ActivationLayerFWD& ActivationLayerFWD::operator=(const ActivationLayerFWD &other) noexcept(false)
+ActivationLayerFWD &ActivationLayerFWD::operator=(const ActivationLayerFWD &other) noexcept(false)
 {
     if (this != &other) {
         this->pImpl.reset(new Detail::ActivationLayerImplFWD{*(other.pImpl.get())});
@@ -1417,7 +1463,7 @@ ActivationLayerFWD& ActivationLayerFWD::operator=(const ActivationLayerFWD &othe
     return *this;
 }
 
-ActivationLayerFWD& ActivationLayerFWD::operator=(ActivationLayerFWD &&other) noexcept
+ActivationLayerFWD &ActivationLayerFWD::operator=(ActivationLayerFWD &&other) noexcept
 {
     if (this != &other) {
         this->pImpl = std::move(other.pImpl);
@@ -1430,8 +1476,8 @@ void ActivationLayerFWD::Run(const void *src, void *dst) const noexcept(false)
     pImpl->Run(src, dst);
 }
 
-Status ActivationLayerFWD::ValidateInput(const TensorInfo &srcInfo, const TensorInfo &dstInfo,
-    ActivationFunction kind, float alpha, float beta) noexcept(false)
+Status ActivationLayerFWD::ValidateInput(const TensorInfo &srcInfo, const TensorInfo &dstInfo, ActivationFunction kind,
+                                         float alpha, float beta) noexcept(false)
 {
     Service::Unused(alpha, beta);
 
@@ -1439,17 +1485,18 @@ Status ActivationLayerFWD::ValidateInput(const TensorInfo &srcInfo, const Tensor
         return Status::BAD_ARGUMENTS;
     }
     if (!(Service::OneOf(srcInfo.GetType(), Element::TypeT::F32, Element::TypeT::F16, Element::TypeT::BF16) ||
-    (Service::OneOf(srcInfo.GetType(), Element::TypeT::S32, Element::TypeT::S8, Element::TypeT::U8) &&
-    Service::OneOf(kind, ActivationFunction::RELU, ActivationFunction::LINEAR)))) {
+          (Service::OneOf(srcInfo.GetType(), Element::TypeT::S32, Element::TypeT::S8, Element::TypeT::U8) &&
+           Service::OneOf(kind, ActivationFunction::RELU, ActivationFunction::LINEAR)))) {
         return Status::UNSUPPORTED;
     }
     if (!Service::OneOf(kind, ActivationFunction::ABS, ActivationFunction::CLIP, ActivationFunction::CLIP_V2,
-        ActivationFunction::ELU, ActivationFunction::ELU_DST, ActivationFunction::EXP, ActivationFunction::GELU_ERF,
-        ActivationFunction::GELU_TANH, ActivationFunction::HARDSIGMOID, ActivationFunction::HARDSWISH,
-        ActivationFunction::LINEAR, ActivationFunction::LOG, ActivationFunction::SIGMOID,
-        ActivationFunction::MISH, ActivationFunction::POW, ActivationFunction::RELU, ActivationFunction::ROUND,
-        ActivationFunction::SRELU, ActivationFunction::SQRT, ActivationFunction::SQUARE, ActivationFunction::SWISH,
-        ActivationFunction::TANH)) {
+                        ActivationFunction::ELU, ActivationFunction::ELU_DST, ActivationFunction::EXP,
+                        ActivationFunction::GELU_ERF, ActivationFunction::GELU_TANH, ActivationFunction::HARDSIGMOID,
+                        ActivationFunction::HARDSWISH, ActivationFunction::LINEAR, ActivationFunction::LOG,
+                        ActivationFunction::SIGMOID, ActivationFunction::MISH, ActivationFunction::POW,
+                        ActivationFunction::RELU, ActivationFunction::ROUND, ActivationFunction::SRELU,
+                        ActivationFunction::SQRT, ActivationFunction::SQUARE, ActivationFunction::SWISH,
+                        ActivationFunction::TANH)) {
         return Status::UNSUPPORTED;
     }
     if ((Service::OneOf(kind, ActivationFunction::CLIP, ActivationFunction::CLIP_V2) && (alpha > beta)) ||
@@ -1468,20 +1515,22 @@ Status ActivationLayerFWD::ValidateInput(const TensorInfo &srcInfo, const Tensor
     return Status::SUCCESS;
 }
 
-
 ActivationLayerBWD::~ActivationLayerBWD() noexcept {}
 
-ActivationLayerBWD::ActivationLayerBWD(const TensorInfo &dsInfo, const TensorInfo &ddInfo,
-    const TensorInfo &srcInfo, ActivationFunction kind, float alpha, float beta) noexcept(false)
-    : pImpl(new Detail::ActivationLayerImplBWD(dsInfo, ddInfo, srcInfo, kind, alpha, beta)) {}
+ActivationLayerBWD::ActivationLayerBWD(const TensorInfo &dsInfo, const TensorInfo &ddInfo, const TensorInfo &srcInfo,
+                                       ActivationFunction kind, float alpha, float beta) noexcept(false)
+    : pImpl(new Detail::ActivationLayerImplBWD(dsInfo, ddInfo, srcInfo, kind, alpha, beta))
+{
+}
 
 ActivationLayerBWD::ActivationLayerBWD(const ActivationLayerBWD &other) noexcept(false)
-    : pImpl(new Detail::ActivationLayerImplBWD{*(other.pImpl.get())}) {}
+    : pImpl(new Detail::ActivationLayerImplBWD{*(other.pImpl.get())})
+{
+}
 
-ActivationLayerBWD::ActivationLayerBWD(ActivationLayerBWD &&other) noexcept
-    : pImpl(std::move(other.pImpl)) {}
+ActivationLayerBWD::ActivationLayerBWD(ActivationLayerBWD &&other) noexcept : pImpl(std::move(other.pImpl)) {}
 
-ActivationLayerBWD& ActivationLayerBWD::operator=(const ActivationLayerBWD &other) noexcept(false)
+ActivationLayerBWD &ActivationLayerBWD::operator=(const ActivationLayerBWD &other) noexcept(false)
 {
     if (this != &other) {
         this->pImpl.reset(new Detail::ActivationLayerImplBWD{*(other.pImpl.get())});
@@ -1489,7 +1538,7 @@ ActivationLayerBWD& ActivationLayerBWD::operator=(const ActivationLayerBWD &othe
     return *this;
 }
 
-ActivationLayerBWD& ActivationLayerBWD::operator=(ActivationLayerBWD &&other) noexcept
+ActivationLayerBWD &ActivationLayerBWD::operator=(ActivationLayerBWD &&other) noexcept
 {
     if (this != &other) {
         this->pImpl = std::move(other.pImpl);
@@ -1502,8 +1551,8 @@ void ActivationLayerBWD::Run(void *ds, const void *dd, const void *src) const no
     pImpl->Run(ds, dd, src);
 }
 
-Status ActivationLayerBWD::ValidateInput(const TensorInfo &dsInfo, const TensorInfo &ddInfo,
-    const TensorInfo &srcInfo, ActivationFunction kind, float alpha, float beta) noexcept
+Status ActivationLayerBWD::ValidateInput(const TensorInfo &dsInfo, const TensorInfo &ddInfo, const TensorInfo &srcInfo,
+                                         ActivationFunction kind, float alpha, float beta) noexcept
 {
     Service::Unused(alpha, beta);
     if (dsInfo != ddInfo || dsInfo != srcInfo) {
@@ -1513,20 +1562,20 @@ Status ActivationLayerBWD::ValidateInput(const TensorInfo &dsInfo, const TensorI
         return Status::UNSUPPORTED;
     }
     if (!Service::OneOf(kind, ActivationFunction::ABS, ActivationFunction::CLIP, ActivationFunction::CLIP_V2,
-        ActivationFunction::CLIP_V2_DST, ActivationFunction::ELU, ActivationFunction::ELU_DST,
-        ActivationFunction::EXP, ActivationFunction::EXP_DST, ActivationFunction::GELU_ERF,
-        ActivationFunction::GELU_TANH, ActivationFunction::HARDSIGMOID, ActivationFunction::HARDSWISH,
-        ActivationFunction::LINEAR, ActivationFunction::LOG, ActivationFunction::SIGMOID,
-        ActivationFunction::LOGISTIC_DST, ActivationFunction::MISH, ActivationFunction::POW,
-        ActivationFunction::RELU, ActivationFunction::RELU_DST, ActivationFunction::SRELU,
-        ActivationFunction::SQRT, ActivationFunction::SQRT_DST, ActivationFunction::SQUARE,
-        ActivationFunction::SWISH, ActivationFunction::TANH, ActivationFunction::TANH_DST)) {
+                        ActivationFunction::CLIP_V2_DST, ActivationFunction::ELU, ActivationFunction::ELU_DST,
+                        ActivationFunction::EXP, ActivationFunction::EXP_DST, ActivationFunction::GELU_ERF,
+                        ActivationFunction::GELU_TANH, ActivationFunction::HARDSIGMOID, ActivationFunction::HARDSWISH,
+                        ActivationFunction::LINEAR, ActivationFunction::LOG, ActivationFunction::SIGMOID,
+                        ActivationFunction::LOGISTIC_DST, ActivationFunction::MISH, ActivationFunction::POW,
+                        ActivationFunction::RELU, ActivationFunction::RELU_DST, ActivationFunction::SRELU,
+                        ActivationFunction::SQRT, ActivationFunction::SQRT_DST, ActivationFunction::SQUARE,
+                        ActivationFunction::SWISH, ActivationFunction::TANH, ActivationFunction::TANH_DST)) {
         return Status::UNSUPPORTED;
     }
     // the list of functions with backward support will be extended
-    if ((Service::OneOf(kind, ActivationFunction::CLIP, ActivationFunction::CLIP_V2, ActivationFunction::CLIP_V2_DST)
-        && (alpha > beta)) || (Service::OneOf(kind, ActivationFunction::ELU_DST, ActivationFunction::RELU_DST)
-        && (alpha < 0))) {
+    if ((Service::OneOf(kind, ActivationFunction::CLIP, ActivationFunction::CLIP_V2, ActivationFunction::CLIP_V2_DST) &&
+         (alpha > beta)) ||
+        (Service::OneOf(kind, ActivationFunction::ELU_DST, ActivationFunction::RELU_DST) && (alpha < 0))) {
         return Status::UNSUPPORTED;
     }
     if (!dsInfo.IsDense()) {
@@ -1538,4 +1587,4 @@ Status ActivationLayerBWD::ValidateInput(const TensorInfo &dsInfo, const TensorI
     return Status::SUCCESS;
 }
 
-} // KuDNN
+} // namespace KuDNN

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -31,10 +31,9 @@ namespace Vector {
 
 template <>
 struct LoadN<float, __fp16, 2> final { // 2 means that load two float regs into __fp16 regs
-    static void Do(const float *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const float *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
+                   typename Vec<__fp16>::Type &in3) noexcept
     {
         svfloat32_t src0 = svld1_f32(pg0, src);
         svfloat32_t src1 = svld1_f32(pg1, src + Vector::Length<float>());
@@ -47,10 +46,9 @@ struct LoadN<float, __fp16, 2> final { // 2 means that load two float regs into 
 
 template <>
 struct LoadN<float, __fp16, 4> final { // 4 means that load four float regs into __fp16 regs
-    static void Do(const float *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const float *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1, typename Vec<__fp16>::Type &in2,
+                   typename Vec<__fp16>::Type &in3) noexcept
     {
         {
             svfloat32_t src0 = svld1_f32(pg0, src);
@@ -72,10 +70,9 @@ struct LoadN<float, __fp16, 4> final { // 4 means that load four float regs into
 
 template <>
 struct LoadN<std::int32_t, __fp16, 2> final { // 2 means that load two float regs into __fp16 regs
-    static void Do(const std::int32_t *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::int32_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         svfloat32_t src0 = svcvt_f32_x(pg0, svld1_s32(pg0, src));
         svfloat32_t src1 = svcvt_f32_x(pg1, svld1_s32(pg1, src + Vector::Length<std::int32_t>()));
@@ -88,10 +85,9 @@ struct LoadN<std::int32_t, __fp16, 2> final { // 2 means that load two float reg
 
 template <>
 struct LoadN<std::int32_t, __fp16, 4> final { // 4 means that load four float regs into __fp16 regs
-    static void Do(const std::int32_t *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::int32_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         {
             svfloat32_t src0 = svcvt_f32_x(pg0, svld1_s32(pg0, src));
@@ -113,10 +109,9 @@ struct LoadN<std::int32_t, __fp16, 4> final { // 4 means that load four float re
 
 template <>
 struct LoadN<__bf16, __fp16, 1> final {
-    static void Do(const __bf16 *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __bf16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         svbool_t pgTrue = svptrue_b32();
         svbfloat16_t tmp = svld1_bf16(pg0, src);
@@ -134,10 +129,9 @@ struct LoadN<__bf16, __fp16, 1> final {
 
 template <>
 struct LoadN<__bf16, __fp16, 2> final { // 2 means that load two __bf16 regs into __fp16 regs
-    static void Do(const __bf16 *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __bf16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         svbool_t pgTrue = svptrue_b32();
         svbfloat16_t zeros = svdup_n_bf16(vcvth_bf16_f32(0.0f));
@@ -167,10 +161,9 @@ struct LoadN<__bf16, __fp16, 2> final { // 2 means that load two __bf16 regs int
 
 template <>
 struct LoadN<__fp16, __fp16, 1> final {
-    static void Do(const __fp16 *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __fp16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svld1_f16(pg0, src);
         Service::Unused(pg1, in1, pg2, in2, pg3, in3);
@@ -179,10 +172,9 @@ struct LoadN<__fp16, __fp16, 1> final {
 
 template <>
 struct LoadN<__fp16, __fp16, 2> final { // 2 means that load two __fp16 regs into __fp16 regs
-    static void Do(const __fp16 *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const __fp16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         in0 = svld1_f16(pg0, src);
         in1 = svld1_f16(pg1, src + Vector::Length<__fp16>());
@@ -192,9 +184,9 @@ struct LoadN<__fp16, __fp16, 2> final { // 2 means that load two __fp16 regs int
 
 template <>
 struct LoadN<std::int8_t, __fp16, 1> final {
-    static void Do(const std::int8_t *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::int8_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         svint8_t inreg = svld1_s8(pg0, src);
         svuint16_t inreg16 = svreinterpret_u16(inreg);
@@ -220,9 +212,9 @@ struct LoadN<std::int8_t, __fp16, 1> final {
 
 template <>
 struct LoadN<std::uint8_t, __fp16, 1> final {
-    static void Do(const std::uint8_t *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
-        typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
+    static void Do(const std::uint8_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__fp16>::Type &in0, typename Vec<__fp16>::Type &in1,
+                   typename Vec<__fp16>::Type &in2, typename Vec<__fp16>::Type &in3) noexcept
     {
         svuint8_t inreg = svld1_u8(pg0, src);
         svuint16_t inreg16 = svreinterpret_u16(inreg);
@@ -231,9 +223,9 @@ struct LoadN<std::uint8_t, __fp16, 1> final {
 
         svuint16_t tmp0 = svand_n_u16_x(pgtrue, inreg16, 0xff00u);
         svuint16_t tmp1 = svand_n_u16_x(pgtrue, inreg16, 0x00ffu);
-    
+
         tmp1 = svlsl_n_u16_x(pgtrue, tmp1, 8); // 8 bits is a size of 1 std::uint8_t element
-        
+
         tmp0 = svlsr_n_u16_x(pgtrue, tmp0, 8); // 8 bits is a size of 1 std::uint8_t elements
         tmp1 = svlsr_n_u16_x(pgtrue, tmp1, 8); // 8 bits is a size of 1 std::uint8_t elements
 
@@ -246,8 +238,8 @@ struct LoadN<std::uint8_t, __fp16, 1> final {
     }
 };
 
-} // Vector
-} // Detail
-} // KuDNN
+} // namespace Vector
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_VECTOR_MEM_LOAD_COMPTYPE_F16_HPP

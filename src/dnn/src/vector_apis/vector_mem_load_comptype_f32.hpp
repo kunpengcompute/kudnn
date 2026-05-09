@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -31,10 +31,9 @@ namespace Vector {
 
 template <>
 struct LoadN<float, float, 1> final {
-    static void Do(const float *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const float *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
+                   typename Vec<float>::Type &in3) noexcept
     {
         in0 = svld1_f32(pg0, src);
         Service::Unused(pg1, in1, pg2, in2, pg3, in3);
@@ -43,10 +42,9 @@ struct LoadN<float, float, 1> final {
 
 template <>
 struct LoadN<float, float, 2> final { // 2 means that load two float regs into float regs
-    static void Do(const float *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const float *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
+                   typename Vec<float>::Type &in3) noexcept
     {
         in0 = svld1_f32(pg0, src);
         in1 = svld1_f32(pg1, src + Vector::Length<float>());
@@ -56,10 +54,9 @@ struct LoadN<float, float, 2> final { // 2 means that load two float regs into f
 
 template <>
 struct LoadN<float, float, 4> final { // 4 means that load four float regs into float regs
-    static void Do(const float *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const float *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+                   typename Vec<float>::Type &in0, typename Vec<float>::Type &in1, typename Vec<float>::Type &in2,
+                   typename Vec<float>::Type &in3) noexcept
     {
         in0 = svld1_f32(pg0, src);
         src += Vector::Length<float>();
@@ -70,12 +67,12 @@ struct LoadN<float, float, 4> final { // 4 means that load four float regs into 
         in3 = svld1_f32(pg3, src);
     }
 };
- 
+
 template <>
 struct LoadN<__bf16, __bf16, 1> final {
-    static void Do(const __bf16 *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<__bf16>::Type &in0, typename Vec<__bf16>::Type &in1,
-        typename Vec<__bf16>::Type &in2, typename Vec<__bf16>::Type &in3) noexcept
+    static void Do(const __bf16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<__bf16>::Type &in0, typename Vec<__bf16>::Type &in1,
+                   typename Vec<__bf16>::Type &in2, typename Vec<__bf16>::Type &in3) noexcept
     {
         in0 = svld1_bf16(pg0, src);
         Service::Unused(pg1, in1, pg2, in2, pg3, in3);
@@ -84,10 +81,9 @@ struct LoadN<__bf16, __bf16, 1> final {
 
 template <>
 struct LoadN<std::int8_t, std::int8_t, 1> final {
-    static void Do(const std::int8_t *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<std::int8_t>::Type &in0,
-        typename Vec<std::int8_t>::Type &in1, typename Vec<std::int8_t>::Type &in2,
-        typename Vec<std::int8_t>::Type &in3) noexcept
+    static void Do(const std::int8_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<std::int8_t>::Type &in0, typename Vec<std::int8_t>::Type &in1,
+                   typename Vec<std::int8_t>::Type &in2, typename Vec<std::int8_t>::Type &in3) noexcept
     {
         in0 = svld1_s8(pg0, src);
         Service::Unused(pg1, in1, pg2, in2, pg3, in3);
@@ -96,10 +92,9 @@ struct LoadN<std::int8_t, std::int8_t, 1> final {
 
 template <>
 struct LoadN<std::uint8_t, std::uint8_t, 1> final {
-    static void Do(const std::uint8_t *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<std::uint8_t>::Type &in0,
-        typename Vec<std::uint8_t>::Type &in1, typename Vec<std::uint8_t>::Type &in2,
-        typename Vec<std::uint8_t>::Type &in3) noexcept
+    static void Do(const std::uint8_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<std::uint8_t>::Type &in0, typename Vec<std::uint8_t>::Type &in1,
+                   typename Vec<std::uint8_t>::Type &in2, typename Vec<std::uint8_t>::Type &in3) noexcept
     {
         in0 = svld1_u8(pg0, src);
         Service::Unused(pg1, in1, pg2, in2, pg3, in3);
@@ -108,10 +103,9 @@ struct LoadN<std::uint8_t, std::uint8_t, 1> final {
 
 template <>
 struct LoadN<std::int32_t, std::int32_t, 1> final {
-    static void Do(const std::int32_t *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<std::int32_t>::Type &in0, typename Vec<std::int32_t>::Type &in1,
-        typename Vec<std::int32_t>::Type &in2, typename Vec<std::int32_t>::Type &in3) noexcept
+    static void Do(const std::int32_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<std::int32_t>::Type &in0, typename Vec<std::int32_t>::Type &in1,
+                   typename Vec<std::int32_t>::Type &in2, typename Vec<std::int32_t>::Type &in3) noexcept
     {
         in0 = svld1_s32(pg0, src);
         Service::Unused(pg1, in1, pg2, in2, pg3, in3);
@@ -120,9 +114,9 @@ struct LoadN<std::int32_t, std::int32_t, 1> final {
 
 template <>
 struct LoadN<__bf16, float, 1> final {
-    static void Do(const __bf16 *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const __bf16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         svbfloat16_t tmp = svld1_bf16(pg0, src);
         svbfloat16_t zeros = svdup_n_bf16(vcvth_bf16_f32(0.0f));
@@ -136,9 +130,9 @@ struct LoadN<__bf16, float, 1> final {
 
 template <>
 struct LoadN<__bf16, float, 2> final { // 2 means that load __bf16 float regs into float regs
-    static void Do(const __bf16 *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const __bf16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         svbfloat16_t zeros = svdup_n_bf16(vcvth_bf16_f32(0.0f));
         {
@@ -161,9 +155,9 @@ struct LoadN<__bf16, float, 2> final { // 2 means that load __bf16 float regs in
 
 template <>
 struct LoadN<__fp16, float, 1> final {
-    static void Do(const __fp16 *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const __fp16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         svbool_t pgFalse = svpfalse_b();
         svbool_t pgEven = svtrn1_b16(pg0, pgFalse);
@@ -181,9 +175,9 @@ struct LoadN<__fp16, float, 1> final {
 
 template <>
 struct LoadN<__fp16, float, 2> final { // 2 means that load two __fp16 regs into float regs
-    static void Do(const __fp16 *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const __fp16 *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         svbool_t pgFalse = svpfalse_b();
         svfloat16_t zeros = svdup_n_f16(0.0f);
@@ -213,9 +207,9 @@ struct LoadN<__fp16, float, 2> final { // 2 means that load two __fp16 regs into
 
 template <>
 struct LoadN<std::int8_t, float, 1> final {
-    static void Do(const std::int8_t *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int8_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         svint8_t inreg = svld1_s8(pg0, src);
         svuint32_t inreg32 = svreinterpret_u32(inreg);
@@ -258,9 +252,9 @@ struct LoadN<std::int8_t, float, 1> final {
 
 template <>
 struct LoadN<std::uint8_t, float, 1> final {
-    static void Do(const std::uint8_t *src, const svbool_t& pg0, const svbool_t &pg1,
-        const svbool_t &pg2, const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::uint8_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         svuint8_t inreg = svld1_u8(pg0, src);
         svuint32_t inreg32 = svreinterpret_u32(inreg);
@@ -271,11 +265,11 @@ struct LoadN<std::uint8_t, float, 1> final {
         svuint32_t tmp1 = svand_n_u32_x(pgtrue, inreg32, 0x00ff0000u);
         svuint32_t tmp2 = svand_n_u32_x(pgtrue, inreg32, 0x0000ff00u);
         svuint32_t tmp3 = svand_n_u32_x(pgtrue, inreg32, 0x000000ffu);
-    
+
         tmp1 = svlsl_n_u32_x(pgtrue, tmp1, 8);  // 8 bits is a size of 1 std::uint8_t element
         tmp2 = svlsl_n_u32_x(pgtrue, tmp2, 16); // 16 bits is a size of 2 std::uint8_t elements
         tmp3 = svlsl_n_u32_x(pgtrue, tmp3, 24); // 24 bits is a size of 3 std::uint8_t elements
-        
+
         tmp0 = svlsr_n_u32_x(pgtrue, tmp0, 24); // 24 bits is a size of 3 std::uint8_t elements
         tmp1 = svlsr_n_u32_x(pgtrue, tmp1, 24); // 24 bits is a size of 3 std::uint8_t elements
         tmp2 = svlsr_n_u32_x(pgtrue, tmp2, 24); // 24 bits is a size of 3 std::uint8_t elements
@@ -301,10 +295,9 @@ struct LoadN<std::uint8_t, float, 1> final {
 
 template <>
 struct LoadN<std::int32_t, float, 1> final {
-    static void Do(const std::int32_t *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int32_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svcvt_f32_x(pg0, svld1_s32(pg0, src));
         Service::Unused(pg1, in1, pg2, in2, pg3, in3);
@@ -313,10 +306,9 @@ struct LoadN<std::int32_t, float, 1> final {
 
 template <>
 struct LoadN<std::int32_t, float, 2> final { // 2 means that load two float regs into float regs
-    static void Do(const std::int32_t *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int32_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svcvt_f32_x(pg0, svld1_s32(pg0, src));
         src += Vector::Length<std::int32_t>();
@@ -327,10 +319,9 @@ struct LoadN<std::int32_t, float, 2> final { // 2 means that load two float regs
 
 template <>
 struct LoadN<std::int32_t, float, 4> final { // 4 means that load four float regs into float regs
-    static void Do(const std::int32_t *src,
-        const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
-        typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
+    static void Do(const std::int32_t *src, const svbool_t &pg0, const svbool_t &pg1, const svbool_t &pg2,
+                   const svbool_t &pg3, typename Vec<float>::Type &in0, typename Vec<float>::Type &in1,
+                   typename Vec<float>::Type &in2, typename Vec<float>::Type &in3) noexcept
     {
         in0 = svcvt_f32_x(pg0, svld1_s32(pg0, src));
         src += Vector::Length<std::int32_t>();
@@ -342,8 +333,8 @@ struct LoadN<std::int32_t, float, 4> final { // 4 means that load four float reg
     }
 };
 
-} // Vector
-} // Detail
-} // KuDNN
+} // namespace Vector
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_VECTOR_MEM_LOAD_COMPTYPE_F32_HPP

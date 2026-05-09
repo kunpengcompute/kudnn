@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -40,9 +40,13 @@ private:
 class AdrSc64S : public Adr {
 public:
     explicit AdrSc64S(const XReg &xn, const ZRegD &zm, ShMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_64VEC), xn_(xn), zm_(zm), mod_(mod), sh_(sh) {}
+        : Adr(AdrKind::SC_64VEC), xn_(xn), zm_(zm), mod_(mod), sh_(sh)
+    {
+    }
     explicit AdrSc64S(const AdrSc64U &a)
-        : Adr(AdrKind::SC_64VEC), xn_(a.GetXn()), zm_(a.GetZm()), mod_(ShMod::LSL), sh_(0) {}
+        : Adr(AdrKind::SC_64VEC), xn_(a.GetXn()), zm_(a.GetZm()), mod_(ShMod::LSL), sh_(0)
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -91,7 +95,9 @@ private:
 class AdrSc32U : public Adr {
 public:
     explicit AdrSc32U(const XReg &xn, const ZRegS &zm, ExtMod mod)
-        : Adr(AdrKind::SC_32VEC32E), xn_(xn), zm_(zm), mod_(Trans(mod)) {}
+        : Adr(AdrKind::SC_32VEC32E), xn_(xn), zm_(zm), mod_(Trans(mod))
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -116,9 +122,13 @@ private:
 class AdrSc32S : public Adr {
 public:
     explicit AdrSc32S(const XReg &xn, const ZRegS &zm, ExtMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_32VEC32E), xn_(xn), zm_(zm), mod_(Trans(mod)), sh_(sh) {}
+        : Adr(AdrKind::SC_32VEC32E), xn_(xn), zm_(zm), mod_(Trans(mod)), sh_(sh)
+    {
+    }
     explicit AdrSc32S(const AdrSc32U &a)
-        : Adr(AdrKind::SC_32VEC32E), xn_(a.GetXn()), zm_(a.GetZm()), mod_(a.GetMod()), sh_(0) {}
+        : Adr(AdrKind::SC_32VEC32E), xn_(a.GetXn()), zm_(a.GetZm()), mod_(a.GetMod()), sh_(0)
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -167,7 +177,9 @@ private:
 class AdrSc32UU : public Adr {
 public:
     explicit AdrSc32UU(const XReg &xn, const ZRegD &zm, ExtMod mod)
-        : Adr(AdrKind::SC_32VEC64E), xn_(xn), zm_(zm), mod_(Trans(mod)) {}
+        : Adr(AdrKind::SC_32VEC64E), xn_(xn), zm_(zm), mod_(Trans(mod))
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -192,9 +204,13 @@ private:
 class AdrSc32US : public Adr {
 public:
     explicit AdrSc32US(const XReg &xn, const ZRegD &zm, ExtMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_32VEC64E), xn_(xn), zm_(zm), mod_(Trans(mod)), sh_(sh) {}
+        : Adr(AdrKind::SC_32VEC64E), xn_(xn), zm_(zm), mod_(Trans(mod)), sh_(sh)
+    {
+    }
     explicit AdrSc32US(const AdrSc32UU &a)
-        : Adr(AdrKind::SC_32VEC64E), xn_(a.GetXn()), zm_(a.GetZm()), mod_(a.GetMod()), sh_(0) {}
+        : Adr(AdrKind::SC_32VEC64E), xn_(a.GetXn()), zm_(a.GetZm()), mod_(a.GetMod()), sh_(0)
+    {
+    }
 
     const XReg &GetXn() const
     {
@@ -262,7 +278,9 @@ private:
 class AdrVec : public Adr {
 public:
     explicit AdrVec(const ZRegBase &zn, const ZRegBase &zm, ShMod mod = ShMod::NONE, uint32_t sh = 0)
-        : Adr(AdrKind::VEC_PACK), zn_(zn), zm_(zm), mod_(mod), sh_(sh) {}
+        : Adr(AdrKind::VEC_PACK), zn_(zn), zm_(zm), mod_(mod), sh_(sh)
+    {
+    }
 
     const ZRegBase &GetZn() const
     {
@@ -292,7 +310,9 @@ private:
 class AdrVecU : public Adr {
 public:
     explicit AdrVecU(const ZRegBase &zn, const ZRegBase &zm, ExtMod mod, uint32_t sh = 0)
-        : Adr(AdrKind::VEC_UNPACK), zn_(zn), zm_(zm), mod_(Trans(mod)), sh_(sh) {}
+        : Adr(AdrKind::VEC_UNPACK), zn_(zn), zm_(zm), mod_(Trans(mod)), sh_(sh)
+    {
+    }
 
     const ZRegBase &GetZn() const
     {
@@ -371,6 +391,6 @@ inline AdrVecU Ptr(const ZRegD &zn, const ZRegD &zm, ExtMod mod, uint32_t sh)
     return AdrVecU(zn, zm, mod, sh);
 }
 
-} // ARMCG
+} // namespace ARMCG
 
-#endif  // CG_ADR_VectorComputation_HPP
+#endif // CG_ADR_VectorComputation_HPP

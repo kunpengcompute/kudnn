@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -27,14 +27,10 @@ namespace Detail {
 
 template <typename T>
 struct Img2colNN final { // wei - ncdhw, src - ncdhw
-    static void Do(const T* dataIm, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T* dataCol, SizeType ndims, int numThreads) noexcept
+    static void Do(const T *dataIm, IntType channels, IntType depth, IntType height, IntType width, IntType outDept,
+                   IntType outHeight, IntType outWidth, IntType ksizeD, IntType ksizeH, IntType ksizeW, IntType padD,
+                   IntType padH, IntType padW, IntType strideD, IntType strideH, IntType strideW, IntType dilateD,
+                   IntType dilateH, IntType dilateW, T *dataCol, SizeType ndims, int numThreads) noexcept
     {
         bool is2d = (ndims >= DIM_4);
         bool is3d = (ndims == DIM_5);
@@ -47,28 +43,25 @@ struct Img2colNN final { // wei - ncdhw, src - ncdhw
                         IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
                         IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
                         IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((c * ksizeD + kd) * ksizeH + kh) * ksizeW + kw)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((c * depth + id) * height + ih) * width + iw];
+                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) && (iw < width)) {
+                            dataCol[(((((c * ksizeD + kd) * ksizeH + kh) * ksizeW + kw) * outDept + od) * outHeight +
+                                     oh) *
+                                        outWidth +
+                                    ow] = dataIm[((c * depth + id) * height + ih) * width + iw];
                         }
                     }
                 }
-            }, shape, numThreads);
+            },
+            shape, numThreads);
     }
 };
 
 template <typename T>
 struct Img2colNT final { // wei - ncdhw, src - ndhwc
-    static void Do(const T* dataIm, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T* dataCol, SizeType ndims, int numThreads) noexcept
+    static void Do(const T *dataIm, IntType channels, IntType depth, IntType height, IntType width, IntType outDept,
+                   IntType outHeight, IntType outWidth, IntType ksizeD, IntType ksizeH, IntType ksizeW, IntType padD,
+                   IntType padH, IntType padW, IntType strideD, IntType strideH, IntType strideW, IntType dilateD,
+                   IntType dilateH, IntType dilateW, T *dataCol, SizeType ndims, int numThreads) noexcept
     {
         bool is2d = (ndims >= DIM_4);
         bool is3d = (ndims == DIM_5);
@@ -81,28 +74,25 @@ struct Img2colNT final { // wei - ncdhw, src - ndhwc
                         IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
                         IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
                         IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((c * ksizeD + kd) * ksizeH + kh) * ksizeW + kw)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((id * height + ih) * width + iw) * channels + c];
+                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) && (iw < width)) {
+                            dataCol[(((((c * ksizeD + kd) * ksizeH + kh) * ksizeW + kw) * outDept + od) * outHeight +
+                                     oh) *
+                                        outWidth +
+                                    ow] = dataIm[((id * height + ih) * width + iw) * channels + c];
                         }
                     }
                 }
-            }, shape, numThreads);
+            },
+            shape, numThreads);
     }
 };
 
 template <typename T>
 struct Img2colTN final { // wei - ndhwc, src - ncdhw
-    static void Do(const T* dataIm, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T* dataCol, SizeType ndims, int numThreads) noexcept
+    static void Do(const T *dataIm, IntType channels, IntType depth, IntType height, IntType width, IntType outDept,
+                   IntType outHeight, IntType outWidth, IntType ksizeD, IntType ksizeH, IntType ksizeW, IntType padD,
+                   IntType padH, IntType padW, IntType strideD, IntType strideH, IntType strideW, IntType dilateD,
+                   IntType dilateH, IntType dilateW, T *dataCol, SizeType ndims, int numThreads) noexcept
     {
         bool is2d = (ndims >= DIM_4);
         bool is3d = (ndims == DIM_5);
@@ -115,28 +105,25 @@ struct Img2colTN final { // wei - ndhwc, src - ncdhw
                         IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
                         IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
                         IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((kd * ksizeH + kh) * ksizeW + kw) * channels + c)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((c * depth + id) * height + ih) * width + iw];
+                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) && (iw < width)) {
+                            dataCol[(((((kd * ksizeH + kh) * ksizeW + kw) * channels + c) * outDept + od) * outHeight +
+                                     oh) *
+                                        outWidth +
+                                    ow] = dataIm[((c * depth + id) * height + ih) * width + iw];
                         }
                     }
                 }
-            }, shape, numThreads);
+            },
+            shape, numThreads);
     }
 };
 
 template <typename T>
 struct Img2colTT final { // wei - ndhwc, src - ndhwc
-    static void Do(const T* dataIm, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T* dataCol, SizeType ndims, int numThreads) noexcept
+    static void Do(const T *dataIm, IntType channels, IntType depth, IntType height, IntType width, IntType outDept,
+                   IntType outHeight, IntType outWidth, IntType ksizeD, IntType ksizeH, IntType ksizeW, IntType padD,
+                   IntType padH, IntType padW, IntType strideD, IntType strideH, IntType strideW, IntType dilateD,
+                   IntType dilateH, IntType dilateW, T *dataCol, SizeType ndims, int numThreads) noexcept
     {
         bool is2d = (ndims >= DIM_4);
         bool is3d = (ndims == DIM_5);
@@ -149,28 +136,25 @@ struct Img2colTT final { // wei - ndhwc, src - ndhwc
                         IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
                         IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
                         IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((kd * ksizeH + kh) * ksizeW + kw) * channels + c)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((id * height + ih) * width + iw) * channels + c];
+                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) && (iw < width)) {
+                            dataCol[(((((kd * ksizeH + kh) * ksizeW + kw) * channels + c) * outDept + od) * outHeight +
+                                     oh) *
+                                        outWidth +
+                                    ow] = dataIm[((id * height + ih) * width + iw) * channels + c];
                         }
                     }
                 }
-            }, shape, numThreads);
+            },
+            shape, numThreads);
     }
 };
 
 template <typename T1, typename T2>
 struct Col2img final {
-    static void Do(const T1* dataCol, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T2* dataIm, SizeType ndims) noexcept
+    static void Do(const T1 *dataCol, IntType channels, IntType depth, IntType height, IntType width, IntType outDept,
+                   IntType outHeight, IntType outWidth, IntType ksizeD, IntType ksizeH, IntType ksizeW, IntType padD,
+                   IntType padH, IntType padW, IntType strideD, IntType strideH, IntType strideW, IntType dilateD,
+                   IntType dilateH, IntType dilateW, T2 *dataIm, SizeType ndims) noexcept
     {
         bool is2d = (ndims >= DIM_4);
         bool is3d = (ndims == DIM_5);
@@ -187,14 +171,16 @@ struct Col2img final {
                                     IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
                                     IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
                                     IntType iw = ow * strideW - padW + kw * dilateW;
-                                    if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) &&
-                                        (iw >= 0) && (iw < width)) {
+                                    if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
+                                        (iw < width)) {
                                         dataIm[c * channelSize + id * height * width + ih * width + iw] =
-                                            Vector::Convert<float, T2>::Do(Vector::Convert<T2, float>::Do(dataIm[
-                                                c * channelSize + id * height * width + ih * width + iw]) +
-                                                Vector::Convert<T1, float>::Do(dataCol[(((c * ksizeD + kd) *
-                                                    ksizeH + kh) * ksizeW + kw) * outDept * outHeight * outWidth +
-                                                    od * outHeight * outWidth + oh * outWidth + ow]));
+                                            Vector::Convert<float, T2>::Do(
+                                                Vector::Convert<T2, float>::Do(
+                                                    dataIm[c * channelSize + id * height * width + ih * width + iw]) +
+                                                Vector::Convert<T1, float>::Do(
+                                                    dataCol[(((c * ksizeD + kd) * ksizeH + kh) * ksizeW + kw) *
+                                                                outDept * outHeight * outWidth +
+                                                            od * outHeight * outWidth + oh * outWidth + ow]));
                                     }
                                 }
                             }
@@ -206,7 +192,7 @@ struct Col2img final {
     }
 };
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_CONVOLUTION_BASE_COMMON_HPP

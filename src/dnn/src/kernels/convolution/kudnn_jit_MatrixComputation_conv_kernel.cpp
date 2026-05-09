@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -368,11 +368,11 @@ void JitConvMatrixComputationKernel::ComputeLoop(int urW)
     }
 
     Mov(x18, jcp.kh);
-    Mov(x29, x2);                                          // CurA
+    Mov(x29, x2); // CurA
     Mov(x14, 0);
     Mov(x12, bStride);
-    Add(x14, x14, x12, ShMod::LSL, FLOAT_OFFSET_SHIFT);    // bStride * sizeof(float)
-    Madd(x16, x10, x14, x3);                               // CurB
+    Add(x14, x14, x12, ShMod::LSL, FLOAT_OFFSET_SHIFT); // bStride * sizeof(float)
+    Madd(x16, x10, x14, x3);                            // CurB
 
     Align(REG_INDEX32);
     L(khLabel);
@@ -506,9 +506,9 @@ void JitConvMatrixComputationKernel::ComputeLoop(int urW)
             B(Cond::GT, kwLabel);
         }
         Mov(x14, sizeW);
-        Add(x29, x29, x14, ShMod::LSL, FLOAT_OFFSET_SHIFT);  // input shift
+        Add(x29, x29, x14, ShMod::LSL, FLOAT_OFFSET_SHIFT); // input shift
         Mov(x14, jcp.kw * jcp.ic);
-        Add(x16, x16, x14, ShMod::LSL, KERNEL_OFFSET_SHIFT);               // kernel shift
+        Add(x16, x16, x14, ShMod::LSL, KERNEL_OFFSET_SHIFT); // kernel shift
         Sub(x18, x18, 1);
         Cmp(x18, 0);
         B(Cond::GT, khLabel);
@@ -561,11 +561,11 @@ void JitConvMatrixComputationKernel::ComputeLoopWithStride(int urW)
     }
 
     Mov(x18, jcp.kh);
-    Mov(x29, x2);                                          // CurA
+    Mov(x29, x2); // CurA
     Mov(x14, 0);
     Mov(x12, bStride);
-    Add(x14, x14, x12, ShMod::LSL, FLOAT_OFFSET_SHIFT);    // bStride * sizeof(float)
-    Madd(x16, x10, x14, x3);                               // CurB
+    Add(x14, x14, x12, ShMod::LSL, FLOAT_OFFSET_SHIFT); // bStride * sizeof(float)
+    Madd(x16, x10, x14, x3);                            // CurB
 
     Align(REG_INDEX32);
     L(khLabel);
@@ -699,9 +699,9 @@ void JitConvMatrixComputationKernel::ComputeLoopWithStride(int urW)
             Add(x25, x25, x14, ShMod::LSL, KERNEL_OFFSET_SHIFT);
         }
         Mov(x14, (jcp.iw + jcp.lPad + jcp.rPad));
-        Add(x29, x29, x14, ShMod::LSL, FLOAT_OFFSET_SHIFT);  // input shift
+        Add(x29, x29, x14, ShMod::LSL, FLOAT_OFFSET_SHIFT); // input shift
         Mov(x14, jcp.kw * jcp.ic);
-        Add(x16, x16, x14, ShMod::LSL, KERNEL_OFFSET_SHIFT);               // kernel shift
+        Add(x16, x16, x14, ShMod::LSL, KERNEL_OFFSET_SHIFT); // kernel shift
         Sub(x18, x18, 1);
         Cmp(x18, 0);
         B(Cond::GT, khLabel);

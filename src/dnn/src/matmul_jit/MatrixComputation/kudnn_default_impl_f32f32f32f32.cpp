@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -32,12 +32,12 @@
 namespace KuDNN {
 namespace Detail {
 
-MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType>::MatMulKernelDefaultCodeGenImpl(
-    IntType m, IntType n, IntType k,
-    IntType srcOffsetArg,
-    IntType weiOffsetArg,
-    IntType dstOffsetArg,
-    IntType biaOffsetArg)
+MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float,
+                               MatmulDummyType>::MatMulKernelDefaultCodeGenImpl(IntType m, IntType n, IntType k,
+                                                                                IntType srcOffsetArg,
+                                                                                IntType weiOffsetArg,
+                                                                                IntType dstOffsetArg,
+                                                                                IntType biaOffsetArg)
 {
     Service::Unused(srcOffsetArg, weiOffsetArg);
     if ((m >= 0) && (n >= 0) && (k >= 0)) {
@@ -91,8 +91,8 @@ MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, flo
     Ret();
 }
 
-void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType>::InitializeDstRegisters(
-    IntType m, IntType n, IntType vl)
+void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float,
+                                    MatmulDummyType>::InitializeDstRegisters(IntType m, IntType n, IntType vl)
 {
     // Initialize Dst matrix registers
     ARMCG::Label loadC;
@@ -119,20 +119,17 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
     for (IntType i = 0; i < std::min(m, vl); ++i) {
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(1));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(1));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(1));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3, ARMCG::ZRegS(1));
         }
     }
     for (IntType i = 0; i < std::min(m - vl, vl); ++i) {
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(1));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(1));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
@@ -141,7 +138,7 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
     }
 
     L(loadBiasN);
-    Tbz(flags, 5, loadBiasM); // 5-bit correspond to LOAD_BIAS_N
+    Tbz(flags, 5, loadBiasM);                   // 5-bit correspond to LOAD_BIAS_N
     Ld1w(ARMCG::ZRegS(0), p1, Ptr(biaPtrCopy)); // z1 is used as tmp register here
     if (n > vl) {
         Ld1w(ARMCG::ZRegS(1), p3, Ptr(biaPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL)); // z1 is used as tmp register here
@@ -149,20 +146,17 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
     for (IntType i = 0; i < std::min(m, vl); ++i) {
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(0));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(0));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(1));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3, ARMCG::ZRegS(1));
         }
     }
     for (IntType i = 0; i < std::min(m - vl, vl); ++i) {
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(0));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(0));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
@@ -171,7 +165,7 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
     }
 
     L(loadBiasM);
-    Tbz(flags, 4, loadBiasMN); // 4-bit correspond to LOAD_BIAS_M
+    Tbz(flags, 4, loadBiasMN);                  // 4-bit correspond to LOAD_BIAS_M
     Ld1w(ARMCG::ZRegS(0), p0, Ptr(biaPtrCopy)); // z1 is used as tmp register here
     if (m > vl) {
         Ld1w(ARMCG::ZRegS(1), p2, Ptr(biaPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL)); // z1 is used as tmp register here
@@ -179,20 +173,17 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
     for (IntType i = 0; i < std::min(n, vl); ++i) {
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZARegVS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p0, ARMCG::ZRegS(0));
+        Mova(ARMCG::ZARegVS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p0, ARMCG::ZRegS(0));
         if (m > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
-            Mova(ARMCG::ZARegVS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p2, ARMCG::ZRegS(1));
+            Mova(ARMCG::ZARegVS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p2, ARMCG::ZRegS(1));
         }
     }
     for (IntType i = 0; i < std::min(n - vl, vl); ++i) {
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZARegVS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p0, ARMCG::ZRegS(0));
+        Mova(ARMCG::ZARegVS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p0, ARMCG::ZRegS(0));
         if (m > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
@@ -211,14 +202,13 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
         Ld1w(ARMCG::ZRegS(i * NUM_2), p1, Ptr(biaPtrCopy));
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(biaPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
 
@@ -227,14 +217,13 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
         Ld1w(ARMCG::ZRegS(i * NUM_2), p1, Ptr(biaPtrCopy));
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(biaPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
-            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
 
@@ -249,14 +238,13 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
         Ld1w(ARMCG::ZRegS(i * NUM_2), p1, Ptr(dstPtrCopy));
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
     for (IntType i = 0; i < std::min(m - vl, vl); ++i) {
@@ -264,19 +252,18 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
         Ld1w(ARMCG::ZRegS(i * NUM_2), p1, Ptr(dstPtrCopy));
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
-            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
 
     L(mullC);
-    Tbz(flags, 2, addBias1); // 2-bit correspond to MULL_C
+    Tbz(flags, 2, addBias1);    // 2-bit correspond to MULL_C
     Mov(ARMCG::ZRegS(1), beta); // z1 is used as tmp register here
     for (IntType i = 0; i < std::min(m, vl); ++i) {
         if (i == 0) {
@@ -292,8 +279,7 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         } else {
             Fmul(ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(0));
         }
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (i == 0) {
             Mov(ARMCG::ZRegS(0), p5, ARMCG::ZRegS(1));
         }
@@ -302,8 +288,8 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fmul(ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(0));
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
     Mov(ARMCG::ZRegS(1), beta); // z1 is used as tmp register here
@@ -317,8 +303,7 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         } else {
             Fmul(ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(0));
         }
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (i == 0) {
             Mov(ARMCG::ZRegS(0), p5, ARMCG::ZRegS(1));
         }
@@ -327,8 +312,8 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fmul(ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(0));
-            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
 
@@ -350,8 +335,7 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         } else {
             Fadd(ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(0));
         }
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (i == 0) {
             Mov(ARMCG::ZRegS(0), p5, ARMCG::ZRegS(1));
         }
@@ -360,8 +344,8 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(0));
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
     Cpy(ARMCG::ZRegS(1), p5, tmpW); // z1 is used as tmp register here
@@ -375,8 +359,7 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         } else {
             Fadd(ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(i * NUM_2), ARMCG::ZRegS(0));
         }
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2));
         if (i == 0) {
             Mov(ARMCG::ZRegS(0), p5, ARMCG::ZRegS(1));
         }
@@ -385,13 +368,13 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(i * NUM_2 + NUM_1), ARMCG::ZRegS(0));
-            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS(i * NUM_2 + NUM_1));
+            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS(i * NUM_2 + NUM_1));
         }
     }
 
     L(addBiasN);
-    Tbz(flags, 9, addBiasM); // 9-bit correspond to Add_BIAS_N
+    Tbz(flags, 9, addBiasM);                     // 9-bit correspond to Add_BIAS_N
     Ld1w(ARMCG::ZRegS(30), p1, Ptr(biaPtrCopy)); // z30 is used as tmp register here
     if (n > vl) {
         Ld1w(ARMCG::ZRegS(31), p3, Ptr(biaPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL)); // z31 is used as tmp here
@@ -405,18 +388,16 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
         Ld1w(ARMCG::ZRegS(i * NUM_2 % NUM_30), p1, Ptr(dstPtrCopy));
-        Fadd(ARMCG::ZRegS(i * NUM_2 % NUM_30), ARMCG::ZRegS(i * NUM_2 % NUM_30),
-            ARMCG::ZRegS(NUM_30));
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2 % NUM_30));
+        Fadd(ARMCG::ZRegS(i * NUM_2 % NUM_30), ARMCG::ZRegS(i * NUM_2 % NUM_30), ARMCG::ZRegS(NUM_30));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2 % NUM_30));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30), ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30),
-                ARMCG::ZRegS(NUM_31));
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30));
+                 ARMCG::ZRegS(NUM_31));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30));
         }
     }
     Cpy(ARMCG::ZRegS(1), p5, tmpW); // z1 is used as tmp register here
@@ -426,17 +407,16 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         // 4 - max imm in MOVA instruction
         Ld1w(ARMCG::ZRegS(i * NUM_2 % NUM_30), p1, Ptr(dstPtrCopy));
         Fadd(ARMCG::ZRegS(i * NUM_2 % NUM_30), ARMCG::ZRegS(i * NUM_2 % NUM_30),
-            ARMCG::ZRegS(NUM_30)); // z30 contains bias value
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS(i * NUM_2 % NUM_30));
+             ARMCG::ZRegS(NUM_30)); // z30 contains bias value
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS(i * NUM_2 % NUM_30));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30), ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30),
-                ARMCG::ZRegS(NUM_31));
-            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30));
+                 ARMCG::ZRegS(NUM_31));
+            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS((i * NUM_2 + NUM_1) % NUM_30));
         }
     }
 
@@ -456,9 +436,8 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         Cpy(ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32), p5, tmpW);
         Ld1w(ARMCG::ZRegS((i * NUM_4) % NUM_32), p1, Ptr(dstPtrCopy));
         Fadd(ARMCG::ZRegS((i * NUM_4) % NUM_32), ARMCG::ZRegS((i * NUM_4) % NUM_32),
-            ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
+             ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
@@ -466,9 +445,9 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
             Cpy(ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32), p5, tmpW);
             Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32),
-                ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
+                 ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
         }
     }
     for (IntType i = 0; i < std::min(m - vl, vl); ++i) {
@@ -480,9 +459,8 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         Cpy(ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32), p5, tmpW);
         Ld1w(ARMCG::ZRegS((i * NUM_4) % NUM_32), p1, Ptr(dstPtrCopy));
         Fadd(ARMCG::ZRegS((i * NUM_4) % NUM_32), ARMCG::ZRegS((i * NUM_4) % NUM_32),
-            ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
+             ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
@@ -490,9 +468,9 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
             Cpy(ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32), p5, tmpW);
             Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32),
-                ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
-            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
+                 ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
+            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
         }
     }
 
@@ -511,18 +489,17 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         Ld1w(ARMCG::ZRegS((i * NUM_4) % NUM_32), p1, Ptr(dstPtrCopy));
         Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32), p1, Ptr(biaPtrCopy));
         Fadd(ARMCG::ZRegS((i * NUM_4) % NUM_32), ARMCG::ZRegS((i * NUM_4) % NUM_32),
-            ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
-        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
+             ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
+        Mova(ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32), p3, Ptr(biaPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32),
-                ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
-            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
+                 ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
+            Mova(ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
         }
     }
     for (IntType i = 0; i < std::min(m - vl, vl); ++i) {
@@ -533,26 +510,25 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         Ld1w(ARMCG::ZRegS((i * NUM_4) % NUM_32), p1, Ptr(dstPtrCopy));
         Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32), p1, Ptr(biaPtrCopy));
         Fadd(ARMCG::ZRegS((i * NUM_4) % NUM_32), ARMCG::ZRegS((i * NUM_4) % NUM_32),
-            ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
-        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-            p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
+             ARMCG::ZRegS((i * NUM_4 + NUM_1) % NUM_32));
+        Mova(ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p1, ARMCG::ZRegS((i * NUM_4) % NUM_32));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
             Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Ld1w(ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32), p3, Ptr(biaPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
             Fadd(ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32), ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32),
-                ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
-            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4,
-                p3, ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
+                 ARMCG::ZRegS((i * NUM_4 + NUM_3) % NUM_32));
+            Mova(ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4, p3,
+                 ARMCG::ZRegS((i * NUM_4 + NUM_2) % NUM_32));
         }
     }
 
     L(initDone);
 }
 
-void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType>::GenerateKLoop(
-    IntType m, IntType n, IntType k, IntType vl)
+void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float,
+                                    MatmulDummyType>::GenerateKLoop(IntType m, IntType n, IntType k, IntType vl)
 {
     ARMCG::Label kLoopHead;
     Mov(kTmpCopy, kVal);
@@ -586,47 +562,47 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         Addvl(weiPtrCopy, weiPtrCopy, kernelNSize * kLoopUnroll);
         if (k > kLoopUnroll) {
             L(kLoopHead);
-                Fmopa(ARMCG::ZARegS(NUM_0), p0, p1, ARMCG::ZRegS(NUM_0), ARMCG::ZRegS(NUM_1));
-                Subs(kTmpCopy, kTmpCopy, kLoopUnroll);
-                if (n > vl) {
-                    Fmopa(ARMCG::ZARegS(NUM_1), p0, p3, ARMCG::ZRegS(NUM_0), ARMCG::ZRegS(NUM_3));
-                }
-                Ld1w(ARMCG::ZRegS(NUM_0), p0, Ptr(srcPtrCopy));
-                if (m > vl) {
-                    Fmopa(ARMCG::ZARegS(NUM_2), p2, p1, ARMCG::ZRegS(NUM_2), ARMCG::ZRegS(NUM_1));
-                }
-                Ld1w(ARMCG::ZRegS(NUM_1), p1, Ptr(weiPtrCopy));
-                if ((m > vl) && (n > vl)) {
-                    Fmopa(ARMCG::ZARegS(NUM_3), p2, p3, ARMCG::ZRegS(NUM_2), ARMCG::ZRegS(NUM_3));
-                }
-                if (m > vl) {
-                    Ld1w(ARMCG::ZRegS(NUM_2), p2, Ptr(srcPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
-                }
-                if (n > vl) {
-                    Ld1w(ARMCG::ZRegS(NUM_3), p3, Ptr(weiPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
-                }
+            Fmopa(ARMCG::ZARegS(NUM_0), p0, p1, ARMCG::ZRegS(NUM_0), ARMCG::ZRegS(NUM_1));
+            Subs(kTmpCopy, kTmpCopy, kLoopUnroll);
+            if (n > vl) {
+                Fmopa(ARMCG::ZARegS(NUM_1), p0, p3, ARMCG::ZRegS(NUM_0), ARMCG::ZRegS(NUM_3));
+            }
+            Ld1w(ARMCG::ZRegS(NUM_0), p0, Ptr(srcPtrCopy));
+            if (m > vl) {
+                Fmopa(ARMCG::ZARegS(NUM_2), p2, p1, ARMCG::ZRegS(NUM_2), ARMCG::ZRegS(NUM_1));
+            }
+            Ld1w(ARMCG::ZRegS(NUM_1), p1, Ptr(weiPtrCopy));
+            if ((m > vl) && (n > vl)) {
+                Fmopa(ARMCG::ZARegS(NUM_3), p2, p3, ARMCG::ZRegS(NUM_2), ARMCG::ZRegS(NUM_3));
+            }
+            if (m > vl) {
+                Ld1w(ARMCG::ZRegS(NUM_2), p2, Ptr(srcPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
+            }
+            if (n > vl) {
+                Ld1w(ARMCG::ZRegS(NUM_3), p3, Ptr(weiPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
+            }
 
-                Fmopa(ARMCG::ZARegS(NUM_0), p0, p1, ARMCG::ZRegS(NUM_4), ARMCG::ZRegS(NUM_5));
-                if (n > vl) {
-                    Fmopa(ARMCG::ZARegS(NUM_1), p0, p3, ARMCG::ZRegS(NUM_4), ARMCG::ZRegS(NUM_7));
-                }
-                Ld1w(ARMCG::ZRegS(NUM_4), p0, Ptr(srcPtrCopy, NUM_2, ARMCG::ExtMod::MUL_VL));
-                if (m > vl) {
-                    Fmopa(ARMCG::ZARegS(NUM_2), p2, p1, ARMCG::ZRegS(NUM_6), ARMCG::ZRegS(NUM_5));
-                }
-                Ld1w(ARMCG::ZRegS(NUM_5), p1, Ptr(weiPtrCopy, NUM_2, ARMCG::ExtMod::MUL_VL));
-                if ((m > vl) && (n > vl)) {
-                    Fmopa(ARMCG::ZARegS(NUM_3), p2, p3, ARMCG::ZRegS(NUM_6), ARMCG::ZRegS(NUM_7));
-                }
-                if (m > vl) {
-                    Ld1w(ARMCG::ZRegS(NUM_6), p2, Ptr(srcPtrCopy, NUM_3, ARMCG::ExtMod::MUL_VL));
-                }
-                if (n > vl) {
-                    Ld1w(ARMCG::ZRegS(NUM_7), p3, Ptr(weiPtrCopy, NUM_3, ARMCG::ExtMod::MUL_VL));
-                }
+            Fmopa(ARMCG::ZARegS(NUM_0), p0, p1, ARMCG::ZRegS(NUM_4), ARMCG::ZRegS(NUM_5));
+            if (n > vl) {
+                Fmopa(ARMCG::ZARegS(NUM_1), p0, p3, ARMCG::ZRegS(NUM_4), ARMCG::ZRegS(NUM_7));
+            }
+            Ld1w(ARMCG::ZRegS(NUM_4), p0, Ptr(srcPtrCopy, NUM_2, ARMCG::ExtMod::MUL_VL));
+            if (m > vl) {
+                Fmopa(ARMCG::ZARegS(NUM_2), p2, p1, ARMCG::ZRegS(NUM_6), ARMCG::ZRegS(NUM_5));
+            }
+            Ld1w(ARMCG::ZRegS(NUM_5), p1, Ptr(weiPtrCopy, NUM_2, ARMCG::ExtMod::MUL_VL));
+            if ((m > vl) && (n > vl)) {
+                Fmopa(ARMCG::ZARegS(NUM_3), p2, p3, ARMCG::ZRegS(NUM_6), ARMCG::ZRegS(NUM_7));
+            }
+            if (m > vl) {
+                Ld1w(ARMCG::ZRegS(NUM_6), p2, Ptr(srcPtrCopy, NUM_3, ARMCG::ExtMod::MUL_VL));
+            }
+            if (n > vl) {
+                Ld1w(ARMCG::ZRegS(NUM_7), p3, Ptr(weiPtrCopy, NUM_3, ARMCG::ExtMod::MUL_VL));
+            }
 
-                Addvl(srcPtrCopy, srcPtrCopy, kernelMSize * kLoopUnroll);
-                Addvl(weiPtrCopy, weiPtrCopy, kernelNSize * kLoopUnroll);
+            Addvl(srcPtrCopy, srcPtrCopy, kernelMSize * kLoopUnroll);
+            Addvl(weiPtrCopy, weiPtrCopy, kernelNSize * kLoopUnroll);
 
             B(ARMCG::Cond::GT, kLoopHead);
         }
@@ -656,8 +632,8 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
     }
 }
 
-void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float, MatmulDummyType>::StoreDstRegisters(
-    IntType m, IntType n, IntType vl)
+void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float, float,
+                                    MatmulDummyType>::StoreDstRegisters(IntType m, IntType n, IntType vl)
 {
     for (IntType i = 0; i < std::min(m, vl); ++i) {
         if (i == 0) {
@@ -667,14 +643,13 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         }
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZRegS(i * NUM_2), p1, ARMCG::ZARegHS(0),
-            ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4);
+        Mova(ARMCG::ZRegS(i * NUM_2), p1, ARMCG::ZARegHS(0), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4);
         St1w(ARMCG::ZRegS(i * NUM_2), p1, Ptr(dstPtrCopy));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
-            Mova(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, ARMCG::ZARegHS(NUM_1),
-                ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4);
+            Mova(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, ARMCG::ZARegHS(NUM_1), ARMCG::WReg(NUM_12 + i / NUM_4),
+                 i % NUM_4);
             St1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
         }
     }
@@ -683,22 +658,21 @@ void MatMulKernelDefaultCodeGenImpl<ARCH::MatrixComputation, float, float, float
         Add(dstPtrCopy, dstPtrCopy, dstOffset);
         // 2 - use even numbered Z registers as tmp, 12 - number of first w register
         // 4 - max imm in MOVA instruction
-        Mova(ARMCG::ZRegS(i * NUM_2), p1, ARMCG::ZARegHS(NUM_2),
-            ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4);
+        Mova(ARMCG::ZRegS(i * NUM_2), p1, ARMCG::ZARegHS(NUM_2), ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4);
         St1w(ARMCG::ZRegS(i * NUM_2), p1, Ptr(dstPtrCopy));
         if (n > vl) {
             // 2 - use odd numbered Z registers as tmp, 12 - number of first w register
             // 4 - max imm in MOVA instruction
-            Mova(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, ARMCG::ZARegHS(NUM_3),
-                ARMCG::WReg(NUM_12 + i / NUM_4), i % NUM_4);
+            Mova(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, ARMCG::ZARegHS(NUM_3), ARMCG::WReg(NUM_12 + i / NUM_4),
+                 i % NUM_4);
             St1w(ARMCG::ZRegS(i * NUM_2 + NUM_1), p3, Ptr(dstPtrCopy, NUM_1, ARMCG::ExtMod::MUL_VL));
         }
     }
 }
 
 using MatrixComputationFloatGen = MatMulKernelDefaultCodeGen<ARCH::MatrixComputation, float, float, float, float>;
-MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::DefaultImpl(
-    const GemmInfo &task, IntType nThreads) : MatMulImplBase(task, nThreads)
+MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::DefaultImpl(const GemmInfo &task, IntType nThreads)
+    : MatMulImplBase(task, nThreads)
 {
     VERBOSE_PRINT;
     UpdateExecParams();
@@ -715,9 +689,9 @@ std::uint32_t MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::GetKe
     return CodeGen::kernelNSize * svcntw();
 }
 
-void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::InitializeCodeGens(IntType m, IntType n, IntType k, IntType vl,
-    SizeType offsetSrc, SizeType offsetWei, SizeType offsetDst, SizeType offsetBia,
-    bool wereSrcWeiSwapped)
+void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::InitializeCodeGens(
+    IntType m, IntType n, IntType k, IntType vl, SizeType offsetSrc, SizeType offsetWei, SizeType offsetDst,
+    SizeType offsetBia, bool wereSrcWeiSwapped)
 {
     Service::Unused(offsetSrc, offsetWei, wereSrcWeiSwapped); // they are actually not used by implementation
     IntType mSubBlockExecFull = CodeGen::kernelMSize * vl;
@@ -727,65 +701,59 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::InitializeCode
     IntType kBlockExecFull = CodeGen::GetKBlockSize(m, n, k);
     IntType kBlockExecResid = k % CodeGen::GetKBlockSize(m, n, k);
     CodeGenWrapper<CodeGen> cgw0;
-    cgw0.Initialize(mSubBlockExecFull, nSubBlockExecFull, kBlockExecFull,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
+    cgw0.Initialize(mSubBlockExecFull, nSubBlockExecFull, kBlockExecFull, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
     CodeGenWrapper<CodeGen> cgw1;
-    cgw1.Initialize(mSubBlockExecFull, nSubBlockExecFull, kBlockExecResid,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
+    cgw1.Initialize(mSubBlockExecFull, nSubBlockExecFull, kBlockExecResid, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
     CodeGenWrapper<CodeGen> cgw2;
-    cgw2.Initialize(mSubBlockExecFull, nSubBlockExecResid, kBlockExecFull,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
+    cgw2.Initialize(mSubBlockExecFull, nSubBlockExecResid, kBlockExecFull, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
     CodeGenWrapper<CodeGen> cgw3;
-    cgw3.Initialize(mSubBlockExecFull, nSubBlockExecResid, kBlockExecResid,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
+    cgw3.Initialize(mSubBlockExecFull, nSubBlockExecResid, kBlockExecResid, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
     CodeGenWrapper<CodeGen> cgw4;
-    cgw4.Initialize(mSubBlockExecResid, nSubBlockExecFull, kBlockExecFull,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
+    cgw4.Initialize(mSubBlockExecResid, nSubBlockExecFull, kBlockExecFull, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
     CodeGenWrapper<CodeGen> cgw5;
-    cgw5.Initialize(mSubBlockExecResid, nSubBlockExecFull, kBlockExecResid,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
+    cgw5.Initialize(mSubBlockExecResid, nSubBlockExecFull, kBlockExecResid, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
     CodeGenWrapper<CodeGen> cgw6;
-    cgw6.Initialize(mSubBlockExecResid, nSubBlockExecResid, kBlockExecFull,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
+    cgw6.Initialize(mSubBlockExecResid, nSubBlockExecResid, kBlockExecFull, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
     CodeGenWrapper<CodeGen> cgw7;
-    cgw7.Initialize(mSubBlockExecResid, nSubBlockExecResid, kBlockExecResid,
-        static_cast<IntType>(offsetSrc), static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst),
-        static_cast<IntType>(offsetBia));
-    perThreadImpls.push_back({std::move(cgw0), std::move(cgw1), std::move(cgw2), std::move(cgw3),
-        std::move(cgw4), std::move(cgw5), std::move(cgw6), std::move(cgw7)});
+    cgw7.Initialize(mSubBlockExecResid, nSubBlockExecResid, kBlockExecResid, static_cast<IntType>(offsetSrc),
+                    static_cast<IntType>(offsetWei), static_cast<IntType>(offsetDst), static_cast<IntType>(offsetBia));
+    perThreadImpls.push_back({std::move(cgw0), std::move(cgw1), std::move(cgw2), std::move(cgw3), std::move(cgw4),
+                              std::move(cgw5), std::move(cgw6), std::move(cgw7)});
 }
 
-IntType MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::GetThreadBufSize(
-    IntType m, IntType n, IntType k, IntType vl) noexcept
+IntType MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::GetThreadBufSize(IntType m, IntType n, IntType k,
+                                                                                      IntType vl) noexcept
 {
     IntType mRoundedUp = Math::CeilDiv(m, CodeGen::kernelMSize * vl) * CodeGen::kernelMSize * vl;
     IntType nRoundedUp = Math::CeilDiv(n, CodeGen::kernelNSize * vl) * CodeGen::kernelNSize * vl;
     IntType kRoundedUp = Math::CeilDiv(k, CodeGen::kLoopUnroll) * CodeGen::kLoopUnroll;
     return static_cast<IntType>(std::min(CodeGen::GetKBlockSize(m, n, k), kRoundedUp) *
-        (std::min(CodeGen::GetMBlockSize(m, n, k), mRoundedUp) * sizeof(SrcType) +
-            std::min(CodeGen::GetNBlockSize(m, n, k), nRoundedUp) * sizeof(WeiType)));
+                                (std::min(CodeGen::GetMBlockSize(m, n, k), mRoundedUp) * sizeof(SrcType) +
+                                 std::min(CodeGen::GetNBlockSize(m, n, k), nRoundedUp) * sizeof(WeiType)));
 }
 
 void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::ReserveImplSpecificParams() {}
 
 std::vector<std::pair<Shape, Shape>> MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::SplitWork()
 {
-    return CalculateWorkOnThread<DefaultImpl>(taskExec.dstInfo.GetDims(), implNThreads,
-        dstLayout2D == Layout::BA, taskExec.srcInfo.GetDims()[taskExec.srcInfo.GetNumDims() - 1] > 256); // 256
-        // is a number indicating that k is big enough to omit condition mWork % kernelMSize == 0 (same for n)
+    return CalculateWorkOnThread<DefaultImpl>(
+        taskExec.dstInfo.GetDims(), implNThreads, dstLayout2D == Layout::BA,
+        taskExec.srcInfo.GetDims()[taskExec.srcInfo.GetNumDims() - 1] > 256); // 256
+    // is a number indicating that k is big enough to omit condition mWork % kernelMSize == 0 (same for n)
 }
 
 // used for packing both Src and Wei matrices
 template <bool AlphaMul>
-void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackSimilarLt(IntType m, IntType k,
-    const float *src, IntType offset, float *buffer, IntType bufferOffset, float alpha)
+void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackSimilarLt(IntType m, IntType k, const float *src,
+                                                                                IntType offset, float *buffer,
+                                                                                IntType bufferOffset, float alpha)
 {
     IntType vl = svcntw();
     svbool_t ptrue = svptrue_b32();
@@ -808,8 +776,9 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackSimilarLt(
 
 // used for packing both Src and Wei matrices
 template <bool AlphaMul>
-void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackDiffLt(IntType m, IntType k,
-    const float *src, IntType offset, float *buffer, IntType bufferOffset, float alpha)
+void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackDiffLt(IntType m, IntType k, const float *src,
+                                                                             IntType offset, float *buffer,
+                                                                             IntType bufferOffset, float alpha)
 {
     const IntType vl = svcntw();
     IntType idxOffset = 0;
@@ -822,9 +791,8 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackDiffLt(Int
             for (IntType kIdx = k; kIdx > 0; kIdx -= vl) {
                 IntType kIdxReorder = std::min(vl, kIdx) - 1;
                 Reorder::TRANSPOSE_REORDER_FUNC_ARR[mIdxReorder * vl + kIdxReorder + idxOffset](
-                    src + (m - mIdx) * offset + (k - kIdx),
-                    buffer + (k - kIdx) * bufferOffset + k * (m - mIdx), offset * sizeof(float),
-                    bufferOffset * sizeof(float), alpha);
+                    src + (m - mIdx) * offset + (k - kIdx), buffer + (k - kIdx) * bufferOffset + k * (m - mIdx),
+                    offset * sizeof(float), bufferOffset * sizeof(float), alpha);
             }
         } else {
             IntType mIdxReorder1 = vl - 1;
@@ -832,9 +800,8 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackDiffLt(Int
             for (IntType kIdx = k; kIdx > 0; kIdx -= vl) {
                 IntType kIdxReorder = std::min(vl, kIdx) - 1;
                 Reorder::TRANSPOSE_REORDER_FUNC_ARR[mIdxReorder1 * vl + kIdxReorder + idxOffset](
-                    src + (m - mIdx) * offset + (k - kIdx),
-                    buffer + (k - kIdx) * bufferOffset + k * (m - mIdx), offset * sizeof(float),
-                    bufferOffset * sizeof(float), alpha);
+                    src + (m - mIdx) * offset + (k - kIdx), buffer + (k - kIdx) * bufferOffset + k * (m - mIdx),
+                    offset * sizeof(float), bufferOffset * sizeof(float), alpha);
                 Reorder::TRANSPOSE_REORDER_FUNC_ARR[mIdxReorder2 * vl + kIdxReorder + idxOffset](
                     src + (m - mIdx + vl) * offset + (k - kIdx),
                     buffer + (k - kIdx) * bufferOffset + k * (m - mIdx) + vl, offset * sizeof(float),
@@ -844,9 +811,11 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::PackDiffLt(Int
     }
 }
 
-void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::RunSequential2D(
-    IntType threadId, const void *src, const void *wei, void *dst,
-    const void *bia, void *buffer, float alpha, float beta) const noexcept(false)
+void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::RunSequential2D(IntType threadId, const void *src,
+                                                                                  const void *wei, void *dst,
+                                                                                  const void *bia, void *buffer,
+                                                                                  float alpha, float beta) const
+    noexcept(false)
 {
     VERBOSE_PRINT;
     IntType m = perThreadParams[threadId].m;
@@ -855,10 +824,10 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::RunSequential2
     IntType vl = svcntw();
     IntType mRoundedUp = Math::CeilDiv(m, CodeGen::kernelMSize * vl) * CodeGen::kernelMSize * vl;
     IntType kRoundedUp = Math::CeilDiv(k, CodeGen::kLoopUnroll) * CodeGen::kLoopUnroll;
-    SrcType* srcBuffer = static_cast<SrcType *>(buffer);
-    WeiType* weiBuffer = static_cast<WeiType *>(static_cast<SrcType *>(buffer) +
-        std::min(CodeGen::GetKBlockSize(m, n, k), kRoundedUp) *
-        std::min(CodeGen::GetMBlockSize(m, n, k), mRoundedUp));
+    SrcType *srcBuffer = static_cast<SrcType *>(buffer);
+    WeiType *weiBuffer = static_cast<WeiType *>(static_cast<SrcType *>(buffer) +
+                                                std::min(CodeGen::GetKBlockSize(m, n, k), kRoundedUp) *
+                                                    std::min(CodeGen::GetMBlockSize(m, n, k), mRoundedUp));
     for (IntType mBlock = 0; mBlock < m; mBlock += CodeGen::GetMBlockSize(m, n, k)) {
         auto mBlockExec = std::min(CodeGen::GetMBlockSize(m, n, k), m - mBlock);
         for (IntType kBlock = 0; kBlock < k; kBlock += CodeGen::GetKBlockSize(m, n, k)) {
@@ -876,57 +845,57 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::RunSequential2
                     if (nBlock == 0) {
                         if (perThreadParams[threadId].srcLayout2D == Layout::COL_MAJOR) {
                             const SrcType *srcExec = static_cast<const SrcType *>(src) + mBlock + mSubBlock +
-                                kBlock * perThreadParams[threadId].srcOffset2D;
+                                                     kBlock * perThreadParams[threadId].srcOffset2D;
                             if (alpha != 1) {
-                                PackSimilarLt<true>(mSubBlockExec, kBlockExec, srcExec,
-                                    perThreadParams[threadId].srcOffset2D, srcBuffer + kBlockExec * mSubBlock,
-                                    CodeGen::kernelMSize * vl, alpha);
+                                PackSimilarLt<true>(
+                                    mSubBlockExec, kBlockExec, srcExec, perThreadParams[threadId].srcOffset2D,
+                                    srcBuffer + kBlockExec * mSubBlock, CodeGen::kernelMSize * vl, alpha);
                             } else {
                                 PackSimilarLt<false>(mSubBlockExec, kBlockExec, srcExec,
-                                    perThreadParams[threadId].srcOffset2D, srcBuffer + kBlockExec * mSubBlock,
-                                    CodeGen::kernelMSize * vl);
+                                                     perThreadParams[threadId].srcOffset2D,
+                                                     srcBuffer + kBlockExec * mSubBlock, CodeGen::kernelMSize * vl);
                             }
                         } else {
                             const SrcType *srcExec = static_cast<const SrcType *>(src) +
-                                (mBlock + mSubBlock) * perThreadParams[threadId].srcOffset2D + kBlock;
+                                                     (mBlock + mSubBlock) * perThreadParams[threadId].srcOffset2D +
+                                                     kBlock;
                             if (alpha != 1) {
                                 PackDiffLt<true>(mSubBlockExec, kBlockExec, srcExec,
-                                    perThreadParams[threadId].srcOffset2D, srcBuffer + kBlockExec * mSubBlock,
-                                    CodeGen::kernelMSize * vl, alpha);
+                                                 perThreadParams[threadId].srcOffset2D,
+                                                 srcBuffer + kBlockExec * mSubBlock, CodeGen::kernelMSize * vl, alpha);
                             } else {
                                 PackDiffLt<false>(mSubBlockExec, kBlockExec, srcExec,
-                                    perThreadParams[threadId].srcOffset2D, srcBuffer + kBlockExec * mSubBlock,
-                                    CodeGen::kernelMSize * vl);
+                                                  perThreadParams[threadId].srcOffset2D,
+                                                  srcBuffer + kBlockExec * mSubBlock, CodeGen::kernelMSize * vl);
                             }
                         }
                     }
                     for (IntType nSubBlock = 0; nSubBlock < nBlockExec; nSubBlock += CodeGen::kernelNSize * vl) {
                         IntType nSubBlockExec = std::min(CodeGen::kernelNSize * vl, nBlockExec - nSubBlock);
                         int nIdx = (nSubBlockExec == (CodeGen::kernelNSize * vl)) ? 0 : 1;
-                    if (mSubBlock == 0) {
-                        if (perThreadParams[threadId].weiLayout2D == Layout::ROW_MAJOR) {
-                            const WeiType *weiExec = static_cast<const WeiType *>(wei) + nBlock + nSubBlock +
-                                kBlock * perThreadParams[threadId].weiOffset2D;
-                            PackSimilarLt(nSubBlockExec, kBlockExec, weiExec,
-                                perThreadParams[threadId].weiOffset2D, weiBuffer + kBlockExec * nSubBlock,
-                                CodeGen::kernelNSize * vl);
-                        } else {
-                            const WeiType *weiExec = static_cast<const WeiType *>(wei) +
-                                (nBlock + nSubBlock) * perThreadParams[threadId].weiOffset2D + kBlock;
-                            PackDiffLt(nSubBlockExec, kBlockExec, weiExec,
-                                perThreadParams[threadId].weiOffset2D, weiBuffer + kBlockExec * nSubBlock,
-                                CodeGen::kernelNSize * vl);
+                        if (mSubBlock == 0) {
+                            if (perThreadParams[threadId].weiLayout2D == Layout::ROW_MAJOR) {
+                                const WeiType *weiExec = static_cast<const WeiType *>(wei) + nBlock + nSubBlock +
+                                                         kBlock * perThreadParams[threadId].weiOffset2D;
+                                PackSimilarLt(nSubBlockExec, kBlockExec, weiExec, perThreadParams[threadId].weiOffset2D,
+                                              weiBuffer + kBlockExec * nSubBlock, CodeGen::kernelNSize * vl);
+                            } else {
+                                const WeiType *weiExec = static_cast<const WeiType *>(wei) +
+                                                         (nBlock + nSubBlock) * perThreadParams[threadId].weiOffset2D +
+                                                         kBlock;
+                                PackDiffLt(nSubBlockExec, kBlockExec, weiExec, perThreadParams[threadId].weiOffset2D,
+                                           weiBuffer + kBlockExec * nSubBlock, CodeGen::kernelNSize * vl);
+                            }
                         }
-                    }
-                    DstType *dstExec = static_cast<DstType *>(dst) + nBlock + nSubBlock +
-                        (mBlock + mSubBlock) * perThreadParams[threadId].dstOffset2D;
-                    const BiaType *biaExec = static_cast<const BiaType *>(bia) + (nBlock + nSubBlock) * biaNOffset +
-                        (mBlock + mSubBlock) * perThreadParams[threadId].biaOffset2D;
-                    auto kernel =
-                        perThreadImpls[threadId][mIdx * NUM_4 + nIdx * NUM_2 + kIdx].template GetCode<void (*)(
-                        const SrcType *, const WeiType *, DstType *, const BiaType *, DstLoadFlags, float)>();
-                    kernel(srcBuffer + mSubBlock * kBlockExec, weiBuffer + nSubBlock * kBlockExec,
-                        dstExec, biaExec, biaFlagsExec, beta);
+                        DstType *dstExec = static_cast<DstType *>(dst) + nBlock + nSubBlock +
+                                           (mBlock + mSubBlock) * perThreadParams[threadId].dstOffset2D;
+                        const BiaType *biaExec = static_cast<const BiaType *>(bia) + (nBlock + nSubBlock) * biaNOffset +
+                                                 (mBlock + mSubBlock) * perThreadParams[threadId].biaOffset2D;
+                        auto kernel = perThreadImpls[threadId][mIdx * NUM_4 + nIdx * NUM_2 + kIdx]
+                                          .template GetCode<void (*)(const SrcType *, const WeiType *, DstType *,
+                                                                     const BiaType *, DstLoadFlags, float)>();
+                        kernel(srcBuffer + mSubBlock * kBlockExec, weiBuffer + nSubBlock * kBlockExec, dstExec, biaExec,
+                               biaFlagsExec, beta);
                     }
                 }
             }
@@ -953,11 +922,12 @@ void MatMulImplGenerator<MatrixComputationFloatGen>::DefaultImpl::UpdateExecPara
     if (implTask.biaInfo.GetTotalTensorSize() != 0) {
         desiredBiaLayout = desiredDstLayout;
     }
-    InitializeTaskExec(desiredSrcLayout, desiredWeiLayout, desiredDstLayout, desiredBiaLayout,
-        GetSrcType(), GetWeiType(), GetDstType(),
-        (implTask.biaInfo.GetTotalTensorSize() != 0) ? GetBiaType() :
-            static_cast<Element::TypeT>(implTask.biaInfo.GetType()));
+    InitializeTaskExec(desiredSrcLayout, desiredWeiLayout, desiredDstLayout, desiredBiaLayout, GetSrcType(),
+                       GetWeiType(), GetDstType(),
+                       (implTask.biaInfo.GetTotalTensorSize() != 0) ?
+                           GetBiaType() :
+                           static_cast<Element::TypeT>(implTask.biaInfo.GetType()));
 }
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -12,8 +12,8 @@
 
 #include "kernels/vml/vml_sve_base.h"
 
-__attribute__((always_inline)) static inline svfloat16_t FmaF16CvtF32(svfloat16_t x,
-    svfloat32_t va, svfloat32_t vb, svbool_t pgB16, svbool_t pgB32)
+__attribute__((always_inline)) static inline svfloat16_t FmaF16CvtF32(svfloat16_t x, svfloat32_t va, svfloat32_t vb,
+                                                                      svbool_t pgB16, svbool_t pgB32)
 {
     svfloat32_t xfEven = svcvt_f32_f16_x(pgB16, x);
     svfloat32_t xfOdd = CvtOddF32F16(x, pgB16, pgB32);
@@ -44,8 +44,8 @@ void HardSigmoidLaSveFWDF16(const int64_t len, const float alpha, const float be
     }
 }
 
-void HardSigmoidLaSveBWDF16(const int64_t len, const float alpha, const float beta,
-    const __fp16 *src, const __fp16 *dd, __fp16 *ds)
+void HardSigmoidLaSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+                            __fp16 *ds)
 {
     int64_t i;
     int loopHardSigmoidh = svcnth();

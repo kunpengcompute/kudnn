@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -15,9 +15,9 @@
 
 #include "kernels/vml/vml_sve_la_tanh.h"
 
-#define VectorComputation_GELU_TANHF_FITTING             svdup_n_f32(0x1.6e4e26p-5f) // 0x3d372713 0.044715
+#define VectorComputation_GELU_TANHF_FITTING svdup_n_f32(0x1.6e4e26p-5f)             // 0x3d372713 0.044715
 #define VectorComputation_GELU_TANHF_FITTING_THREE_TIMES svdup_n_f32(0x1.12ba9ep-3f) // 0x3e095d4f 0.134145
-#define VectorComputation_GELU_TANHF_SQRT_TWO_OVER_PI    svdup_n_f32(0x1.988454p-1f) // 0x3f4c422a
+#define VectorComputation_GELU_TANHF_SQRT_TWO_OVER_PI svdup_n_f32(0x1.988454p-1f)    // 0x3f4c422a
 
 inline svfloat32_t SvGeluTanhF32X(svfloat32_t x, svbool_t pg)
 {

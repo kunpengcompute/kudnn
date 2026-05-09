@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -55,5 +55,5 @@ std::unique_ptr<ParallelBackend> create_parallel_backend()
     return std::make_unique<OpenMPBackend>();
 }
 
-}  // namespace Threading
-}  // namespace KuDNN
+} // namespace Threading
+} // namespace KuDNN

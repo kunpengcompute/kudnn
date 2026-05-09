@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -39,9 +39,8 @@ struct ConvolutionParams {
 class ConvolutionBase {
 public:
     using SizeType = ::KuDNN::SizeType;
-    ConvolutionBase(const TensorInfo &inputTensor, const TensorInfo &kernelTensor,
-        const TensorInfo &outputTensor, const Shape& strides, const Shape& dilates,
-        const Shape& paddingL, const Shape& paddingR)
+    ConvolutionBase(const TensorInfo &inputTensor, const TensorInfo &kernelTensor, const TensorInfo &outputTensor,
+                    const Shape &strides, const Shape &dilates, const Shape &paddingL, const Shape &paddingR)
         : inputType(inputTensor.GetType()), kernelType(kernelTensor.GetType()), outputType(outputTensor.GetType())
     {
         params.isGroup = inputTensor.GetNumDims() != kernelTensor.GetNumDims();
@@ -76,7 +75,7 @@ public:
     }
 
     static Status ValidateStridesDilatesPadding(const Shape &argStrides, const Shape &argDilates,
-        const Shape &argPaddingL, const Shape &argPaddingR)
+                                                const Shape &argPaddingL, const Shape &argPaddingR)
     {
         for (SizeType i = 0; i < argStrides.GetNumDims(); ++i) {
             if (argStrides[i] == 0) {
@@ -99,8 +98,8 @@ public:
     }
 
     static Status ValidateAlgSizesConv(const Shape &argStrides, const Shape &argDilates, const Shape &argPaddingL,
-        const Shape &argPaddingR, ConvolutionAlgorithm argAlg, const TensorInfo &src, const TensorInfo &wei,
-        const TensorInfo &dst)
+                                       const Shape &argPaddingR, ConvolutionAlgorithm argAlg, const TensorInfo &src,
+                                       const TensorInfo &wei, const TensorInfo &dst)
     {
         if (argAlg == ConvolutionAlgorithm::UNIMPLEMENTED) {
             return Status::BAD_ARGUMENTS;
@@ -111,26 +110,26 @@ public:
         bool gConv = src.GetNumDims() != wei.GetNumDims();
         SizeType numDims = src.GetNumDims();
         SizeType ow = ComputeOutConvolution(src.GetDims()[numDims - 1],
-            wei.GetDims()[(gConv ? numDims : (numDims - IDX_1))],
-            argStrides[numDims - DIM_3], argPaddingL[numDims - DIM_3],
-            argPaddingR[numDims - DIM_3], argDilates[numDims - DIM_3]);
+                                            wei.GetDims()[(gConv ? numDims : (numDims - IDX_1))],
+                                            argStrides[numDims - DIM_3], argPaddingL[numDims - DIM_3],
+                                            argPaddingR[numDims - DIM_3], argDilates[numDims - DIM_3]);
         if (dst.GetDims()[numDims - 1] != ow) {
             return Status::BAD_ARGUMENTS;
         }
         if (numDims >= DIM_4) {
             SizeType oh = ComputeOutConvolution(src.GetDims()[numDims - 2],
-                wei.GetDims()[(gConv ? (numDims - IDX_1) : (numDims - IDX_2))],
-                argStrides[numDims - DIM_4], argPaddingL[numDims - DIM_4],
-                argPaddingR[numDims - DIM_4], argDilates[numDims - DIM_4]);
+                                                wei.GetDims()[(gConv ? (numDims - IDX_1) : (numDims - IDX_2))],
+                                                argStrides[numDims - DIM_4], argPaddingL[numDims - DIM_4],
+                                                argPaddingR[numDims - DIM_4], argDilates[numDims - DIM_4]);
             if (dst.GetDims()[numDims - DIM_2] != oh) {
                 return Status::BAD_ARGUMENTS;
             }
         }
         if (numDims == DIM_5) {
             SizeType od = ComputeOutConvolution(src.GetDims()[numDims - 3],
-                wei.GetDims()[(gConv ? (numDims - IDX_2) : (numDims - IDX_3))],
-                argStrides[numDims - DIM_5], argPaddingL[numDims - DIM_5],
-                argPaddingR[numDims - DIM_5], argDilates[numDims - DIM_5]);
+                                                wei.GetDims()[(gConv ? (numDims - IDX_2) : (numDims - IDX_3))],
+                                                argStrides[numDims - DIM_5], argPaddingL[numDims - DIM_5],
+                                                argPaddingR[numDims - DIM_5], argDilates[numDims - DIM_5]);
             if (dst.GetDims()[numDims - DIM_3] != od) {
                 return Status::BAD_ARGUMENTS;
             }
@@ -138,9 +137,9 @@ public:
         return Status::SUCCESS;
     }
 
-    template<typename... Args>
+    template <typename... Args>
     static Status ValidateDataShapes(const TensorInfo &src, const TensorInfo &wei, const TensorInfo &dst,
-        Args&& ... args)
+                                     Args &&...args)
     {
         static_assert(sizeof...(args) <= 1, "This function supports at most one additional arg");
         bool gConv = src.GetNumDims() != wei.GetNumDims();
@@ -178,10 +177,10 @@ public:
         return Status::SUCCESS;
     }
 
-    template<typename... Args>
+    template <typename... Args>
     static Status ValidateDataTypes(const Shape &argStrides, const Shape &argDilates, const Shape &argPaddingL,
-        const Shape &argPaddingR, const TensorInfo &in1, const TensorInfo &in2,
-        const TensorInfo &out, Args... args)
+                                    const Shape &argPaddingR, const TensorInfo &in1, const TensorInfo &in2,
+                                    const TensorInfo &out, Args... args)
     {
         static_assert(sizeof...(args) <= 1, "This function supports at most one additional arg");
         if (ValidateStridesDilatesPadding(argStrides, argDilates, argPaddingL, argPaddingR) != Status::SUCCESS) {
@@ -191,8 +190,8 @@ public:
             return Status::UNSUPPORTED;
         }
 #ifdef KUDNNL_920Pro
-        bool precisionCond = ((out.GetType() == Element::TypeT::U8) || (out.GetType() == Element::TypeT::S8)
-                              || (out.GetType() == Element::TypeT::S32));
+        bool precisionCond = ((out.GetType() == Element::TypeT::U8) || (out.GetType() == Element::TypeT::S8) ||
+                              (out.GetType() == Element::TypeT::S32));
         if (precisionCond) {
             return Status::UNSUPPORTED;
         }
@@ -207,19 +206,19 @@ protected:
     ConvolutionParams params;
 
     template <typename... Args>
-    void CheckIntMultOverflow(Args&&... argGroup) const
+    void CheckIntMultOverflow(Args &&...argGroup) const
     {
-        auto checkOverflow = [](auto&&... args) {
+        auto checkOverflow = [](auto &&...args) {
             return Service::WillIntMultOverflow(std::forward<decltype(args)>(args)...);
         };
 
         if ((... || std::apply(checkOverflow, argGroup))) {
-            throw Service::LogicError {
+            throw Service::LogicError{
                 "Convolution/Deconvolution: specified data sizes caused integer overflow for multiplications"};
         }
     }
 
-    template<typename... Args>
+    template <typename... Args>
     static bool IsAnyNoDense(Args... args)
     {
         return ((!args.IsDense() || ...));
@@ -237,161 +236,152 @@ protected:
     }
 };
 
-template <typename InType, typename KerType, typename OutType, typename Runnable, typename ... Args>
-inline void ConvParseType(Runnable &&runnable, Args && ... args)
-    noexcept(noexcept(std::declval<Runnable>().template Evaluate<InType, KerType, OutType>(args ...)))
+template <typename InType, typename KerType, typename OutType, typename Runnable, typename... Args>
+inline void ConvParseType(Runnable &&runnable, Args &&...args) noexcept(
+    noexcept(std::declval<Runnable>().template Evaluate<InType, KerType, OutType>(args...)))
 {
-    runnable.template Evaluate<InType, KerType, OutType>(args ...);
+    runnable.template Evaluate<InType, KerType, OutType>(args...);
 }
 
-template <bool OutTypeFixFloat, typename InType, typename KerType, typename Runnable, typename ... Args>
-inline void ConvParseType(Element::TypeT outType, Runnable &&runnable,
-    Args && ... args) noexcept(false)
+template <bool OutTypeFixFloat, typename InType, typename KerType, typename Runnable, typename... Args>
+inline void ConvParseType(Element::TypeT outType, Runnable &&runnable, Args &&...args) noexcept(false)
 {
     if constexpr (std::is_same_v<InType, float> && std::is_same_v<KerType, float>) {
         if (outType == Element::TypeT::F32) {
-            ConvParseType<float, float, float>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+            ConvParseType<float, float, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported output data type"};
+            throw Service::Unsupported{"Unsupported output data type"};
         }
     } else if constexpr (std::is_same_v<InType, __fp16> && std::is_same_v<KerType, __fp16>) {
         if constexpr (OutTypeFixFloat) {
-            ConvParseType<__fp16, __fp16, float>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+            ConvParseType<__fp16, __fp16, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
         } else {
             if (outType == Element::TypeT::F32) {
-                ConvParseType<__fp16, __fp16, float>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ConvParseType<__fp16, __fp16, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             } else if (outType == Element::TypeT::F16) {
-                ConvParseType<__fp16, __fp16, __fp16>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ConvParseType<__fp16, __fp16, __fp16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             } else {
-                throw Service::Unsupported {"Unsupported output data type"};
+                throw Service::Unsupported{"Unsupported output data type"};
             }
         }
     } else if constexpr (std::is_same_v<InType, __bf16> && std::is_same_v<KerType, __bf16>) {
         if constexpr (OutTypeFixFloat) {
-            ConvParseType<__bf16, __bf16, float>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+            ConvParseType<__bf16, __bf16, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
         } else {
             if (outType == Element::TypeT::F32) {
-                ConvParseType<__bf16, __bf16, float>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ConvParseType<__bf16, __bf16, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             } else if (outType == Element::TypeT::BF16) {
-                ConvParseType<__bf16, __bf16, __bf16>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                ConvParseType<__bf16, __bf16, __bf16>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
             } else {
-                throw Service::Unsupported {"Unsupported output data type"};
+                throw Service::Unsupported{"Unsupported output data type"};
             }
         }
-    } else if constexpr ((std::is_same_v<InType, std::int8_t> || std::is_same_v<InType, std::uint8_t>)
-        && std::is_same_v<KerType, std::int8_t>) {
+    } else if constexpr ((std::is_same_v<InType, std::int8_t> || std::is_same_v<InType, std::uint8_t>) &&
+                         std::is_same_v<KerType, std::int8_t>) {
         if constexpr (OutTypeFixFloat) {
-            ConvParseType<InType, std::int8_t, float>(std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+            ConvParseType<InType, std::int8_t, float>(std::forward<Runnable>(runnable), std::forward<Args>(args)...);
         } else {
             if (outType == Element::TypeT::F32) {
                 ConvParseType<InType, std::int8_t, float>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                                                          std::forward<Args>(args)...);
             } else if (outType == Element::TypeT::BF16) {
                 ConvParseType<InType, std::int8_t, __bf16>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                                                           std::forward<Args>(args)...);
             } else if (outType == Element::TypeT::S32) {
                 ConvParseType<InType, std::int8_t, std::int32_t>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                                                                 std::forward<Args>(args)...);
             } else if (outType == Element::TypeT::S8) {
                 ConvParseType<InType, std::int8_t, std::int8_t>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                                                                std::forward<Args>(args)...);
             } else if (outType == Element::TypeT::U8) {
                 ConvParseType<InType, std::int8_t, std::uint8_t>(std::forward<Runnable>(runnable),
-                    std::forward<Args>(args) ...);
+                                                                 std::forward<Args>(args)...);
             } else {
-                throw Service::Unsupported {"Unsupported output data type"};
+                throw Service::Unsupported{"Unsupported output data type"};
             }
         }
     } else {
-        throw Service::Unsupported {"Unsupported output data type"};
+        throw Service::Unsupported{"Unsupported output data type"};
     }
 }
 
-template <bool OutTypeFixFloat, typename InType, typename Runnable, typename ... Args>
+template <bool OutTypeFixFloat, typename InType, typename Runnable, typename... Args>
 inline void ConvParseType(Element::TypeT kerType, Element::TypeT outType, Runnable &&runnable,
-    Args && ... args) noexcept(false)
+                          Args &&...args) noexcept(false)
 {
     if constexpr (std::is_same_v<InType, float>) {
         if (kerType == Element::TypeT::F32) {
             ConvParseType<OutTypeFixFloat, float, float>(outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                         std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported kernel data type"};
+            throw Service::Unsupported{"Unsupported kernel data type"};
         }
     } else if constexpr (std::is_same_v<InType, __fp16>) {
         if (kerType == Element::TypeT::F16) {
             ConvParseType<OutTypeFixFloat, __fp16, __fp16>(outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                           std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported kernel data type"};
+            throw Service::Unsupported{"Unsupported kernel data type"};
         }
     } else if constexpr (std::is_same_v<InType, __bf16>) {
         if (kerType == Element::TypeT::BF16) {
             ConvParseType<OutTypeFixFloat, __bf16, __bf16>(outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                           std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported kernel data type"};
+            throw Service::Unsupported{"Unsupported kernel data type"};
         }
     } else if constexpr (std::is_same_v<InType, std::int8_t> || std::is_same_v<InType, std::uint8_t>) {
         if (kerType == Element::TypeT::S8) {
             ConvParseType<OutTypeFixFloat, InType, std::int8_t>(outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                                std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported kernel data type"};
+            throw Service::Unsupported{"Unsupported kernel data type"};
         }
     } else {
-        throw Service::Unsupported {"Unsupported kernel data type"};
+        throw Service::Unsupported{"Unsupported kernel data type"};
     }
 }
 
-template <bool IsSupportedInt, bool OutTypeFixFloat, typename Runnable, typename ... Args>
-inline void ConvParseType(Element::TypeT inType, Element::TypeT kerType, Element::TypeT outType,
-    Runnable &&runnable, Args && ... args) noexcept(false)
+template <bool IsSupportedInt, bool OutTypeFixFloat, typename Runnable, typename... Args>
+inline void ConvParseType(Element::TypeT inType, Element::TypeT kerType, Element::TypeT outType, Runnable &&runnable,
+                          Args &&...args) noexcept(false)
 {
     if constexpr (IsSupportedInt) {
         if (inType == Element::TypeT::F32) {
             ConvParseType<OutTypeFixFloat, float>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                  std::forward<Args>(args)...);
         } else if (inType == Element::TypeT::F16) {
             ConvParseType<OutTypeFixFloat, __fp16>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                   std::forward<Args>(args)...);
         } else if (inType == Element::TypeT::BF16) {
             ConvParseType<OutTypeFixFloat, __bf16>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                   std::forward<Args>(args)...);
         } else if (inType == Element::TypeT::S8) {
             ConvParseType<OutTypeFixFloat, std::int8_t>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                        std::forward<Args>(args)...);
         } else if (inType == Element::TypeT::U8) {
             ConvParseType<OutTypeFixFloat, std::uint8_t>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                         std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported input data type"};
+            throw Service::Unsupported{"Unsupported input data type"};
         }
     } else {
         if (inType == Element::TypeT::F32) {
             ConvParseType<OutTypeFixFloat, float>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                  std::forward<Args>(args)...);
         } else if (inType == Element::TypeT::F16) {
             ConvParseType<OutTypeFixFloat, __fp16>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                   std::forward<Args>(args)...);
         } else if (inType == Element::TypeT::BF16) {
             ConvParseType<OutTypeFixFloat, __bf16>(kerType, outType, std::forward<Runnable>(runnable),
-                std::forward<Args>(args) ...);
+                                                   std::forward<Args>(args)...);
         } else {
-            throw Service::Unsupported {"Unsupported input data type"};
+            throw Service::Unsupported{"Unsupported input data type"};
         }
     }
 }
 
-} // Detail
-} // KuDNN
+} // namespace Detail
+} // namespace KuDNN
 
 #endif // KUDNN_CONVOLUTION_BASE_HPP

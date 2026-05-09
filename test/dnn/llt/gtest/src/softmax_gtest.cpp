@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -77,7 +77,7 @@ static void dataFree(float **src, float **dst, float **dstRef)
     free(*src);
     free(*dst);
     free(*dstRef);
-    
+
     *src = nullptr;
     *dst = nullptr;
     *dstRef = nullptr;
