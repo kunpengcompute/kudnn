@@ -18,14 +18,14 @@ include_directories(${PROJECT_SOURCE_DIR}/src/aarch64_codegen)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
-add_compile_options(-fPIC -Wall -Werror -Wnarrowing -Wpointer-arith -Wextra -fopenmp -D_FORTIFY_SOURCE=2 -O2)
+add_compile_options(-fPIC -Wall -Werror -Wnarrowing -Wpointer-arith -Wextra -fopenmp -D_FORTIFY_SOURCE=2 -O2 -ftrapv)
 if (${TARGET_PLATFORM} STREQUAL "KP920Pro")
     add_compile_options(-march=armv9.2-a+fp+simd+bf16+sve+sve2+sme)
 else ()
     add_compile_options(-march=armv8.5-a+fp+simd+bf16+sve)
 endif ()
 
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-z,relro,-z,now")
+set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-z,relro,-z,now -Wl,-z,noexecstack")
 
 # release version lib compile options
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -108,7 +108,7 @@ add_library(kudnn SHARED $<TARGET_OBJECTS:src>
 
 set(PACKAGE_NUM_VERSION $ENV{PACKAGE_NUM_VERSION})
 if ("$ENV{PACKAGE_NUM_VERSION}" STREQUAL "")
-    set(PACKAGE_NUM_VERSION "1.26.0.RC1")
+    set(PACKAGE_NUM_VERSION "1.26.1.RC1")
 endif()
 set_target_properties(kudnn PROPERTIES VERSION ${PACKAGE_NUM_VERSION} SOVERSION 1)
 
