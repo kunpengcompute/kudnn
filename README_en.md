@@ -23,8 +23,10 @@ KuDNN is an operator library designed to optimize AI performance by leveraging K
 
 1. [Obtain the HPCKit software package](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_007.html).
 
-    > https://www.hikunpeng.com/developer/hpc/hpckit-download
-
+    1. Download the HPCKit software package (replace the version number in the example with your actual version).
+        ```
+        wget https://mirrors.huaweicloud.com/kunpeng/archive/HPC/HPCKit/HPCKit_26.0.RC1_Linux-aarch64.tar.gz
+        ```
 2. [Install HPCKit](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_012.html).
 
    1. Extract the HPCKit software package (replace the version number in the example with your actual version).
