@@ -13,18 +13,20 @@ KuDNN is an operator library designed to optimize AI performance by leveraging K
 - Operating platform
     - Kunpeng 920 Pro
 - System specifications
-    - openEuler 20.03 LTS SP3 AArch64
-    - openEuler 22.03 LTS SP2 AArch64
-    - openEuler 22.03 LTS SP3 AArch64
-    - openEuler 22.03 LTS SP4 AArch64
-    - openEuler 24.03 LTS SP3 AArch64
+    - openEuler 20.03（LTS-SP3）AArch64
+    - openEuler 22.03（LTS-SP2）AArch64
+    - openEuler 22.03（LTS-SP3）AArch64
+    - openEuler 22.03（LTS-SP4）AArch64
+    - openEuler 24.03（LTS-SP3）AArch64
 
 ## ⚡️Build, Installation, and Testing
 
 1. [Obtain the HPCKit software package](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_007.html).
 
-    > https://www.hikunpeng.com/developer/hpc/hpckit-download
-
+    1. Download the HPCKit software package (replace the version number in the example with your actual version).
+        ```
+        wget https://mirrors.huaweicloud.com/kunpeng/archive/HPC/HPCKit/HPCKit_26.0.RC1_Linux-aarch64.tar.gz
+        ```
 2. [Install HPCKit](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_012.html).
 
    1. Extract the HPCKit software package (replace the version number in the example with your actual version).
@@ -142,7 +144,7 @@ KuDNN is an operator library designed to optimize AI performance by leveraging K
         sh build/pre_env_dnn.sh
         ```
 
-        If the `pre_env_kudnn.sh` script fails to download GoogleTest due to network issues, you can manually download [GoogleTest v1.15.2](https://github.com/google/googletest/tree/v1.15.2). If the extracted folder contains any version suffixes or extension names, rename it to `googletest` (without any suffixes) and upload it to the `opensource/` subdirectory within the KuDNN root path. Finally, execute the following command to skip the download phase and directly initiate build:
+        If the `pre_env_kudnn.sh` script fails to download GoogleTest due to network issues, you can manually download [GoogleTest v1.15.2](https://github.com/google/googletest/tree/v1.15.2). If you cannot access GitHub, you can visit the domestic mirror [GoogleTest v1.15.2](https://gitcode.com/GitHub_Trending/go/googletest/tree/v1.15.2). If the extracted folder contains any version suffixes or extension names, rename it to `googletest` (without any suffixes) and upload it to the `opensource/` subdirectory within the KuDNN root path. Finally, execute the following command to skip the download phase and directly initiate build:
 
         ```shell
         sh build/pre_env_kudnn_compile.sh

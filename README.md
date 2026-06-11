@@ -22,7 +22,10 @@ KuDNN鲲鹏深度神经网络算子库，结合鲲鹏CPU微架构特性与软优
 ## ⚡️编译安装与测试
 
 ### 1. [获取 HPCKit 软件包](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_007.html)
-> https://www.hikunpeng.com/developer/hpc/hpckit-download
+#### 下载 HPCKit 软件包（HPCKit 版本号根据实际情况调整）
+```
+wget https://mirrors.huaweicloud.com/kunpeng/archive/HPC/HPCKit/HPCKit_26.0.RC1_Linux-aarch64.tar.gz
+```
 ### 2. [安装 HPCKit](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_012.html)
 #### 解压 HPCKit 软件包（HPCKit 版本号根据实际情况调整）
 ```
@@ -113,7 +116,7 @@ KuDNN的gtest测试程序依赖googletest，进入KuDNN根目录执行脚本下�
 sh build/pre_env_kudnn.sh
 ```
 
-如果pre_env_kudnn.sh脚本因网络问题下载googletest失败，可手动下载[googletest](https://github.com/google/googletest/tree/v1.15.2)。如果下载的googletest根目录带有后缀名，需重命名为不带后缀的googletest，再上传至KuDNN根目录的opensource/路径下。最后执行如下命令跳过下载直接开始构建。
+如果pre_env_kudnn.sh脚本因网络问题下载googletest失败，可手动下载[googletest](https://github.com/google/googletest/tree/v1.15.2)，如无法访问github可访问国内镜像[googletest](https://gitcode.com/GitHub_Trending/go/googletest/tree/v1.15.2)。如果下载的googletest根目录带有后缀名，需重命名为不带后缀的googletest，再上传至KuDNN根目录的opensource/路径下。最后执行如下命令跳过下载直接开始构建。
 ```
 sh build/pre_env_kudnn_compile.sh
 ```
