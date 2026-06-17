@@ -19,7 +19,7 @@ namespace Threading {
 void OpenMPBackend ::parallel_for(int64_t total, int numThreads, const std::function<void(int64_t)> &fn)
 {
 #pragma omp parallel for num_threads(numThreads)
-    for (int i = 0; i < total; i++) {
+    for (int64_t i = 0; i < total; i++) {
         fn(i);
     }
 }
