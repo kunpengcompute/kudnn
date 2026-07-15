@@ -19,7 +19,7 @@
 #define CONSTRUCTOR __attribute__((constructor))
 #define DESTRUCTOR __attribute__((destructor))
 #define PRIVATE __attribute__((visibility("hidden")))
-
+//第一个执行和最后执行的函数声明
 PRIVATE void CONSTRUCTOR KudnnInit(void);
 PRIVATE void DESTRUCTOR KudnnShutDown(void);
 
