@@ -74,6 +74,46 @@ add_library(convolution_kernels_pipeline OBJECT ${CONVOLUTION_PIPELINE})
 add_library(convolution_kernels_f32 OBJECT ${CONVOLUTION_KERNELS_F32})
 add_library(convolution_kernels_f16 OBJECT ${CONVOLUTION_KERNELS_F16})
 
+# STL-only PCH for convolution kernels.
+#
+# Convolution generates ~2000 .cpp files (layout × kernel_size × exec_size ×
+# sw_size × precision). Each file includes vector_wrappers.hpp → arm_sve.h →
+# kudnn.hpp → types headers, so the STL transitive closure (from kudnn.hpp /
+# internal_funcs.hpp) is re-parsed ~2000 times.
+#
+# arm_sve.h cannot enter the PCH (known GCC/Clang ICE with SVE intrinsics),
+# so this PCH is STL-only. The heavy SVE header is still parsed per TU, but
+# all STL headers (<vector>, <string>, <memory>, <algorithm>, <cmath>, etc.)
+# are parsed once. Estimated ~5-10% cold-build reduction on convolution.
+target_precompile_headers(convolution_kernels_f32 PRIVATE
+    <vector>
+    <string>
+    <memory>
+    <algorithm>
+    <cmath>
+    <cstddef>
+    <cstdint>
+    <cstring>
+    <array>
+    <utility>
+    <limits>
+    <type_traits>
+)
+target_precompile_headers(convolution_kernels_f16 PRIVATE
+    <vector>
+    <string>
+    <memory>
+    <algorithm>
+    <cmath>
+    <cstddef>
+    <cstdint>
+    <cstring>
+    <array>
+    <utility>
+    <limits>
+    <type_traits>
+)
+
 list(APPEND CONV_KERNELS_LIST
     $<TARGET_OBJECTS:convolution_kernels_pipeline>
     $<TARGET_OBJECTS:convolution_kernels_f16>
