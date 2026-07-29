@@ -10,7 +10,7 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#include "kudnn_reorder_def.hpp"
+#include "reorder/kudnn_reorder_def.hpp"
 
 namespace KuDNN {
 namespace Detail {
