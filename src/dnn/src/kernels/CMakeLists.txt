@@ -41,9 +41,9 @@ file(MAKE_DIRECTORY "${KERNS_GEN_DIR}")
 set(REORDER_KERNELS_LIST "")
 set(REORDER_ALL_OUT_TYPES ${ALL_SUPPORTED_PRECISIONS})
 foreach(IN_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(REORDER_INST "")
+    set(KUDNN_REORDER_INSTANTIATIONS "")
     foreach(OUT_PREC ${REORDER_ALL_OUT_TYPES})
-        set(REORDER_INST "${REORDER_INST}template void EvaluateReorder<${IN_PREC}, ${OUT_PREC}>(const Shape &start, const Shape &end, const ${IN_PREC} *typedSrc, ${OUT_PREC} *typedDst, const Shape &reorderedStridesSrc, const Shape &reorderedStridesDst, bool fastReorder, SizeType strideIn, SizeType strideOut) noexcept;\n")
+        set(KUDNN_REORDER_INSTANTIATIONS "${KUDNN_REORDER_INSTANTIATIONS}template void EvaluateReorder<${IN_PREC}, ${OUT_PREC}>(const Shape &start, const Shape &end, const ${IN_PREC} *typedSrc, ${OUT_PREC} *typedDst, const Shape &reorderedStridesSrc, const Shape &reorderedStridesDst, bool fastReorder, SizeType strideIn, SizeType strideOut) noexcept;\n")
     endforeach()
     set(GEN_FILE "${KERNS_GEN_DIR}/kudnn_reorder_merged_${SHORT_NAME_${IN_PREC}}.cpp")
     configure_file(
@@ -125,10 +125,10 @@ set(CONV_KERNELS_LIST "${CONV_KERNELS_LIST}" CACHE INTERNAL "")
 # GNorm — 9 OBJECT → 2 OBJECT (fwd / bwd merged)
 # ----------------------------------------------------------------------------
 set(GNORM_KERNELS_LIST "")
-set(GNORM_FWD_INST "")
+set(KUDNN_GNORM_FWD_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(GNORM_FWD_INST "${GNORM_FWD_INST}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType groupSize, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
-    set(GNORM_FWD_INST "${GNORM_FWD_INST}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, SizeType batchSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType groupSize, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
+    set(KUDNN_GNORM_FWD_INSTANTIATIONS "${KUDNN_GNORM_FWD_INSTANTIATIONS}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType groupSize, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
+    set(KUDNN_GNORM_FWD_INSTANTIATIONS "${KUDNN_GNORM_FWD_INSTANTIATIONS}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, SizeType batchSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType groupSize, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/gnorm/kudnn_gnorm_merged_fwd.cpp.in"
@@ -136,10 +136,10 @@ configure_file(
 add_library(gnorm_merged_fwd OBJECT "${KERNS_GEN_DIR}/kudnn_gnorm_merged_fwd.cpp")
 list(APPEND GNORM_KERNELS_LIST $<TARGET_OBJECTS:gnorm_merged_fwd>)
 
-set(GNORM_BWD_INST "")
+set(KUDNN_GNORM_BWD_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${FLOAT_SUPPORTED_PRECISIONS})
-    set(GNORM_BWD_INST "${GNORM_BWD_INST}template void EvaluteAbx<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType batchNum, SizeType eltPerGroup, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float *diffScale, float *diffShift, float eps, NormalizationFlags flags, SizeType channelSize, SizeType channelPerGroup) noexcept;\n")
-    set(GNORM_BWD_INST "${GNORM_BWD_INST}template void EvaluteAxb<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType batchNum, SizeType eltPerGroup, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float *diffScale, float *diffShift, float eps, NormalizationFlags flags, SizeType channelSize, SizeType channelPerGroup) noexcept;\n")
+    set(KUDNN_GNORM_BWD_INSTANTIATIONS "${KUDNN_GNORM_BWD_INSTANTIATIONS}template void EvaluteAbx<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType batchNum, SizeType eltPerGroup, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float *diffScale, float *diffShift, float eps, NormalizationFlags flags, SizeType channelSize, SizeType channelPerGroup) noexcept;\n")
+    set(KUDNN_GNORM_BWD_INSTANTIATIONS "${KUDNN_GNORM_BWD_INSTANTIATIONS}template void EvaluteAxb<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType batchNum, SizeType eltPerGroup, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float *diffScale, float *diffShift, float eps, NormalizationFlags flags, SizeType channelSize, SizeType channelPerGroup) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/gnorm/kudnn_gnorm_merged_bwd.cpp.in"
@@ -154,9 +154,9 @@ set(GNORM_KERNELS_LIST "${GNORM_KERNELS_LIST}" CACHE INTERNAL "")
 # ----------------------------------------------------------------------------
 set(LNORM_KERNELS_LIST "")
 
-set(LNORM_FWD_CROSS_INST "")
+set(KUDNN_LNORM_FWD_CROSS_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(LNORM_FWD_CROSS_INST "${LNORM_FWD_CROSS_INST}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
+    set(KUDNN_LNORM_FWD_CROSS_INSTANTIATIONS "${KUDNN_LNORM_FWD_CROSS_INSTANTIATIONS}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/lnorm/kudnn_lnorm_merged_fwd_cross.cpp.in"
@@ -164,9 +164,9 @@ configure_file(
 add_library(lnorm_merged_fwd_cross OBJECT "${KERNS_GEN_DIR}/kudnn_lnorm_merged_fwd_cross.cpp")
 list(APPEND LNORM_KERNELS_LIST $<TARGET_OBJECTS:lnorm_merged_fwd_cross>)
 
-set(LNORM_FWD_LAST_INST "")
+set(KUDNN_LNORM_FWD_LAST_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(LNORM_FWD_LAST_INST "${LNORM_FWD_LAST_INST}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, SizeType batchSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
+    set(KUDNN_LNORM_FWD_LAST_INSTANTIATIONS "${KUDNN_LNORM_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType execAcrossAxis, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, const ${IN_OUT_PREC} *shift, float *mean, float *variance, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/lnorm/kudnn_lnorm_merged_fwd_last.cpp.in"
@@ -174,10 +174,10 @@ configure_file(
 add_library(lnorm_merged_fwd_last OBJECT "${KERNS_GEN_DIR}/kudnn_lnorm_merged_fwd_last.cpp")
 list(APPEND LNORM_KERNELS_LIST $<TARGET_OBJECTS:lnorm_merged_fwd_last>)
 
-set(LNORM_BWD_CROSS_INST "")
+set(KUDNN_LNORM_BWD_CROSS_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${FLOAT_SUPPORTED_PRECISIONS})
-    set(LNORM_BWD_CROSS_INST "${LNORM_BWD_CROSS_INST}template void EvaluateScaleShiftCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, ${IN_OUT_PREC} *diffScale, ${IN_OUT_PREC} *diffShift, float *bufScale, float *bufShift, float eps, NormalizationFlags flags, SizeType axisSizeConst, SizeType innerSize) noexcept;\n")
-    set(LNORM_BWD_CROSS_INST "${LNORM_BWD_CROSS_INST}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
+    set(KUDNN_LNORM_BWD_CROSS_INSTANTIATIONS "${KUDNN_LNORM_BWD_CROSS_INSTANTIATIONS}template void EvaluateScaleShiftCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, ${IN_OUT_PREC} *diffScale, ${IN_OUT_PREC} *diffShift, float *bufScale, float *bufShift, float eps, NormalizationFlags flags, SizeType axisSizeConst, SizeType innerSize) noexcept;\n")
+    set(KUDNN_LNORM_BWD_CROSS_INSTANTIATIONS "${KUDNN_LNORM_BWD_CROSS_INSTANTIATIONS}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/lnorm/kudnn_lnorm_merged_bwd_cross.cpp.in"
@@ -185,10 +185,11 @@ configure_file(
 add_library(lnorm_merged_bwd_cross OBJECT "${KERNS_GEN_DIR}/kudnn_lnorm_merged_bwd_cross.cpp")
 list(APPEND LNORM_KERNELS_LIST $<TARGET_OBJECTS:lnorm_merged_bwd_cross>)
 
-set(LNORM_BWD_LAST_INST "")
+set(KUDNN_LNORM_BWD_LAST_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${FLOAT_SUPPORTED_PRECISIONS})
-    set(LNORM_BWD_LAST_INST "${LNORM_BWD_LAST_INST}template void EvaluateScaleShiftLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, SizeType batchSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, ${IN_OUT_PREC} *diffScale, ${IN_OUT_PREC} *diffShift, float *bufScale, float *bufShift, float eps, NormalizationFlags flags, SizeType axisSizeConst) noexcept;\n")
-    set(LNORM_BWD_LAST_INST "${LNORM_BWD_LAST_INST}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, SizeType batchSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
+    set(KUDNN_LNORM_BWD_LAST_INSTANTIATIONS "${KUDNN_LNORM_BWD_LAST_INSTANTIATIONS}template void EvaluateScaleShiftLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, ${IN_OUT_PREC} *diffScale, ${IN_OUT_PREC} *diffShift, float *bufScale, float *bufShift, float eps, NormalizationFlags flags, SizeType axisSize, SizeType axisSizeConst) noexcept;\n")
+    set(KUDNN_LNORM_BWD_LAST_INSTANTIATIONS "${KUDNN_LNORM_BWD_LAST_INSTANTIATIONS}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, const float *mean, const float *variance, const ${IN_OUT_PREC} *diffDst, const ${IN_OUT_PREC} *scale, ${IN_OUT_PREC} *diffSrc, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
+    set(KUDNN_LNORM_BWD_LAST_INSTANTIATIONS "${KUDNN_LNORM_BWD_LAST_INSTANTIATIONS}template void EvaluateRewriteScaleShift<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>( ${IN_OUT_PREC} *diffScale, ${IN_OUT_PREC} *diffShift, float *bufScale, float *bufShift, NormalizationFlags flags, SizeType axisSize, SizeType numThreads) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/lnorm/kudnn_lnorm_merged_bwd_last.cpp.in"
@@ -203,9 +204,9 @@ set(LNORM_KERNELS_LIST "${LNORM_KERNELS_LIST}" CACHE INTERNAL "")
 # ----------------------------------------------------------------------------
 set(RMSNORM_KERNELS_LIST "")
 
-set(RMSNORM_FWD_CROSS_INST "")
+set(KUDNN_RMSNORM_FWD_CROSS_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(RMSNORM_FWD_CROSS_INST "${RMSNORM_FWD_CROSS_INST}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, float *rms, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
+    set(KUDNN_RMSNORM_FWD_CROSS_INSTANTIATIONS "${KUDNN_RMSNORM_FWD_CROSS_INSTANTIATIONS}template void EvaluateCrossAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, float *rms, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize, SizeType innerSize) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/rmsnorm/kudnn_rmsnorm_merged_fwd_cross.cpp.in"
@@ -213,9 +214,9 @@ configure_file(
 add_library(rmsnorm_merged_fwd_cross OBJECT "${KERNS_GEN_DIR}/kudnn_rmsnorm_merged_fwd_cross.cpp")
 list(APPEND RMSNORM_KERNELS_LIST $<TARGET_OBJECTS:rmsnorm_merged_fwd_cross>)
 
-set(RMSNORM_FWD_LAST_INST "")
+set(KUDNN_RMSNORM_FWD_LAST_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(RMSNORM_FWD_LAST_INST "${RMSNORM_FWD_LAST_INST}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType outerSize, SizeType batchSize, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, float *rms, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
+    set(KUDNN_RMSNORM_FWD_LAST_INSTANTIATIONS "${KUDNN_RMSNORM_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxis<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(SizeType execAcrossAxis, const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *scale, float *rms, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize) noexcept;\n")
 endforeach()
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/rmsnorm/kudnn_rmsnorm_merged_fwd_last.cpp.in"
@@ -230,11 +231,11 @@ set(RMSNORM_KERNELS_LIST "${RMSNORM_KERNELS_LIST}" CACHE INTERNAL "")
 # ----------------------------------------------------------------------------
 set(SOFTMAX_KERNELS_LIST "")
 
-set(SOFTMAX_FWD_CROSS_INST "")
+set(KUDNN_SOFTMAX_FWD_CROSS_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(SOFTMAX_FWD_CROSS_INST "${SOFTMAX_FWD_CROSS_INST}template void EvaluateCrossAxisFWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+    set(KUDNN_SOFTMAX_FWD_CROSS_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_CROSS_INSTANTIATIONS}template void EvaluateCrossAxisFWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     if(IN_OUT_PREC STREQUAL "__fp16")
-        set(SOFTMAX_FWD_CROSS_INST "${SOFTMAX_FWD_CROSS_INST}template void EvaluateCrossAxisFWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+        set(KUDNN_SOFTMAX_FWD_CROSS_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_CROSS_INSTANTIATIONS}template void EvaluateCrossAxisFWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     endif()
 endforeach()
 configure_file(
@@ -243,11 +244,11 @@ configure_file(
 add_library(softmax_merged_fwd_cross OBJECT "${KERNS_GEN_DIR}/kudnn_softmax_merged_fwd_cross.cpp")
 list(APPEND SOFTMAX_KERNELS_LIST $<TARGET_OBJECTS:softmax_merged_fwd_cross>)
 
-set(SOFTMAX_FWD_LAST_INST "")
+set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(SOFTMAX_FWD_LAST_INST "${SOFTMAX_FWD_LAST_INST}template void EvaluateLastAxisFWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+    set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisFWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     if(IN_OUT_PREC STREQUAL "__fp16")
-        set(SOFTMAX_FWD_LAST_INST "${SOFTMAX_FWD_LAST_INST}template void EvaluateLastAxisFWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+        set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisFWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     endif()
 endforeach()
 configure_file(
@@ -256,11 +257,11 @@ configure_file(
 add_library(softmax_merged_fwd_last OBJECT "${KERNS_GEN_DIR}/kudnn_softmax_merged_fwd_last.cpp")
 list(APPEND SOFTMAX_KERNELS_LIST $<TARGET_OBJECTS:softmax_merged_fwd_last>)
 
-set(SOFTMAX_BWD_CROSS_INST "")
+set(KUDNN_SOFTMAX_BWD_CROSS_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(SOFTMAX_BWD_CROSS_INST "${SOFTMAX_BWD_CROSS_INST}template void EvaluateCrossAxisBWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+    set(KUDNN_SOFTMAX_BWD_CROSS_INSTANTIATIONS "${KUDNN_SOFTMAX_BWD_CROSS_INSTANTIATIONS}template void EvaluateCrossAxisBWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     if(IN_OUT_PREC STREQUAL "__fp16")
-        set(SOFTMAX_BWD_CROSS_INST "${SOFTMAX_BWD_CROSS_INST}template void EvaluateCrossAxisBWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+        set(KUDNN_SOFTMAX_BWD_CROSS_INSTANTIATIONS "${KUDNN_SOFTMAX_BWD_CROSS_INSTANTIATIONS}template void EvaluateCrossAxisBWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     endif()
 endforeach()
 configure_file(
@@ -269,11 +270,11 @@ configure_file(
 add_library(softmax_merged_bwd_cross OBJECT "${KERNS_GEN_DIR}/kudnn_softmax_merged_bwd_cross.cpp")
 list(APPEND SOFTMAX_KERNELS_LIST $<TARGET_OBJECTS:softmax_merged_bwd_cross>)
 
-set(SOFTMAX_BWD_LAST_INST "")
+set(KUDNN_SOFTMAX_BWD_LAST_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(SOFTMAX_BWD_LAST_INST "${SOFTMAX_BWD_LAST_INST}template void EvaluateLastAxisBWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+    set(KUDNN_SOFTMAX_BWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_BWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisBWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     if(IN_OUT_PREC STREQUAL "__fp16")
-        set(SOFTMAX_BWD_LAST_INST "${SOFTMAX_BWD_LAST_INST}template void EvaluateLastAxisBWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+        set(KUDNN_SOFTMAX_BWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_BWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisBWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *dst, const ${IN_OUT_PREC} *dstDiff, ${IN_OUT_PREC} *srcDiff, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     endif()
 endforeach()
 configure_file(
