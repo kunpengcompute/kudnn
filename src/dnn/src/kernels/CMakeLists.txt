@@ -246,9 +246,9 @@ list(APPEND SOFTMAX_KERNELS_LIST $<TARGET_OBJECTS:softmax_merged_fwd_cross>)
 
 set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "")
 foreach(IN_OUT_PREC ${ALL_SUPPORTED_PRECISIONS})
-    set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisFWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+    set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisFWD<${COMPUTE_PRECISIONS}, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     if(IN_OUT_PREC STREQUAL "__fp16")
-        set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisFWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
+        set(KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS "${KUDNN_SOFTMAX_FWD_LAST_INSTANTIATIONS}template void EvaluateLastAxisFWD<__fp16, ${IN_OUT_PREC}, ${IN_OUT_PREC}>(const ${IN_OUT_PREC} *src, ${IN_OUT_PREC} *dst, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;\n")
     endif()
 endforeach()
 configure_file(
