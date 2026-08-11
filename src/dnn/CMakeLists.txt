@@ -106,9 +106,9 @@ add_library(kudnn SHARED $<TARGET_OBJECTS:src>
                         ${REORDER_KERNELS_LIST}
                         ${SOFTMAX_KERNELS_LIST})
 
-set(PACKAGE_NUM_VERSION $ENV{PACKAGE_NUM_VERSION})
-if ("$ENV{PACKAGE_NUM_VERSION}" STREQUAL "")
-    set(PACKAGE_NUM_VERSION "1.26.1.RC1")
+set(PACKAGE_NUM_VERSION $ENV{package_version})
+if ("$ENV{package_version}" STREQUAL "")
+    set(PACKAGE_NUM_VERSION "1.26.2.0")
 endif()
 set_target_properties(kudnn PROPERTIES VERSION ${PACKAGE_NUM_VERSION} SOVERSION 1)
 
