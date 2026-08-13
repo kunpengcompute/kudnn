@@ -108,9 +108,10 @@ add_library(kudnn SHARED $<TARGET_OBJECTS:src>
 
 set(PACKAGE_NUM_VERSION $ENV{package_version})
 if ("$ENV{package_version}" STREQUAL "")
-    set(PACKAGE_NUM_VERSION "1.26.2.0")
+    set(PACKAGE_NUM_VERSION "26.2.0")
 endif()
-set_target_properties(kudnn PROPERTIES VERSION ${PACKAGE_NUM_VERSION} SOVERSION 1)
+
+set_target_properties(kudnn PROPERTIES VERSION "1.${PACKAGE_NUM_VERSION}" SOVERSION 1)
 
 target_link_libraries(kudnn ${LINKED_LIBS})
 
