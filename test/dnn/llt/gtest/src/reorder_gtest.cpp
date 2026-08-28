@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -11,22 +11,86 @@
  */
 
 #include <cstdlib>
-#include <iostream>
-#include <cmath>
-#include <ctime>
-#include <random>
-#include <map>
-#include <string>
-
-#include <arm_neon.h>
 
 #include "gtest/gtest.h"
 #include "kudnn.hpp"
 #include "kudnn_tensor_data.hpp"
 
+static void CopyConstructor1()
+{
+    const KuDNN::TensorInfo srcTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo dstTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::DECAB};
+    KuDNN::ReorderLayer ReorderLayer1(srcTensor, dstTensor);
+    KuDNN::ReorderLayer ReorderLayer2(ReorderLayer1);
+    for (size_t i = 0; i < g_Tensor_data.size() / 2; i += 2) {
+        KuDNN::ReorderLayer ReorderLayer1(g_Tensor_data[i], g_Tensor_data[i + 1]);
+        KuDNN::ReorderLayer ReorderLayer2(ReorderLayer1);
+    }
+}
+
+static void CopyConstructor2()
+{
+    const KuDNN::TensorInfo srcTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo dstTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::CDEBA};
+    KuDNN::ReorderLayer ReorderLayer1(srcTensor, dstTensor);
+    KuDNN::ReorderLayer ReorderLayer2(ReorderLayer1);
+    ReorderLayer2 = ReorderLayer1;
+    for (size_t i = 0; i < g_Tensor_data.size() / 2; i += 2) {
+        KuDNN::ReorderLayer ReorderLayer1(g_Tensor_data[i], g_Tensor_data[i + 1]);
+        KuDNN::ReorderLayer ReorderLayer2(ReorderLayer1);
+        ReorderLayer2 = ReorderLayer1;
+    }
+}
+
+static void MoveConstructor1()
+{
+    const KuDNN::TensorInfo srcTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo dstTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
+    KuDNN::ReorderLayer ReorderLayer1(srcTensor, dstTensor);
+    KuDNN::ReorderLayer ReorderLayer2(std::move(ReorderLayer1));
+    for (size_t i = 0; i < g_Tensor_data.size() / 2; i += 2) {
+        KuDNN::ReorderLayer ReorderLayer1(g_Tensor_data[i], g_Tensor_data[i + 1]);
+        KuDNN::ReorderLayer ReorderLayer2(std::move(ReorderLayer1));
+    }
+}
+
+static void MoveConstructor2()
+{
+    const KuDNN::TensorInfo srcTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo dstTensor = {{2, 2, 2, 2, 2}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACBDE};
+    KuDNN::ReorderLayer ReorderLayer1(srcTensor, dstTensor);
+    KuDNN::ReorderLayer ReorderLayer2(ReorderLayer1);
+    ReorderLayer2 = std::move(ReorderLayer1);
+    for (size_t i = 0; i < g_Tensor_data.size() / 2; i += 2) {
+        KuDNN::ReorderLayer ReorderLayer1(g_Tensor_data[i], g_Tensor_data[i + 1]);
+        KuDNN::ReorderLayer ReorderLayer2(ReorderLayer1);
+        ReorderLayer2 = std::move(ReorderLayer1);
+    }
+}
+
+// test cases
+TEST(ReorderGTests, CopyConstructor1)
+{
+    EXPECT_NO_THROW(CopyConstructor1());
+}
+
+TEST(ReorderGTests, CopyConstructor2)
+{
+    EXPECT_NO_THROW(CopyConstructor2());
+}
+
+TEST(ReorderGTests, MoveConstructor1)
+{
+    EXPECT_NO_THROW(MoveConstructor1());
+}
+
+TEST(ReorderGTests, MoveConstructor2)
+{
+    EXPECT_NO_THROW(MoveConstructor2());
+}
+
 using Shape = KuDNN::Shape;
 using SizeType = KuDNN::SizeType;
-
 
 template <typename srcT, typename dstT>
 static bool reorderFunc(const KuDNN::TensorInfo &srcTensor, const KuDNN::TensorInfo &dstTensor)
@@ -40,7 +104,7 @@ static bool reorderFunc(const KuDNN::TensorInfo &srcTensor, const KuDNN::TensorI
     KuDNN::ReorderLayer reorderLayer(srcTensor, dstTensor);
 
     reorderLayer.Run(src, dst);
-    
+
     return true;
 }
 
@@ -156,7 +220,6 @@ TEST(ReorderGTests, U8ToF32_1)
     reorderFunc<uint8_t, float>(srcTensor, dstTensor);
 }
 
-
 TEST(ReorderGTests, S8ToBF16_1)
 {
     const KuDNN::TensorInfo srcTensor = {{10, 12, 14}, KuDNN::Element::TypeT::S8, KuDNN::Layout::ABC};
@@ -179,46 +242,6 @@ TEST(ReorderGTests, S8ToS32_1)
     const KuDNN::TensorInfo dstTensor = {{10, 12, 14}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
 
     reorderFunc<int8_t, int32_t>(srcTensor, dstTensor);
-}
-
-TEST(ReorderGTests, MoveConstructor1)
-{
-    const KuDNN::TensorInfo srcTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
-    const KuDNN::TensorInfo dstTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
-
-    KuDNN::ReorderLayer reorderLayer1(srcTensor, dstTensor);
-
-    KuDNN::ReorderLayer reorderLayer2(std::move(reorderLayer1));
-}
-
-TEST(ReorderGTests, CopyConstructor2)
-{
-    const KuDNN::TensorInfo srcTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
-    const KuDNN::TensorInfo dstTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
-
-    KuDNN::ReorderLayer reorderLayer1(srcTensor, dstTensor);
-    KuDNN::ReorderLayer reorderLayer2(srcTensor, dstTensor);
-    reorderLayer2 = std::move(reorderLayer1);
-}
-
-TEST(ReorderGTests, CopyConstructor1)
-{
-    const KuDNN::TensorInfo srcTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
-    const KuDNN::TensorInfo dstTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
-
-    KuDNN::ReorderLayer reorderLayer1(srcTensor, dstTensor);
-
-    KuDNN::ReorderLayer reorderLayer2(reorderLayer1);
-}
-
-TEST(ReorderGTests, MoveConstructor2)
-{
-    const KuDNN::TensorInfo srcTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
-    const KuDNN::TensorInfo dstTensor = {{10, 12, 14}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
-
-    KuDNN::ReorderLayer reorderLayer1(srcTensor, dstTensor);
-    KuDNN::ReorderLayer reorderLayer2(srcTensor, dstTensor);
-    reorderLayer2 = reorderLayer1;
 }
 
 TEST(ReorderGTests, S8_ACBToABC)

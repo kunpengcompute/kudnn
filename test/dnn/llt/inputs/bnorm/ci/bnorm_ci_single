@@ -1,0 +1,6 @@
+--dir=FWD_D
+--batch=bnorm_fwd
+--dir=FWD_I
+--batch=bnorm_fwd
+
+--dir=BWD_D --tag=abx,axb --dt=f32,f16,bf16 --flags=GCH,CH --batch=bnorm_bwd_single_shapes

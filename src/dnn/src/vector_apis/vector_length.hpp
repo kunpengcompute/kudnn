@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -53,6 +53,41 @@ template <>
 KUDNN_INLINE inline SizeType Length<std::int32_t>()
 {
     return svcntw();
+}
+
+template <>
+KUDNN_INLINE inline SizeType Length<float, ARCH::NEON>()
+{
+    return NUM_8;
+}
+
+template <>
+KUDNN_INLINE inline SizeType Length<std::int32_t, ARCH::NEON>()
+{
+    return NUM_8;
+}
+
+template <>
+KUDNN_INLINE inline SizeType Length<__fp16, ARCH::NEON>()
+{
+    return NUM_16;
+}
+template <>
+KUDNN_INLINE inline SizeType Length<__bf16, ARCH::NEON>()
+{
+    return NUM_16;
+}
+
+template <>
+KUDNN_INLINE inline SizeType Length<std::int8_t, ARCH::NEON>()
+{
+    return NUM_32;
+}
+
+template <>
+KUDNN_INLINE inline SizeType Length<std::uint8_t, ARCH::NEON>()
+{
+    return NUM_32;
 }
 
 } // Vector

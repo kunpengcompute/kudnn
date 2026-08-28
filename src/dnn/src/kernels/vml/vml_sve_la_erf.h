@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,8 +10,8 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef VML_VectorComputation_LA_ERF_H
-#define VML_VectorComputation_LA_ERF_H
+#ifndef VML_VC_LA_ERF_H
+#define VML_VC_LA_ERF_H
 
 #include "vml_sve_la_exp.h"
 
@@ -27,13 +27,13 @@ __attribute__((always_inline)) inline svfloat32_t SvErfF32X(svfloat32_t x, svboo
 {
     // t = 1 / (p*|x| + 1)
     svfloat32_t absX = svabs_f32_x(pg, x);
-    svfloat32_t temp = svmad_f32_x(pg, GELU_ERF_APPROX_CONST, absX, VectorComputation_FLOAT_ONE);
-    svfloat32_t t = svdiv_f32_x(pg, VectorComputation_FLOAT_ONE, temp);
+    svfloat32_t temp = svmad_f32_x(pg, GELU_ERF_APPROX_CONST, absX, VC_FLOAT_ONE);
+    svfloat32_t t = svdiv_f32_x(pg, VC_FLOAT_ONE, temp);
 
     // -exp(-x*x)
-    svfloat32_t negX2 = svmls_f32_x(pg, VectorComputation_FLOAT_ZERO, x, x);
+    svfloat32_t negX2 = svmls_f32_x(pg, VC_FLOAT_ZERO, x, x);
     svfloat32_t expNegX2 = SvExpF32X(negX2, pg);
-    svfloat32_t negExpNegX2 = svsub_f32_x(pg, VectorComputation_FLOAT_ZERO, expNegX2);
+    svfloat32_t negExpNegX2 = svsub_f32_x(pg, VC_FLOAT_ZERO, expNegX2);
 
     // r = poly(t)
     svfloat32_t r = svmad_f32_x(pg, GELU_ERF_C4, t, GELU_ERF_C3);
@@ -41,38 +41,38 @@ __attribute__((always_inline)) inline svfloat32_t SvErfF32X(svfloat32_t x, svboo
     r = svmad_f32_x(pg, r, t, GELU_ERF_C1);
     r = svmad_f32_x(pg, r, t, GELU_ERF_C0);
 
-    svbool_t pgNeg = svcmpge_u32(pg, svreinterpret_u32_f32(x), VectorComputation_FLOAT_SIGN_BIT);
+    svbool_t pgNeg = svcmpge_u32(pg, svreinterpret_u32_f32(x), VC_FLOAT_SIGN_BIT);
     svfloat32_t res = svmul_f32_x(pg, t, negExpNegX2);
-    res = svmad_f32_x(pg, res, r, VectorComputation_FLOAT_ONE);
-    res = svmul_f32_m(pgNeg, res, VectorComputation_FLOAT_NEG_ONE);
+    res = svmad_f32_x(pg, res, r, VC_FLOAT_ONE);
+    res = svmul_f32_m(pgNeg, res, VC_FLOAT_NEG_ONE);
 
     return res;
 }
 
-#define VectorComputation_ERF_TBL_SIZE 0x1000U
-extern const float G_ERF_TBL[VectorComputation_ERF_TBL_SIZE];
-extern const float G_ERF_EXP_TBL[VectorComputation_ERF_TBL_SIZE];
-#define VectorComputation_VSERF_MAX       svdup_n_f32(0x1.f5a002p1f)
-#define VectorComputation_VSERF_SHIFT     svdup_n_f32(0x1p+14f)
-#define VectorComputation_VSERF_IDXMASK   svdup_n_u32(0xfffU)
-#define VectorComputation_VSERF_TALOR_C1  svdup_n_f32(-0x1.555556p-2f)
-#define VML_VSERF_ERFTABLE  G_ERF_TBL
-#define VML_VSERF_EXPTABLE  G_ERF_EXP_TBL
+#define VC_ERF_TBL_SIZE 0x1000U
+extern const float g_erfTbl[VC_ERF_TBL_SIZE];
+extern const float g_erfExpTbl[VC_ERF_TBL_SIZE];
+#define VC_VSERF_MAX       svdup_n_f32(0x1.f5a002p1f)
+#define VC_VSERF_SHIFT     svdup_n_f32(0x1p+14f)
+#define VC_VSERF_IDXMASK   svdup_n_u32(0xfffU)
+#define VC_VSERF_TALOR_C1  svdup_n_f32(-0x1.555556p-2f)
+#define VML_VSERF_ERFTABLE  g_erfTbl
+#define VML_VSERF_EXPTABLE  g_erfExpTbl
 
 __attribute__((always_inline)) inline svfloat32_t SvErfF32XNew(svfloat32_t x, svbool_t pg)
 {
-    svfloat32_t absX = SvAndF32X(pg, x, VectorComputation_FLOAT_ABS_MASK);
-    svuint32_t sign = svand_u32_x(pg, svreinterpret_u32_f32(x), VectorComputation_FLOAT_SIGN_BIT);
-    absX = svmin_f32_x(pg, absX, VectorComputation_VSERF_MAX);
-    svfloat32_t rX = svadd_f32_x(pg, absX, VectorComputation_VSERF_SHIFT);
-    svuint32_t idx = svand_u32_x(pg, svreinterpret_u32_f32(rX), VectorComputation_VSERF_IDXMASK);
+    svfloat32_t absX = SvAndF32X(pg, x, VC_FLOAT_ABS_MASK);
+    svuint32_t sign = svand_u32_x(pg, svreinterpret_u32_f32(x), VC_FLOAT_SIGN_BIT);
+    absX = svmin_f32_x(pg, absX, VC_VSERF_MAX);
+    svfloat32_t rX = svadd_f32_x(pg, absX, VC_VSERF_SHIFT);
+    svuint32_t idx = svand_u32_x(pg, svreinterpret_u32_f32(rX), VC_VSERF_IDXMASK);
     svfloat32_t erfX0 = svld1_gather_u32index_f32(pg, VML_VSERF_ERFTABLE, idx);
     svfloat32_t expNegx2 = svld1_gather_u32index_f32(pg, VML_VSERF_EXPTABLE, idx);
-    svfloat32_t x0 = svsub_f32_x(pg, rX, VectorComputation_VSERF_SHIFT);
+    svfloat32_t x0 = svsub_f32_x(pg, rX, VC_VSERF_SHIFT);
     svfloat32_t r = svsub_f32_x(pg, absX, x0);
     svfloat32_t taylor1 = svmul_f32_x(pg, r, expNegx2);
-    svfloat32_t poly1 = svmla_f32_x(pg, svneg_f32_x(pg, x0), VectorComputation_VSERF_TALOR_C1, r);
-    svfloat32_t poly2 = svmla_f32_x(pg, VectorComputation_FLOAT_ONE, poly1, r);
+    svfloat32_t poly1 = svmla_f32_x(pg, svneg_f32_x(pg, x0), VC_VSERF_TALOR_C1, r);
+    svfloat32_t poly2 = svmla_f32_x(pg, VC_FLOAT_ONE, poly1, r);
     svfloat32_t y = svmla_f32_x(pg, erfX0, poly2, taylor1);
     y = SvOrrF32X(pg, y, sign);
     return y;

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef CG_ERROR_HPP
 #define CG_ERROR_HPP
@@ -55,32 +54,32 @@ class Error : public std::runtime_error {
     static constexpr int ERR_NUM = 30;
     static constexpr const char* ERR_DESC[ERR_NUM] = {
         "none",
-        "code is too big",
-        "label is redefined",
-        "label is too far",
+        "big code",
+        "redefined label",
+        "label is unreachable",
         "label is not found",
         "bad parameter",
-        "can't protect",
-        "offset is too big",
-        "can't alloc",
-        "label is not set by L()",
-        "label is already set by L()",
+        "protect fail",
+        "big offset",
+        "alloc fail",
+        "label is not set",
+        "label is already set",
         "internal error",
-        "illegal register index (can not encoding register index)",
-        "illegal register element index (can not encoding element index)",
-        "illegal predicate register type",
-        "illegal immediate parameter (range error)",
-        "illegal immediate parameter (unavailable value error)",
-        "illegal immediate parameter (condition error)",
-        "illegal shift-mode paramater",
-        "illegal extend-mode parameter",
-        "illegal condition parameter",
+        "illegal reg index (can not encoding reg index)",
+        "illegal reg element index (can not encoding element index)",
+        "illegal predicate reg type",
+        "illegal immediate param (out of range)",
+        "illegal immediate param (value unavailable)",
+        "illegal immediate param (bad condition)",
+        "illegal shift-mode param",
+        "illegal extend-mode param",
+        "illegal condition param",
         "illegal barrier option",
-        "illegal const parameter (range error)",
-        "illegal const parameter (unavailable error)",
-        "illegal const parameter (condition error)",
+        "const param range error",
+        "const param unavailable error",
+        "const param condition error",
         "illegal type",
-        "bad align",
+        "bad alignment",
         "bad addressing",
         "bad scale",
         "Munmap"

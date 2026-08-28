@@ -1,0 +1,36 @@
+--dt=f32,bf16,f16
+--dir=FWD_D,BWD_D
+--alg=ACROSS,WITHIN
+--tag=abx,axb
+--batch=lrn_shapes_func
+
+# DTS2024120430772
+--reset
+--dir=BWD_D --dt=f32 --tag=acdeb --alg=WITHIN mb46ic41_id2ih25iw13_alpha0.339_ls1
+--dir=BWD_D --dt=f32 --tag=acdeb --alg=WITHIN mb18ic29_id13ih28iw47_k13_beta0.623_alpha0.842_ls1
+--dir=BWD_D --dt=f32 --tag=abcde --alg=ACROSS mb4ic16_id3ih10iw4_k15_alpha0.523_ls1
+--dir=BWD_D --dt=f32 --tag=decab --alg=WITHIN mb13ic41_id26ih3iw22_alpha0.874_k2_beta0.432_ls1
+--dir=BWD_D --dt=f32 --tag=acdeb --alg=ACROSS mb43ic25_id49ih40iw15_alpha0.436_ls1
+--dir=BWD_D --dt=f32 --tag=abdec --alg=WITHIN mb1ic25_id7ih43iw9_beta0.912_alpha0.557_k8_ls1
+--dir=BWD_D --dt=f32 --tag=decab --alg=ACROSS mb7ic1_id48ih20iw4_alpha0.351_ls1
+--dir=BWD_D --dt=f32 --tag=adecb --alg=WITHIN mb26ic36_id1ih43iw42_beta0.629_alpha0.594_ls1
+--dir=BWD_D --dt=f32 --tag=acbde --alg=ACROSS mb6ic30_id18ih50iw35_alpha6.05_k5_ls1
+
+#Containing Not abx,axb memory layout
+--dir=FWD_D,BWD_D
+--dt=f32,bf16,f16
+--tag=abcde,abced,abdec,acbde,acdeb,adecb,bacde,bcdea,cdeab,cdeba,decab 
+--alg=ACROSS,WITHIN 
+ic9id2ih2iw7_ls3_alpha0.00005
+
+--dir=FWD_D,BWD_D
+--dt=f32,bf16,f16
+--tag=abcd,abdc,acbd,acdb,adbc,adcb,bacd,bcda,cdab,cdba,dcab
+--alg=ACROSS,WITHIN 
+ic9ih2iw7_ls3_alpha0.00005
+
+--dir=FWD_D,BWD_D
+--dt=f32,bf16,f16
+--tag=abc,acb,bac,bca,cab
+--alg=ACROSS,WITHIN 
+ic9iw7_ls3_alpha0.00005

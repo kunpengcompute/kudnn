@@ -1,0 +1,15 @@
+g1mb50ic256iw56oc512ow28kw1sw2pw0n"conv1d:3"
+g1mb22ic192ih17iw17oc192oh17ow17kh7kw1ph3pw0n"googlenet_v3:mixed_7_tower_conv_2_conv2d*4"
+mb1ic64id6ih4iw4oc64od4oh2ow2kd3kh3kw3pd0ph0pw0n"3d_unet:conv_3"
+g1mb1ic256iw56oc512ow28kw1sw2pw0n"conv1d:3"
+mb1ic32iw121oc32ow122kw6pw3n"conv1d:18"
+mb1ic512ih7oc2048oh7kh1ph0n"resnet_50:res5a_branch2c*3"
+mb1ic16ih14oc16oh14kh3ph1n"googlenet_v1:inception_4e/3x3"
+mb1ic768iw7oc48ow7kw3pw1
+mb1ic16id28oc16od28kd1pd0
+mb1ic16id4oc16od4kd3sd6
+mb1ic16iw28oc16ow28kw3sw4pw30
+mb1ic16iw10oc16ow10kw3sw4pw15
+mb1ic16iw20oc16ow20kw3sw2dw12pw25
+mb1ic16iw20oc16ow20kw3sw2pw14
+mb1ic3iw20oc72ow20kw3pw1

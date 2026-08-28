@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_REORDER_HPP
 #define KUDNN_REORDER_HPP
@@ -26,7 +25,7 @@ class ReorderLayerImpl;
 
 } // Detail
 
-class KUDNN_API_PUBLIC ReorderLayer final {
+class ReorderLayer final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &srcInfo, const TensorInfo &dstInfo) noexcept;
@@ -36,6 +35,7 @@ public:
     ReorderLayer& operator=(const ReorderLayer &other) noexcept(false);
     ReorderLayer& operator=(ReorderLayer &&other) noexcept;
     void Run(const void *src, void *dst) const noexcept(false);
+    void Run(const void *src, void *dst, float alpha) const noexcept(false);
     ~ReorderLayer() noexcept;
 private:
     std::unique_ptr<Detail::ReorderLayerImpl> pImpl;

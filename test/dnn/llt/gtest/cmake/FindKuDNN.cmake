@@ -19,7 +19,9 @@ find_path(KUDNN_INCLUDE_DIR
   PATH_SUFFIXES include
   NO_DEFAULT_PATH
 )
+set(SRC_PATH "$ENV{KUDNN_SRC_DIRS}/src")
 set(AARCH64_CODEGEN_PATH "$ENV{KUDNN_SRC_DIRS}/src/aarch64_codegen/")
+set(BRGEMM_PATH "$ENV{KUDNN_SRC_DIRS}/src/brgemm/")
 
 find_library(KUDNN_LIBRARY
   NAMES kudnn
@@ -28,8 +30,9 @@ find_library(KUDNN_LIBRARY
   NO_DEFAULT_PATH
   )
 
+
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(KuDNN DEFAULT_MSG
+find_package_handle_standard_args(KUDNN DEFAULT_MSG
   KUDNN_INCLUDE_DIR
   KUDNN_LIBRARY
 )
@@ -43,6 +46,5 @@ mark_as_advanced(
 if(KUDNN_FOUND)
   list(APPEND KUDNN_INCLUDE_DIRS ${KUDNN_INCLUDE_DIR})
   list(APPEND KUDNN_LIBRARIES
-    ${KUDNN_LIBRARY}
-    kblas)
+    ${KUDNN_LIBRARY})
 endif()

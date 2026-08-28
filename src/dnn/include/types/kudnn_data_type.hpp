@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -18,8 +18,6 @@
 
 #include "service/kudnn_exception.hpp"
 
-#define KUDNN_API_PUBLIC __attribute__((visibility("default")))
-
 namespace KuDNN {
 
 using SizeType = std::size_t;
@@ -30,12 +28,12 @@ namespace Element {
 // enumeration of KuDNN supported data types
 enum class TypeT {
     UNDEFINED = 0,
-    F32,
-    F16,
-    BF16,
-    S32,
-    S8,
-    U8
+    F32 = 0x1,
+    F16 = 0x2,
+    BF16 = 0x4,
+    S32 = 0x8,
+    S8 = 0x10,
+    U8 = 0x20
 };
 
 // This class is designed to provide runtime info about data type.

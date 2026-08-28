@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef CG_IMPL_HPP
 #define CG_IMPL_HPP
@@ -155,10 +154,10 @@ uint64_t Ones(uint32_t size)
 
 uint32_t Field(uint64_t v, uint32_t mpos, uint32_t lpos)
 {
-    if (mpos < lpos) {
+    if ((mpos + 1) < lpos) {
         throw Error(Err::ILLEGAL_IMM_RANGE);
     }
-    return static_cast<uint32_t>((v >> lpos) & Ones(mpos - lpos + 1));
+    return static_cast<uint32_t>((v >> lpos) & Ones(mpos + 1 - lpos));
 }
 
 uint64_t RRotate(uint64_t v, uint32_t size, uint32_t num)
@@ -257,6 +256,7 @@ uint32_t TestBrEnc(uint32_t op, const RReg &rt, uint32_t imm, int64_t labelOffse
 void CompareBr(uint32_t op, const RReg &rt, const Label &label);
 void StExclusive(uint32_t size, uint32_t o0, const WReg ws, const RReg &rt, const AdrImm &adr);
 void LdExclusive(uint32_t size, uint32_t o0, const RReg &rt, const AdrImm &adr);
+uint32_t ExtractLdStRegPairImm7(int32_t imm, uint32_t opc);
 void LdStRegPairPostImm(uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrPostImm &adr);
 void LdStRegPair(uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrImm &adr);
 void LdStRegPairPre(uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrPreImm &adr);
@@ -286,10 +286,15 @@ void AdvSimdLdRepSingleStruct(uint32_t l, uint32_t r, uint32_t opcode,
     uint32_t s, const VRegVec &vt, const AdrNoOfs &adr);
 void AdvSimdLdStSingleStructPostReg(uint32_t l, uint32_t r, uint32_t num, const VRegElem &vt, const AdrPostReg &adr);
 void AdvSimdLdStSingleStructPostImm(uint32_t l, uint32_t r, uint32_t num, const VRegElem &vt, const AdrPostImm &adr);
+void AdvSimdLdStMultiStructPostRegExceptLd1St1(uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostReg &adr);
+void AdvSimdLdStMultiStructPostImmExceptLd1St1(uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostImm &adr);
+void AdvSimdLdStMultiStructPostRegForLd1St1(uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostReg &adr);
+void AdvSimdLdStMultiStructPostImmForLd1St1(uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostImm &adr);
 void LdStSimdFpPairPostImm(uint32_t l, const VRegSc &vt1, const VRegSc &vt2, const AdrPostImm &adr);
 void LdStSimdFpPair(uint32_t l, const VRegSc &vt1, const VRegSc &vt2, const AdrImm &adr);
 void LdStSimdFpPairPre(uint32_t l, const VRegSc &vt1, const VRegSc &vt2, const AdrPreImm &adr);
 void LdStSimdFpUnImm(uint32_t opc, const VRegSc &vt, const AdrUimm &adr);
+void LdStSimdFpRegUnsImm(uint32_t opc, const VRegSc &vt, const AdrImm &adr);
 void AdvSimdPermute(uint32_t opcode, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm);
 void AdvSimdExtract(uint32_t op2, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm, uint32_t index);
 void AdvSimdCopyDupElem(uint32_t op, uint32_t imm4, const VRegVec &vd, const VRegElem &vn);
@@ -299,165 +304,198 @@ void AdvSimdCopyInsGen(uint32_t op, uint32_t imm4, const VRegElem &vd, const RRe
 void AdvSimdCopyElemIns(uint32_t op, const VRegElem &vd, const VRegElem &vn);
 void AdvSimd2RegMisc(uint32_t q, uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn);
 void AdvSimd2RegMiscSz0x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn);
+void AdvSimd2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn,
+    double zero);
 void AdvSimd2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn);
 void AdvSimdAcrossLanes(uint32_t u, uint32_t opcode, const VRegSc &vd, const VRegVec &vn);
 void AdvSimd3Same(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm);
+void AdvSimd3Same(uint32_t opc2, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm);
+void AdvSimd2RegMVN(uint32_t u, uint32_t opcode,
+    const VRegVec &vd, const VRegVec &vn);
+void AdvSimd3SameFp16(uint32_t u, uint32_t a, uint32_t opcode, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm);
 void AdvSimd3SameSz0x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm);
 void AdvSimd3SameSz1x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm);
 void AdvSimd3SameSz(uint32_t u, uint32_t size, uint32_t opcode, const VRegVec &vd,
     const VRegVec &vn, const VRegVec &vm);
+void AdvSimdVecXindElemEnc(uint32_t q, uint32_t u, uint32_t size, uint32_t opcode,
+    const VRegVec &vd, const VRegVec &vn, const VRegElem &vm);
+void AdvSimdVecXindElemSz(uint32_t u, uint32_t size, uint32_t opcode, const VRegVec &vd,
+    const VRegVec &vn, const VRegElem &vm);
 void AdvSimdModiImmMoviMvni(uint32_t op, uint32_t o2, const VRegVec &vd,
     uint32_t imm, ShMod shmod, uint32_t sh);
+void AdvSimdModiImmFmov(uint32_t op, uint32_t o2, const VRegVec &vd, double imm);
 void AdvSimdShImm(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn, uint32_t sh);
+void FpDataProc1Reg(uint32_t m, uint32_t s, uint32_t type, uint32_t opcode,
+    const VRegSc &vd, const VRegSc &vn);
 void FpDataProc2Reg(uint32_t m, uint32_t s, uint32_t type, uint32_t opcode,
     const VRegSc &vd, const VRegSc &vn, const VRegSc &vm);
 void ConversionFpInt(uint32_t sf, uint32_t s, uint32_t type, uint32_t rmode,
     uint32_t opcode, const RReg &rd, const VRegSc &vn);
 void ConversionFpInt(uint32_t sf, uint32_t s, uint32_t type, uint32_t rmode,
     uint32_t opcode, const VRegSc &vd, const RReg &rn);
+void AdvSimdSc2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegSc &vd, const VRegSc &vn);
+void AdvSimdSc2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegSc &vd, const VRegSc &vn, double zero);
+void AdvSimdSc3SameSz0x(uint32_t u, uint32_t opcode, const VRegSc &vd, const VRegSc &vn, const VRegSc &vm);
+void AdvSimdScPairwise(uint32_t u, uint32_t size, uint32_t opcode, const VRegSc &vd, const VRegVec &vn);
+void FpImm(uint32_t m, uint32_t s, uint32_t type, const VRegSc &vd, double imm);
+void FpComp(uint32_t m, uint32_t s, uint32_t type, uint32_t op, uint32_t opcode2, const VRegSc &vn, const VRegSc &vm);
+void FpComp(uint32_t m, uint32_t s, uint32_t type, uint32_t op, uint32_t opcode2, const VRegSc &vn, double imm);
 
 // sve
-void SveIntBinArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
+void VCIntBinArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn);
-void SveBitwiseLOpPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveIntMinMaxDiffPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
+void VCBitwiseLOpPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCIntMinMaxDiffPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn);
-void SveIntMultDivVecPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
+void VCIntMultDivVecPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn);
-void SveIntReduction(uint32_t opc, uint32_t type, const Reg &rd, const PRegBase &pg, const Reg &rn);
-void SveIntAddReductPred(uint32_t opc, uint32_t u, const VRegSc &vd, const PRegBase &pg, const ZRegBase &zn);
-void SveConstPrefPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveBitShPred(uint32_t opc, uint32_t type, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
-void SveBitwiseShByImmPred(uint32_t opc, uint32_t l, uint32_t u, const ZRegBase &zdn,
+void VCIntReduction(uint32_t opc, uint32_t type, const Reg &rd, const PRegBase &pg, const Reg &rn);
+void VCIntAddReductPred(uint32_t opc, uint32_t u, const VRegSc &vd, const PRegBase &pg, const ZRegBase &zn);
+void VCConstPrefPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCBitShPred(uint32_t opc, uint32_t type, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
+void VCBitwiseShByImmPred(uint32_t opc, uint32_t l, uint32_t u, const ZRegBase &zdn,
     const PRegBase &pg, uint32_t amount);
-void SveBitwiseShVecPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
-void SveIntUnaryArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
+void VCBitwiseShVecPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
+void VCIntUnaryArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn);
-void SveBitwiseUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
-void SveIntUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
-void SveIntAddSubUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
-void SveBitwiseLOpUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
-void SveIndexGenImmImmInc(const ZRegBase &zd, int32_t imm1, int32_t imm2);
-void SveStackFrameAdjust(uint32_t op, const XReg &xd, const XReg &xn, int32_t imm);
-void SveBitwiseShByImmUnpred(uint32_t opc, const ZRegBase &zd,
+void VCBitwiseUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
+void VCIntUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
+void VCIntAddSubUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
+void VCBitwiseLOpUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
+void VCIndexGenImmImmInc(const ZRegBase &zd, int32_t imm1, int32_t imm2);
+void VCStackFrameAdjust(uint32_t op, const XReg &xd, const XReg &xn, int32_t imm);
+void VCBitwiseShByImmUnpred(uint32_t opc, const ZRegBase &zd,
     const ZRegBase &zn, uint32_t amount);
-void SveIntMiscUnpred(uint32_t size, uint32_t opc, uint32_t type,
+void VCIntMiscUnpred(uint32_t size, uint32_t opc, uint32_t type,
     const ZRegBase &zd, const ZRegBase &zn);
-void SveFpExpAccel(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn);
-void SveElemCountGrp(uint32_t size, uint32_t op, uint32_t type1, uint32_t type2,
+void VCFpExpAccel(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn);
+void VCElemCountGrp(uint32_t size, uint32_t op, uint32_t type1, uint32_t type2,
     const Reg &rd, Pattern pat, ExtMod mod, uint32_t imm);
-void SveElemCount(uint32_t size, uint32_t op, const XReg &xd, Pattern pat, ExtMod mod, uint32_t imm);
-void SveIncDecRegByElemCount(uint32_t size, uint32_t d, const XReg &xd, Pattern pat,
+void VCElemCount(uint32_t size, uint32_t op, const XReg &xd, Pattern pat, ExtMod mod, uint32_t imm);
+void VCIncDecRegByElemCount(uint32_t size, uint32_t d, const XReg &xd, Pattern pat,
     ExtMod mod, uint32_t imm);
-void SveBitwiseImm(uint32_t opc, const ZRegBase &zd, uint64_t imm);
-void SveBitwiseLogicalImmUnpred(uint32_t opc, const ZRegBase &zdn, uint64_t imm);
-void SveBcBitmaskImm(const ZRegBase &zdn, uint64_t imm);
-void SveCopyFpImmPred(const ZRegBase &zd, const PRegBase &pg, double imm);
-void SveCopyIntImmPred(const ZRegBase &zd, const PRegBase &pg, uint32_t imm, ShMod mod, uint32_t sh);
-void SveExtVec(const ZRegBase &zdn, const ZRegBase &zm, uint32_t imm);
-void SvePerVecUnpred(uint32_t size, uint32_t type1, uint32_t type2, const ZRegBase &zd, const Reg &rn);
-void SveBcGeneralReg(const ZRegBase &zd, const RReg &rn);
-void SveBcIndexedElem(const ZRegBase &zd, const ZRegElem &zn);
-void SvePermutePredElem(uint32_t opc, uint32_t h, const PRegBase &pd,
+void VCBitwiseImm(uint32_t opc, const ZRegBase &zd, uint64_t imm);
+void VCBitwiseLogicalImmUnpred(uint32_t opc, const ZRegBase &zdn, uint64_t imm);
+void VCBcBitmaskImm(const ZRegBase &zdn, uint64_t imm);
+void VCCopyFpImmPred(const ZRegBase &zd, const PRegBase &pg, double imm);
+void VCCopyIntImmPred(const ZRegBase &zd, const PRegBase &pg, uint32_t imm, ShMod mod, uint32_t sh);
+void VCExtVec(const ZRegBase &zdn, const ZRegBase &zm, uint32_t imm);
+void VCPerVecUnpred(uint32_t size, uint32_t type1, uint32_t type2, const ZRegBase &zd, const Reg &rn);
+void VCBcGeneralReg(const ZRegBase &zd, const RReg &rn);
+void VCBcIndexedElem(const ZRegBase &zd, const ZRegElem &zn);
+void VCPermutePredElem(uint32_t opc, uint32_t h, const PRegBase &pd,
     const PRegBase &pn, const PRegBase &pm);
-void SvePermuteVecElem(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
-void SveCopyGeneralRegToVecPred(const ZRegBase &zd, const PRegBase &pg, const RReg &rn);
-void SveSelVecSplice(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveSelVecElemPred(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm);
-void SveIntCompVecGrp(uint32_t opc, uint32_t ne, const PRegBase &pd, const PRegBase &pg,
+void VCPermuteVecElem(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
+void VCCopyGeneralRegToVecPred(const ZRegBase &zd, const PRegBase &pg, const RReg &rn);
+void VCSelVecSplice(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCSelVecElemPred(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm);
+void VCIntCompVecGrp(uint32_t opc, uint32_t ne, const PRegBase &pd, const PRegBase &pg,
     const ZRegBase &zn, const ZRegBase &zm);
-void SveIntCompVec(uint32_t op, uint32_t o2, uint32_t ne, const PRegBase &pd,
+void VCIntCompVec(uint32_t op, uint32_t o2, uint32_t ne, const PRegBase &pd,
     const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm);
-void SvePredLOp(uint32_t op, uint32_t s, uint32_t o2, uint32_t o3, const PRegBase &pd,
+void VCPredLOp(uint32_t op, uint32_t s, uint32_t o2, uint32_t o3, const PRegBase &pd,
     const PRegBase &pg, const PRegBase &pn, const PRegBase &pm);
-void SvePredInit(uint32_t s, const PRegBase &pd, Pattern pat);
-void SvePredZero(uint32_t op, uint32_t s, const PRegBase &pd);
-void SveIntCompSImm(uint32_t op, uint32_t o2, uint32_t ne, const PRegBase &pd,
+void VCPredInit(uint32_t s, const PRegBase &pd, Pattern pat);
+void VCPredZero(uint32_t op, uint32_t s, const PRegBase &pd);
+void VCIntCompSImm(uint32_t op, uint32_t o2, uint32_t ne, const PRegBase &pd,
     const PRegBase &pg, const ZRegBase &zn, int32_t imm);
-void SveIntCompScalarCountAndLimit(uint32_t u, uint32_t lt, uint32_t eq,
+void VCIntCompScalarCountAndLimit(uint32_t u, uint32_t lt, uint32_t eq,
     const PRegBase &pd, const RReg &rn, const RReg &rm);
-void SveBcFpImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zd, double imm);
-void SveBcIntImmUnpred(uint32_t opc, const ZRegBase &zd, int32_t imm, ShMod mod, uint32_t sh);
-void SveIntMinMaxImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zdn, int32_t imm);
-void SveIntMultAddUnpredGroup(uint32_t op0, const ZRegBase &zda, const ZRegBase &zn, const ZRegBase &zm, uint32_t rot);
-void SveFpMultAddIndexed(uint32_t op, const ZRegBase &zda, const ZRegBase &zn, const ZRegElem &zm);
-void SveFpReciproEstUnPred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn);
-void SveFpCompWithZero(uint32_t eq, uint32_t lt, uint32_t ne, const PRegBase &pd,
+void VCBcFpImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zd, double imm);
+void VCBcIntImmUnpred(uint32_t opc, const ZRegBase &zd, int32_t imm, ShMod mod, uint32_t sh);
+void VCIntMinMaxImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zdn, int32_t imm);
+void VCIntMultAddUnpredGroup(uint32_t op0, const ZRegBase &zda, const ZRegBase &zn, const ZRegBase &zm, uint32_t rot);
+void VCFpMultAddIndexed(uint32_t op, const ZRegBase &zda, const ZRegBase &zn, const ZRegElem &zm);
+void VCFpRecurReduct(uint32_t opc, const VRegSc &vd, const PRegBase &pg, const ZRegBase &zn);
+void VCFpReciproEstUnPred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn);
+void VCFpCompWithZero(uint32_t eq, uint32_t lt, uint32_t ne, const PRegBase &pd,
     const PRegBase &pg, const ZRegBase &zn, double zero);
-void SveFpArithmeticUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
-void SveFpArithmeticPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
-void SveFpArithmeticImmPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, float ct);
-void SveFpCvtPrecision(uint32_t opc, uint32_t opc2, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveFpCvtToInt(uint32_t opc, uint32_t opc2, uint32_t u, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveFpRoundToIntegral(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveFpUnaryOp(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveIntCvtToFp(uint32_t opc, uint32_t opc2, uint32_t u, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
-void SveFpCompVec(uint32_t op, uint32_t o2, uint32_t o3, const PRegBase &pd, const PRegBase &pg,
+void VCFpArithmeticUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm);
+void VCFpArithmeticPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm);
+void VCFpArithmeticImmPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, float ct);
+void VCFpCvtPrecision(uint32_t opc, uint32_t opc2, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCFpCvtToInt(uint32_t opc, uint32_t opc2, uint32_t u, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCFpRoundToIntegral(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCFpUnaryOp(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCIntCvtToFp(uint32_t opc, uint32_t opc2, uint32_t u, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCFpCompVec(uint32_t op, uint32_t o2, uint32_t o3, const PRegBase &pd, const PRegBase &pg,
     const ZRegBase &zn, const ZRegBase &zm);
-void SveFpMultAccumAddend(uint32_t opc, const ZRegBase &zda, const PRegBase &pg,
+void VCFpMultAccumAddend(uint32_t opc, const ZRegBase &zda, const PRegBase &pg,
     const ZRegBase &zn, const ZRegBase &zm);
-void SveFpMultAccumMulti(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm, const ZRegBase &za);
-void Sve32GatherLdSc32U(uint32_t msz, uint32_t u, uint32_t ff, const ZRegBase &zt,
+void VCFpMultAccumMulti(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm, const ZRegBase &za);
+void VC32GatherLdSc32U(uint32_t msz, uint32_t u, uint32_t ff, const ZRegBase &zt,
     const PRegBase &pg, const AdrSc32U &adr);
-void Sve32GatherLdWSc32S(uint32_t u, uint32_t ff, const ZRegBase &zt, const PRegBase &pg, const AdrSc32S &adr);
-void Sve32ContiPfScImm(PrfopSve prfopSve, uint32_t msz, const PRegBase &pg, const AdrScImm &adr);
-void Sve32ContiPfScImm(PrfopSve prfopSve, uint32_t msz, const PRegBase &pg, const AdrNoOfs &adr);
-void SveLoadAndBcElem(uint32_t dtypeh, uint32_t dtypel, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr);
-void SveLoadAndBcElem(uint32_t dtypeh, uint32_t dtypel, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
-void SveLoadPredReg(const PRegBase &pt, const AdrScImm &adr);
-void SveLoadPredReg(const PRegBase &pt, const AdrNoOfs &adr);
-void SveLoadPredVec(const ZRegBase &zt, const AdrScImm &adr);
-void SveLoadPredVec(const ZRegBase &zt, const AdrNoOfs &adr);
-void SveContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr);
-void SveContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
-void SveContiLdScSc(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr);
-void SveLdBcQuadScImm(uint32_t msz, uint32_t num, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
-void SveContiNTStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
-void SveContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr);
-void SveContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
-void SveContiStScSc(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr);
-void SveStorePredReg(const PRegBase &pt, const AdrScImm &adr);
-void SveStorePredReg(const PRegBase &pt, const AdrNoOfs &adr);
-void SveStorePredVec(const ZRegBase &zt, const AdrScImm &adr);
-void SveStorePredVec(const ZRegBase &zt, const AdrNoOfs &adr);
+void VC32GatherLdWSc32S(uint32_t u, uint32_t ff, const ZRegBase &zt, const PRegBase &pg, const AdrSc32S &adr);
+void VC32ContiPfScImm(PrfopVC prfopVC, uint32_t msz, const PRegBase &pg, const AdrScImm &adr);
+void VC32ContiPfScImm(PrfopVC prfopVC, uint32_t msz, const PRegBase &pg, const AdrNoOfs &adr);
+void VCLoadAndBcElem(uint32_t dtypeh, uint32_t dtypel, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr);
+void VCLoadAndBcElem(uint32_t dtypeh, uint32_t dtypel, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
+void VCLoadPredReg(const PRegBase &pt, const AdrScImm &adr);
+void VCLoadPredReg(const PRegBase &pt, const AdrNoOfs &adr);
+void VCLoadPredVec(const ZRegBase &zt, const AdrScImm &adr);
+void VCLoadPredVec(const ZRegBase &zt, const AdrNoOfs &adr);
+void VCContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr);
+void VCContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
+void VCContiLdScSc(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr);
+void VCLdBcQuadScImm(uint32_t msz, uint32_t num, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr);
+void VCLdBcQuadScImm(uint32_t msz, uint32_t num, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
+void VCContiNTStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
+void VCContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr);
+void VCContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr);
+void VCContiStScSc(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr);
+void VCStorePredReg(const PRegBase &pt, const AdrScImm &adr);
+void VCStorePredReg(const PRegBase &pt, const AdrNoOfs &adr);
+void VCStorePredVec(const ZRegBase &zt, const AdrScImm &adr);
+void VCStorePredVec(const ZRegBase &zt, const AdrNoOfs &adr);
 void TestBr(uint32_t op, const RReg &rt, uint32_t imm, const Label &label);
-void SveFpWideMultAddGroup(uint32_t bit10, const ZRegBase &zda, const ZRegBase &zn, const ZRegBase &zm);
-void SveFpWideMultAddIndexedGroup(uint32_t bit10, const ZRegBase &zda, const ZRegBase &zn, const ZRegElem &zm);
+void VCFpWideMultAddGroup(uint32_t bit10, const ZRegBase &zda, const ZRegBase &zn, const ZRegBase &zm);
+void VCFpWideMultAddIndexedGroup(uint32_t bit10, const ZRegBase &zda, const ZRegBase &zn, const ZRegElem &zm);
+void VCFpConvPrecOddElem(uint32_t bit, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn);
+void VCUnpackVecElem(uint32_t u, uint32_t h, const ZRegBase &zd, const ZRegBase &zn);
+void VCMiscGroup(uint32_t bit2310, const ZRegBase &zd, const ZRegBase &zda, const ZRegBase &zn, const ZRegBase &zm,
+    uint32_t amount);
 
-// MatrixComputation
-#ifdef KUDNNL_920Pro
-void MatrixComputationStart(StreamMode mod);
-void MatrixComputationStop(StreamMode mod);
-void MatrixComputationZero(const std::initializer_list<ZARegBase> &list);
+// sme
+#ifdef KUDNNL_920F
+void MCStart(StreamMode mod);
+void MCStop(StreamMode mod);
+void MCZero(const std::initializer_list<ZARegBase> &list);
 uint32_t EncodeSourcesMOP(const ZRegBase &zm, const PRegBase &pm, const PRegBase &pn, const ZRegBase &zn);
-void MatrixComputationOuterProductAccNonWidening(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductAccNonWidening(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegS &zn, const ZRegS &zm);
-void MatrixComputationOuterProductAcc2Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductAcc2Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegH &zn, const ZRegH &zm);
-void MatrixComputationOuterProductAccSigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductAccBfNonWidening(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+    const ZRegH &zn, const ZRegH &zm);
+void MCOuterProductAccSigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationOuterProductSubSigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductSubSigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationOuterProductAccSignedUnsigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductAccSignedUnsigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationOuterProductSubSignedUnsigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductSubSignedUnsigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationOuterProductAccUnsigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductAccUnsigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationOuterProductSubUnsigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductSubUnsigned4Way(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationOuterProductAccUnsignedSigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductAccUnsignedSigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationOuterProductSubUnsignedSigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
+void MCOuterProductSubUnsignedSigned(const ZARegS &zada, const PRegBase &pn, const PRegBase &pm,
     const ZRegB &zn, const ZRegB &zm);
-void MatrixComputationMovTile2Vec(const ZRegB &zd, const PRegBase &pg, const ZARegB &zan, bool v, const WReg &ws, uint32_t offs);
-void MatrixComputationMovTile2Vec(const ZRegS &zd, const PRegBase &pg, const ZARegS &zan, bool v, const WReg &ws, uint32_t offs);
-void MatrixComputationMovVec2Tile(const ZARegB &zad, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const ZRegB &zn);
-void MatrixComputationMovVec2Tile(const ZARegS &zad, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const ZRegS &zn);
-void MatrixComputationStoreTile(const ZARegB &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
-void MatrixComputationLoadTile(const ZARegB &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
-void MatrixComputationStoreTile(const ZARegS &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
-void MatrixComputationAddVec2Tile(const ZARegS &zada, bool v, const PRegBase &pn, const PRegBase &pm, const ZRegS &zn);
+void MCAddVec2Tile(const ZARegS &zada, bool v, const PRegBase &pn, const PRegBase &pm, const ZRegS &zn);
+void MCLoadTile(const ZARegB &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
+void MCLoadTile(const ZARegH &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
+void MCLoadTile(const ZARegS &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
+void MCStoreTile(const ZARegB &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
+void MCStoreTile(const ZARegH &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
+void MCStoreTile(const ZARegS &zat, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const AdrScSc &adr);
+void MCMovTile2Vec(const ZRegB &zd, const PRegBase &pg, const ZARegB &zan, bool v, const WReg &ws, uint32_t offs);
+void MCMovTile2Vec(const ZRegH &zd, const PRegBase &pg, const ZARegH &zan, bool v, const WReg &ws, uint32_t offs);
+void MCMovTile2Vec(const ZRegS &zd, const PRegBase &pg, const ZARegS &zan, bool v, const WReg &ws, uint32_t offs);
+void MCMovVec2Tile(const ZARegB &zad, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const ZRegB &zn);
+void MCMovVec2Tile(const ZARegH &zad, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const ZRegH &zn);
+void MCMovVec2Tile(const ZARegS &zad, bool v, const WReg &ws, uint32_t offs, const PRegBase &pg, const ZRegS &zn);
 #endif
 
 #endif // CG_IMPL_HPP

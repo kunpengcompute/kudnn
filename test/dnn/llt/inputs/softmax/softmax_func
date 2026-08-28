@@ -1,0 +1,55 @@
+# 1D
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 222
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 4788
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=0 8534
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=0 6461
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 1711
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 4776
+
+# 2D
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 131x233
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 168x71
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=1 49x188
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=1 97x44
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=1 142x109
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 241x73
+
+# 3D
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=1 24x196x49
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=1 21x214x42
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 16x25x98
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=2 13x37x20
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=1 61x80x31
+--dir=FWD_D,FWD_I,BWD_D --ddt=f16 --sdt=f16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=2 35x72x15
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=2 13x37x20
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=1 61x80x31
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=0 35x72x15
+
+# 4D
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=3 16x27x17x10
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=2 26x8x25x20
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=3 6x16x27x1
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=1 12x26x8x2
+
+# 5D
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=3 2x16x27x17x10
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=2 1x26x8x25x10
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=true --axis=4 2x16x27x17x10
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=1 1x26x8x25x10
+--dir=FWD_D,FWD_I,BWD_D --ddt=bf16 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=0 1x26x8x25x10
+
+--dir=FWD_D,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX --inplace=false --axis=1 2049x3072
+--dir=FWD_D,FWD_I --ddt=s32 --sdt=s32 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=4 1x26x8x25x10
+--dir=FWD_D,FWD_I --ddt=s32 --sdt=s32 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=0 1x26x8x25x10
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=bf16 --alg=SOFTMAX,LOGSOFTMAX --inplace=false --axis=2 1x26x8x25x10
+--dir=FWD_D,FWD_I,BWD_D --ddt=f32 --sdt=f32 --alg=SOFTMAX,LOGSOFTMAX --stag=abcde --dtag=abced --inplace=false --axis=4 1x26x8x25x10
+
+# DTS2025011516867
+--dir=FWD_D --sdt=s8 --ddt=s8 --stag=cdeab --dtag=cdeab --alg=LOGSOFTMAX --axis=3 --inplace=false 23x41x31x31x15
+--dir=FWD_D --sdt=s8 --ddt=s8 --stag=bcdea --dtag=bcdea --alg=SOFTMAX --axis=4 --inplace=false 41x5x15x1x1
+--dir=FWD_D --sdt=u8 --ddt=u8 --stag=a --dtag=a --alg=LOGSOFTMAX --axis=0 --inplace=true 87
+--dir=FWD_D --sdt=u8 --ddt=u8 --stag=acbde --dtag=acbde --alg=SOFTMAX --axis=1 --inplace=true 17x23x5x12x50
+--dir=FWD_I --sdt=s8 --ddt=s8 --stag=abdec --dtag=abdec --alg=SOFTMAX --axis=2 --inplace=false 48x7x15x7x1
+--dir=FWD_I --sdt=s8 --ddt=s8 --stag=decab --dtag=decab --alg=LOGSOFTMAX --axis=0 --inplace=false 10x1x3x3x15
+--dir=FWD_I --sdt=u8 --ddt=u8 --stag=a --dtag=a --alg=SOFTMAX --axis=0 --inplace=true 11
+--dir=FWD_I --sdt=u8 --ddt=u8 --stag=acbde --dtag=acbde --alg=LOGSOFTMAX --axis=3 --inplace=true 46x41x21x38x11

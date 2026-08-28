@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,122 +9,192 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 #include "kudnn_jit_sve_conv_kernel.hpp"
 #include "kudnn_conv_const.hpp"
+#include "internal_funcs.hpp"
 namespace KuDNN {
-namespace {
-// calculates filter size taking into account dilation
-inline int CalculateExtendedFilterSize(int filterSize, int dilation)
-{
-    return (filterSize - 1) * (dilation + 1) + 1;
-}
-
-inline int CalculateEndPadding(int startPadding, int dstDize, int srcSize,
-    int spatialStride, int dilatedFilterSize)
-{
-    return (dstDize - 1) * spatialStride + dilatedFilterSize
-            - (srcSize + startPadding);
-}
-}
-
 using namespace ARMCG;
 using namespace Element;
 
 template <CPUISAT isa, TypeT dtp>
-void KudnnJitConvFwdKernel<isa, dtp>::PrepareOutput(int urW)
+void KdnnJitConvFwdKernel<isa, dtp>::PrepareOutput(IntType urW)
 {
-    auto zregOut = [this](int iUr, int iOc) {
-        if (jcp.kernelKind == KudnnConvKernelKindT::KUDNN_CONT_BCAST) {
-            int idx = REG_INDEX29 - (iUr + iOc * jcp.urW);
+#ifdef KUDNNL_920B
+    if (jcp.kernelKind == KdnnConvKernelKindT::KUDNN_EMBD_BCAST) {
+        for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+            for (IntType j = 0; j < urW; j++) {
+                Movi(VReg(j + k * jcp.urW).s, 0);
+            }
+        }
+    } else {
+#endif
+        auto zregOut = [this](IntType iUr, IntType iOc) {
+            if (jcp.kernelKind == KdnnConvKernelKindT::KUDNN_CONT_BCAST) {
+                IntType idx = REG_INDEX29 - (iUr + iOc * jcp.urW);
+                return ZRegFactory::GetZRegAcdTp4Fmov(dtp, idx);
+            }
+            IntType idx = iUr + iOc * jcp.urW;
             return ZRegFactory::GetZRegAcdTp4Fmov(dtp, idx);
-        }
-        int idx = iUr + iOc * jcp.urW;
-        return ZRegFactory::GetZRegAcdTp4Fmov(dtp, idx);
-    };
+        };
 
-    for (int k = 0; k < jcp.nbOcBlocking; k++) {
-        for (int j = 0; j < urW; j++) {
-            FmovZReg(dtp, zregOut(j, k));
+        for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+            for (IntType j = 0; j < urW; j++) {
+                FmovZReg(dtp, zregOut(j, k));
+            }
         }
+#ifdef KUDNNL_920B
     }
+#endif
 }
 
+#ifdef KUDNNL_920B
 template <CPUISAT isa, TypeT dtp>
-void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
+void KdnnJitConvFwdKernel<isa, dtp>::StoreOutputForVReg(IntType urW)
 {
     Label noUpdateLabel;
     Label storeLabel;
     Label eltwiseLabel;
-    auto tTest = [this](const int cond) { return Tst(regChannel, cond); };
-    auto zregOut = [this](int iUr, int iOc) {
-        int idx = jcp.kernelKind == KudnnConvKernelKindT::KUDNN_CONT_BCAST
-                  ? REG_INDEX29 - (iUr + iOc * jcp.urW)
-                  : iUr + iOc * jcp.urW;
-        return ZRegFactory::GetZRegAcdTp(dtp, idx);
-    };
+    auto tTest = [this](const IntType cond) { return Tst(regChannel, cond); };
 
-    Ldr(regChannel, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-        offsetof(KudnnConvJitCallS, flags))));
+    Ldr(regChannel, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KdnnConvJitCallS, flags))));
 
     if (jcp.withBias) {
-        Ldr(regBias, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-            offsetof(KudnnConvJitCallS, bias))));
+        Ldr(regBias, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KdnnConvJitCallS, bias))));
     }
 
     if (!jcp.withSum) {
         auto tJmp = [this](const Label &l) { return B(Cond::NE, l); };
-        tTest(static_cast<int32_t>(KudnnConvFlag::KUDNN_FLAG_IC_FIRST));
+        tTest(static_cast<int32_t>(KdnnConvFlag::KUDNN_FLAG_IC_FIRST));
         tJmp(noUpdateLabel);
     }
 
-    int regOfs = jcp.urW * jcp.nbOcBlocking;
-    int nRegs = REG_INDEX32 - regOfs;
-    if (dtp == TypeT::BF16) {
-        nRegs = REG_INDEX32 - regOfs - REG_INDEX2;
-        Fmov(ZReg(REG_INDEX31).s, pAllOne, 1.f);
-        Bfcvt(ZReg(REG_INDEX30).h, pAllOne, ZReg(REG_INDEX31).s);
-    }
-    int prevOutOfs = -1;
-    for (int k = 0; k < jcp.nbOcBlocking; k++) {
-        for (int j = 0; j < urW; j++) {
-            int tmpIdx = jcp.kernelKind == KudnnConvKernelKindT::KUDNN_CONT_BCAST
-                         ? j
-                         : regOfs + ((j + k * urW) % nRegs);
-            size_t auxOutputOffset = GetOutputOffset(j, k);
+    IntType regOfs = jcp.urW * jcp.nbOcBlocking;
+    IntType nRegs = REG_INDEX32 - regOfs;
+
+    IntType prevOutOfs = -1;
+    for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+        for (IntType j = 0; j < urW; j++) {
+            IntType tmpIdx = regOfs + ((j + k * urW) % nRegs);
+            SizeType auxOutputOffset = GetOutputOffset(j, k);
             if (j == 0) {
                 AddImm(regOutOfs, regOut, auxOutputOffset, regTmpImm);
-                prevOutOfs = static_cast<int>(auxOutputOffset);
+                prevOutOfs = auxOutputOffset;
+                Ld1(VReg4SList(VReg(tmpIdx).s), Ptr(regOutOfs));
+            } else {
+                AddImm(regOutOfs, regOutOfs, auxOutputOffset - prevOutOfs, regTmpImm);
+                prevOutOfs = auxOutputOffset;
+                Ld1(VReg4SList(VReg(tmpIdx).s), Ptr(regOutOfs));
+            }
+            Fadd(VReg(j + k * jcp.urW).s, VReg(j + k * jcp.urW).s, VReg(tmpIdx).s);
+        }
+    }
+
+    B(eltwiseLabel);
+
+    auto biasLoad = [this](IntType biasOffset, IntType idx) {
+        IntType ofs = biasOffset;
+        if ((GetVlenOfs(ofs, isa) < LDRMAX) && (GetVlenOfs(ofs, isa) >= (-1 * LDRMAX))
+                && ((ofs & 0x3f) == 0)) {
+            AddImm(xDefaultAddr, regBias, ofs, X_TMP_0);
+            Ld1(VReg4SList(VReg(idx).s), Ptr(xDefaultAddr));
+        } else {
+            AddImm(regTmpAddr, regBias, ofs, regTmpImm);
+            Ld1(VReg4SList(VReg(idx).s), Ptr(regTmpAddr));
+        }
+    };
+
+    L(noUpdateLabel);
+    if (jcp.withBias) {
+        for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+            SizeType biasOffset = jcp.typeSizeOut * k * jcp.ocBlock;
+            IntType idx = regOfs + (k % nRegs);
+            biasLoad(biasOffset, idx);
+            for (IntType j = 0; j < urW; j++) {
+                Fadd(VReg(j + k * jcp.urW).s, VReg(j + k * jcp.urW).s, VReg(idx).s);
+            }
+        }
+    }
+
+    L(eltwiseLabel);
+    auto outStr = [this](IntType j, IntType k, IntType auxOutputOffset, IntType tPrevOutOfs) {
+        IntType ofs = auxOutputOffset;
+        if (KdnnStrImmCheck<IntType, isa>(ofs)) {
+            AddImm(xDefaultAddr, regOut, ofs, X_TMP_0);
+            St1(VReg4SList(VReg(j + k * jcp.urW).s), Ptr(xDefaultAddr));
+        } else if ((tPrevOutOfs != -1)
+                && KdnnStrImmCheck<IntType, isa>(ofs - tPrevOutOfs)) {
+            AddImm(xDefaultAddr, regTmpAddr, (ofs - tPrevOutOfs), X_TMP_0);
+            St1(VReg4SList(VReg(j + k * jcp.urW).s), Ptr(xDefaultAddr));
+        } else {
+            if (tPrevOutOfs == -1) {
+                AddImm(regTmpAddr, regOut, ofs, regTmpImm);
+            } else {
+                AddImm(regTmpAddr, regTmpAddr, ofs - tPrevOutOfs, regTmpImm);
+            }
+            St1(VReg4SList(VReg(j + k * jcp.urW).s), Ptr(regTmpAddr));
+            tPrevOutOfs = auxOutputOffset;
+        }
+        return tPrevOutOfs;
+    };
+
+    L(storeLabel);
+    prevOutOfs = -1;
+    for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+        for (IntType j = 0; j < urW; j++) {
+            SizeType auxOutputOffset = GetOutputOffset(j, k);
+            prevOutOfs = outStr(j, k, auxOutputOffset, prevOutOfs);
+        }
+    }
+}
+#endif
+
+template <CPUISAT isa, TypeT dtp>
+void KdnnJitConvFwdKernel<isa, dtp>::StoreOutputFadd(IntType rOfs, IntType nRegs,
+    IntType& preOutOfs, IntType urW)
+{
+    auto zregOut = [this](IntType iUr, IntType iOc) {
+        IntType idx = jcp.kernelKind == KdnnConvKernelKindT::KUDNN_CONT_BCAST
+                  ? REG_INDEX29 - (iUr + iOc * jcp.urW)
+                  : iUr + iOc * jcp.urW;
+        return ZRegFactory::GetZRegAcdTp(dtp, idx);
+    };
+    for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+        for (IntType j = 0; j < urW; j++) {
+            IntType tmpIdx = jcp.kernelKind == KdnnConvKernelKindT::KUDNN_CONT_BCAST
+                         ? j
+                         : rOfs + ((j + k * urW) % nRegs);
+            SizeType auxOutputOffset = GetOutputOffset(j, k);
+            if (j == 0) {
+                AddImm(regOutOfs, regOut, auxOutputOffset, regTmpImm);
+                preOutOfs = auxOutputOffset;
                 dtp == TypeT::F32 ? Ld1w(ZReg(tmpIdx).s, pAllOne / PredType::T_Z, Ptr(regOutOfs)) :
                     (dtp == TypeT::F16 ? Ld1h(ZReg(tmpIdx).h, pAllOne / PredType::T_Z, Ptr(regOutOfs)) :
                     Ld1h(ZReg(tmpIdx).s, pAllOne / PredType::T_Z, Ptr(regOutOfs)));
-            } else if (KudnnLdrImmCheck<size_t, isa>(auxOutputOffset - prevOutOfs)) {
+            } else if (KdnnLdrImmCheck<SizeType, isa>(auxOutputOffset - preOutOfs)) {
                 if (dtp == TypeT::BF16) {
-                    AddImm(xDefaultAddr, regOutOfs, (auxOutputOffset - prevOutOfs), X_TMP_0);
+                    AddImm(xDefaultAddr, regOutOfs, (auxOutputOffset - preOutOfs), X_TMP_0);
                 } else if (dtp == TypeT::F16) {
-                    AddImm(regOutOfs, regOutOfs,
-                    auxOutputOffset - prevOutOfs, regTmpImm);
-                    prevOutOfs = auxOutputOffset;
+                    AddImm(regOutOfs, regOutOfs, auxOutputOffset - preOutOfs, regTmpImm);
+                    preOutOfs = auxOutputOffset;
                 }
                 dtp == TypeT::F32 ? Ldr(ZRegS(tmpIdx), AdrScImm(Ptr(regOutOfs,
-                    static_cast<int32_t>(GetVlenOfs(auxOutputOffset - prevOutOfs, isa))))) :
+                    static_cast<int32_t>(GetVlenOfs(auxOutputOffset - preOutOfs, isa))))) :
                     (dtp == TypeT::F16 ? Ld1h(ZReg(tmpIdx).h, pAllOne / PredType::T_Z, Ptr(regOutOfs)) :
                         Ld1h(ZReg(tmpIdx).s, pAllOne / PredType::T_Z, Ptr(xDefaultAddr)));
             } else {
                 AddImm(regOutOfs, regOutOfs,
-                    auxOutputOffset - prevOutOfs, regTmpImm);
-                prevOutOfs = static_cast<int>(auxOutputOffset);
+                    auxOutputOffset - preOutOfs, regTmpImm);
+                preOutOfs = auxOutputOffset;
                 dtp == TypeT::F32 ? Ld1w(ZReg(tmpIdx).s, pAllOne / PredType::T_Z, Ptr(regOutOfs)) : (
                     dtp == TypeT::F16 ? Ld1h(ZReg(tmpIdx).h, pAllOne / PredType::T_Z, Ptr(regOutOfs)) :
                     Ld1h(ZReg(tmpIdx).s, pAllOne / PredType::T_Z, Ptr(regOutOfs)));
             }
         }
-        for (int j = 0; j < urW; j++) {
-            int tmpIdx = jcp.kernelKind == KudnnConvKernelKindT::KUDNN_CONT_BCAST
+        for (IntType j = 0; j < urW; j++) {
+            IntType tmpIdx = jcp.kernelKind == KdnnConvKernelKindT::KUDNN_CONT_BCAST
                          ? j
-                         : regOfs + ((j + k * urW) % nRegs);
+                         : rOfs + ((j + k * urW) % nRegs);
             auto pZreg = zregOut(j, k);
-            assert(pZreg.get() != nullptr);
             if (dtp == TypeT::F32) {
                 ARMCG::ZRegS* pZRegS = static_cast<ARMCG::ZRegS*>(pZreg.get());
                 Fadd(*pZRegS, *pZRegS, ZRegS(tmpIdx));
@@ -137,11 +207,55 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
             }
         }
     }
+}
 
+template <CPUISAT isa, TypeT dtp>
+void KdnnJitConvFwdKernel<isa, dtp>::StoreOutput(IntType urW)
+{
+#ifdef KUDNNL_920B
+    if (jcp.kernelKind == KdnnConvKernelKindT::KUDNN_EMBD_BCAST) {
+        StoreOutputForVReg(urW);
+        return;
+    }
+#endif
+    Label noUpdateLabel;
+    Label storeLabel;
+    Label eltwiseLabel;
+    auto tTest = [this](const IntType cond) { return Tst(regChannel, cond); };
+    auto zregOut = [this](IntType iUr, IntType iOc) {
+        IntType idx = jcp.kernelKind == KdnnConvKernelKindT::KUDNN_CONT_BCAST
+                  ? REG_INDEX29 - (iUr + iOc * jcp.urW)
+                  : iUr + iOc * jcp.urW;
+        return ZRegFactory::GetZRegAcdTp(dtp, idx);
+    };
+
+    Ldr(regChannel, Ptr(ABI_PARAM1, static_cast<uint32_t>(
+        offsetof(KdnnConvJitCallS, flags))));
+
+    if (jcp.withBias) {
+        Ldr(regBias, Ptr(ABI_PARAM1, static_cast<uint32_t>(
+            offsetof(KdnnConvJitCallS, bias))));
+    }
+
+    if (!jcp.withSum) {
+        auto tJmp = [this](const Label &l) { return B(Cond::NE, l); };
+        tTest(static_cast<int32_t>(KdnnConvFlag::KUDNN_FLAG_IC_FIRST));
+        tJmp(noUpdateLabel);
+    }
+
+    IntType regOfs = jcp.urW * jcp.nbOcBlocking;
+    IntType nRegs = REG_INDEX32 - regOfs;
+    if (dtp == TypeT::BF16) {
+        nRegs = REG_INDEX32 - regOfs - REG_INDEX2;
+        Fmov(ZReg(REG_INDEX31).s, pAllOne, 1.f);
+        Bfcvt(ZReg(REG_INDEX30).h, pAllOne, ZReg(REG_INDEX31).s);
+    }
+    IntType prevOutOfs = -1;
+    StoreOutputFadd(regOfs, nRegs, prevOutOfs, urW);
     B(eltwiseLabel);
 
-    auto biasLoad = [this](int biasOffset, int idx) {
-        int ofs = biasOffset;
+    auto biasLoad = [this](SizeType biasOffset, IntType idx) {
+        SizeType ofs = biasOffset;
         if ((GetVlenOfs(ofs, isa) < LDRMAX) && (GetVlenOfs(ofs, isa) >= (-1 * LDRMAX))
                 && ((ofs & 0x3f) == 0)) {
             AddImm(xDefaultAddr, regBias, ofs, X_TMP_0);
@@ -158,9 +272,9 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
 
     L(noUpdateLabel);
     if (jcp.withBias) {
-        for (int k = 0; k < jcp.nbOcBlocking; k++) {
-            int biasOffset = jcp.typeSizeOut * k * jcp.ocBlock;
-            int idx = jcp.kernelKind == KudnnConvKernelKindT::KUDNN_CONT_BCAST
+        for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+            SizeType biasOffset = jcp.typeSizeOut * k * jcp.ocBlock;
+            IntType idx = jcp.kernelKind == KdnnConvKernelKindT::KUDNN_CONT_BCAST
                       ? k : regOfs + (k % nRegs);
             biasLoad(biasOffset, idx);
             if (dtp == TypeT::BF16) {
@@ -168,9 +282,8 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
                 Bfcvt(ZReg(REG_INDEX30).h, pAllOne, ZReg(REG_INDEX31).s);
             }
             
-            for (int j = 0; j < urW; j++) {
+            for (IntType j = 0; j < urW; j++) {
                 auto pZreg = zregOut(j, k);
-                assert(pZreg.get() != nullptr);
                 if (dtp == TypeT::F32) {
                     ARMCG::ZRegS* pZRegS = static_cast<ARMCG::ZRegS*>(pZreg.get());
                     Fadd(*pZRegS, *pZRegS, ZRegS(idx));
@@ -186,16 +299,15 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
     }
 
     L(eltwiseLabel);
-    auto outStrF32 = [this, zregOut](int j, int k, int auxOutputOffset, int tPrevOutOfs) {
+    auto outStrF32 = [this, zregOut](IntType j, IntType k, IntType auxOutputOffset, IntType tPrevOutOfs) {
         auto pZreg = zregOut(j, k);
-        assert(pZreg.get() != nullptr);
         ARMCG::ZRegS* pZRegS = static_cast<ARMCG::ZRegS*>(pZreg.get());
-        int ofs = auxOutputOffset;
-        if (KudnnStrImmCheck<int, isa>(ofs)) {
+        IntType ofs = auxOutputOffset;
+        if (KdnnStrImmCheck<IntType, isa>(ofs)) {
             AddImm(xDefaultAddr, regOut, ofs, X_TMP_0);
             St1w(*pZRegS, pAllOne / PredType::T_Z, Ptr(xDefaultAddr));
         } else if ((tPrevOutOfs != -1)
-                && KudnnStrImmCheck<int, isa>(ofs - tPrevOutOfs)) {
+                && KdnnStrImmCheck<IntType, isa>(ofs - tPrevOutOfs)) {
             AddImm(xDefaultAddr, regTmpAddr, (ofs - tPrevOutOfs),
                 X_TMP_0);
             St1w(*pZRegS, pAllOne / PredType::T_Z, Ptr(xDefaultAddr));
@@ -211,11 +323,10 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
         return tPrevOutOfs;
     };
 
-    auto outStrF16 = [this, zregOut](int j, int k, int auxOutputOffset, int tPrevOutOfs) {
+    auto outStrF16 = [this, zregOut](IntType j, IntType k, SizeType auxOutputOffset, IntType tPrevOutOfs) {
         auto pZreg = zregOut(j, k);
-        assert(pZreg.get() != nullptr);
         ARMCG::ZRegH* pZRegH = static_cast<ARMCG::ZRegH*>(pZreg.get());
-        int ofs = auxOutputOffset;
+        SizeType ofs = auxOutputOffset;
         if (tPrevOutOfs == -1) {
             AddImm(regTmpAddr, regOut, ofs, regTmpImm);
         } else {
@@ -226,8 +337,8 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
         return tPrevOutOfs;
     };
 
-    auto outStrBF16 = [this](int auxOutputOffset, int tPrevOutOfs) {
-        int ofs = auxOutputOffset;
+    auto outStrBF16 = [this](SizeType auxOutputOffset, IntType tPrevOutOfs) {
+        SizeType ofs = auxOutputOffset;
         if (tPrevOutOfs == -1) {
             AddImm(regTmpAddr, regOut, ofs, regTmpImm);
         } else {
@@ -240,16 +351,15 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
 
     L(storeLabel);
     prevOutOfs = -1;
-    for (int k = 0; k < jcp.nbOcBlocking; k++) {
-        for (int j = 0; j < urW; j++) {
-            size_t auxOutputOffset = GetOutputOffset(j, k);
+    for (IntType k = 0; k < jcp.nbOcBlocking; k++) {
+        for (IntType j = 0; j < urW; j++) {
+            SizeType auxOutputOffset = GetOutputOffset(j, k);
             if (dtp == TypeT::F32) {
                 prevOutOfs = outStrF32(j, k, auxOutputOffset, prevOutOfs);
             } else if (dtp == TypeT::F16) {
                 prevOutOfs = outStrF16(j, k, auxOutputOffset, prevOutOfs);
             } else if (dtp == TypeT::BF16) {
                 auto pZreg = zregOut(j, k);
-                assert(pZreg.get() != nullptr);
                 ARMCG::ZRegS* pZRegS = static_cast<ARMCG::ZRegS*>(pZreg.get());
                 Bfcvt(ZReg(REG_INDEX31).h, pAllOne, *pZRegS);
                 prevOutOfs = outStrBF16(auxOutputOffset, prevOutOfs);
@@ -259,7 +369,74 @@ void KudnnJitConvFwdKernel<isa, dtp>::StoreOutput(int urW)
 }
 
 template <CPUISAT isa, TypeT dtp>
-void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoop(int urW, int padL, int padR)
+void KdnnJitConvFwdKernel<isa, dtp>::ComputeLoopCommon(IntType urW, IntType padL, IntType padR)
+{
+    Label kdLabel;
+    const bool isSourceLayoutNxc = IsSrcLayoutNxc();
+    IntType inpMul = isSourceLayoutNxc ? jcp.ngroups * jcp.ic
+                                   : (!jcp.is1stConv ? jcp.icBlock : 1);
+
+    if (jcp.ndims == KERNEL_DIMS_3 || jcp.ndims == KERNEL_DIMS_4) {
+        Mov(auxRegInp, regInp);
+        AddImm(auxRegInp2, auxRegInp, 0x100, regTmpImm);
+        AddImm(auxRegInp3, auxRegInp2, 0x100, regTmpImm);
+        Mov(auxRegKer, regKer);
+    }
+
+    if (jcp.ndims == KERNEL_DIMS_5) {
+        Mov(regOutOrg, regOut);
+        Ldr(regKi, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KdnnConvJitCallS, kdPadding))));
+        if (isSourceLayoutNxc) {
+            // need to continue with the same kernel pointer, but as
+            // auxRegKerD == regKer we need to save its value and restore
+            // it after kd loop
+            Mov(auxRegKerOrg, auxRegKerD);
+        } else {
+            Mov(auxRegKerD, auxRegKerOrg);
+        }
+        Mov(auxRegInpD, regInp);
+
+        L(kdLabel);
+        Ldr(regKj, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KdnnConvJitCallS, khPadding))));
+    } else {
+        Mov(regKj, regKh);
+    }
+
+    if (jcp.ndims == KERNEL_DIMS_5) {
+        Mov(auxRegInp, auxRegInpD);
+        AddImm(auxRegInp2, auxRegInp, 0x100, regTmpImm);
+        AddImm(auxRegInp3, auxRegInp2, 0x100, regTmpImm);
+        Mov(auxRegKer, auxRegKerD);
+    }
+
+    if (jcp.kernelKind == KdnnConvKernelKindT::KUDNN_EXPL_BCAST
+        || jcp.kernelKind == KdnnConvKernelKindT::KUDNN_EMBD_BCAST) {
+        ComputeLoopFmaCore(urW, padL, padR);
+    } else {
+        ComputeLoopFma(urW, padL, padR);
+    }
+
+    if (jcp.ndims == KERNEL_DIMS_5) {
+        IntType dtpSize = dtp == TypeT::F32 ? TYPE_SIZE : HALF_TYPE_SIZE;
+        AddImm(auxRegInpD, auxRegInpD,
+            dtpSize * (jcp.dilateD + 1) * jcp.ih * jcp.iw * inpMul,
+            regTmpImm);
+        const SizeType kerShift = dtpSize * jcp.kw * jcp.kh * jcp.ocBlock * jcp.icBlock;
+        AddImm(auxRegKerD, auxRegKerD, kerShift, regTmpImm);
+
+        Sub(regKi, regKi, 1);
+        Cmp(regKi, 0);
+        B(Cond::GT, kdLabel);
+
+        if (isSourceLayoutNxc) {
+            Mov(auxRegKerD, auxRegKerOrg);
+        }
+        Mov(regOut, regOutOrg);
+    }
+}
+
+template <CPUISAT isa, TypeT dtp>
+void KdnnJitConvFwdKernel<isa, dtp>::ComputeLoop(IntType urW, IntType padL, IntType padR)
 {
     if (jcp.ndims == KERNEL_DIMS_5) {
         Mov(regOiOrg, regOi);
@@ -269,16 +446,16 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoop(int urW, int padL, int padR)
     if (jcp.ndims == KERNEL_DIMS_5) {
         if ((jcp.dilateD >= jcp.id)
                 || (jcp.kd - 1) * (jcp.dilateD + 1)
-                        < std::max(static_cast<int>(jcp.fPad), static_cast<int>(jcp.backPad))) {
-            Ldr(regKj, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KudnnConvJitCallS, kdPadding))));
+                        < (jcp.fPad > jcp.backPad ? jcp.fPad : jcp.backPad)) {
+            Ldr(regKj, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KdnnConvJitCallS, kdPadding))));
             Cmp(regKj, 0);
             B(Cond::LE, skipComputeLoop);
         }
     }
     if ((jcp.dilateH >= jcp.ih)
             || (jcp.kh - 1) * (jcp.dilateH + 1)
-                    < std::max(static_cast<int>(jcp.tPad), static_cast<int>(jcp.bPad))) {
-        Ldr(regKj, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KudnnConvJitCallS, khPadding))));
+                    < (jcp.tPad > jcp.bPad ? jcp.tPad : jcp.bPad)) {
+        Ldr(regKj, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KdnnConvJitCallS, khPadding))));
         Cmp(regKj, 0);
         B(Cond::LE, skipComputeLoop);
     }
@@ -288,23 +465,20 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoop(int urW, int padL, int padR)
     if (generateIcbLoop) {
         Mov(regInpOrg, regInp);
         Mov(regKerOrg, regKer);
-        Ldr(regChannel, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KudnnConvJitCallS, reduceWork))));
+        Ldr(regChannel, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KdnnConvJitCallS, reduceWork))));
         L(icLoop);
     }
 
-    if (jcp.ver == KudnnConvVersionT::KUDNN_VER_FMA) {
-        if (jcp.kernelKind == KudnnConvKernelKindT::KUDNN_CONT_BCAST) {
-            ComputeLoopFma(urW, padL, padR);
-        } else {
-            ComputeLoopFmaCore(urW, padL, padR);
-        }
+    if (jcp.ver == KdnnConvVersionT::KUDNN_VER_FMA) {
+        ComputeLoopCommon(urW, padL, padR);
     } else {
-        assert(!"unknown convolution version");
+        printf("unknown convolution version\n");
+        return;
     }
     if (generateIcbLoop) {
-        const int inpShift = jcp.icBlock * jcp.typeSizeIn;
+        const IntType inpShift = jcp.icBlock * jcp.typeSizeIn;
         AddImm(regInp, regInp, inpShift, regTmpImm);
-        const int kerShift = jcp.kd * jcp.kh * jcp.kw * jcp.icBlock
+        const IntType kerShift = jcp.kd * jcp.kh * jcp.kw * jcp.icBlock
                 * jcp.ocBlock * jcp.typeSizeIn;
         AddImm(regKer, regKer, kerShift, regTmpImm);
         SubImm(regChannel, regChannel, jcp.icBlock, regTmpImm);
@@ -322,77 +496,38 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoop(int urW, int padL, int padR)
 }
 
 template <CPUISAT isa, TypeT dtp>
-void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFma(int urW, int padL, int padR)
+void KdnnJitConvFwdKernel<isa, dtp>::ComputeLoopFma(IntType urW, IntType padL, IntType padR)
 {
-    int kw = jcp.kw;
-    int icBlock = jcp.icBlock;
-    int ocBlock = jcp.ocBlock;
-    int nbOcBlock = jcp.nbOcBlocking;
-    const bool isSourceLayoutNxc = IsSrcLayoutNxc();
-    const bool icbLoopInComputeFunction = isSourceLayoutNxc;
-
+    IntType kw = jcp.kw;
+    IntType icBlock = jcp.icBlock;
+    IntType ocBlock = jcp.ocBlock;
+    IntType nbOcBlock = jcp.nbOcBlocking;
     Label khLabel;
-    Label kdLabel;
 
     std::vector<Label> icTailJmp(kw);
-    int shiftKernelPtr = jcp.typeSizeIn * jcp.kw * jcp.ocBlock * jcp.icBlock;
-    int inpMul = isSourceLayoutNxc ? jcp.ngroups * jcp.ic
+    SizeType shiftKernelPtr = jcp.typeSizeIn * jcp.kw * jcp.ocBlock * jcp.icBlock;
+    SizeType inpMul = IsSrcLayoutNxc() ? jcp.ngroups * jcp.ic
                                    : (!jcp.is1stConv ? icBlock : 1);
 
-    int shiftInputPtr = jcp.typeSizeIn * (jcp.dilateH + 1) * jcp.iw * inpMul;
+    SizeType shiftInputPtr = jcp.typeSizeIn * (jcp.dilateH + 1) * jcp.iw * inpMul;
 
-    if (jcp.ndims == KERNEL_DIMS_3 || jcp.ndims == KERNEL_DIMS_4) {
-        Mov(auxRegInp, regInp);
-        AddImm(auxRegInp2, auxRegInp, 0x100, regTmpImm);
-        AddImm(auxRegInp3, auxRegInp2, 0x100, regTmpImm);
-        Mov(auxRegKer, regKer);
-    }
-
-    if (jcp.ndims == KERNEL_DIMS_5) {
-        Mov(regOutOrg, regOut);
-        Ldr(regKi, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-            offsetof(KudnnConvJitCallS, kdPadding))));
-        if (icbLoopInComputeFunction) {
-            // need to continue with the same kernel pointer, but as
-            // auxRegKerD == regKer we need to save its value and restore
-            // it after kd loop
-            Mov(auxRegKerOrg, auxRegKerD);
-        } else {
-            Mov(auxRegKerD, auxRegKerOrg);
-        }
-        Mov(auxRegInpD, regInp);
-
-        L(kdLabel);
-        Ldr(regKj, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-            offsetof(KudnnConvJitCallS, khPadding))));
-    } else {
-        Mov(regKj, regKh);
-    }
-
-    if (jcp.ndims == KERNEL_DIMS_5) {
-        Mov(auxRegInp, auxRegInpD);
-        AddImm(auxRegInp2, auxRegInp, 0x100, regTmpImm);
-        AddImm(auxRegInp3, auxRegInp2, 0x100, regTmpImm);
-        Mov(auxRegKer, auxRegKerD);
-    }
-
-    auto zregInpIdxF32 = [](int iIc, int idx) {
+    auto zregInpIdxF32 = [](IntType iIc, IntType idx) {
         return ZRegS(iIc)[idx];
     };
-    auto zregInpIdxHalfF = [](int iIc, int idx) {
+    auto zregInpIdxHalfF = [](IntType iIc, IntType idx) {
         return ZRegH(iIc)[idx];
     };
-    auto zregOutS = [this](int iUr, int iOc) {
-        int idx = REG_INDEX29 - (iUr + iOc * jcp.urW);
+    auto zregOutS = [this](IntType iUr, IntType iOc) {
+        IntType idx = REG_INDEX29 - (iUr + iOc * jcp.urW);
         return ZRegS(idx);
     };
-    auto zregOutH = [this](int iUr, int iOc) {
-        int idx = REG_INDEX29 - (iUr + iOc * jcp.urW);
+    auto zregOutH = [this](IntType iUr, IntType iOc) {
+        IntType idx = REG_INDEX29 - (iUr + iOc * jcp.urW);
         return ZRegH(idx);
     };
 
-    auto bcastLoad = [this](int jj, int auxInputOffset, int prevOfs) {
-        int ofs;
+    auto bcastLoad = [this](IntType jj, SizeType auxInputOffset, IntType prevOfs) {
+        SizeType ofs;
         if ((prevOfs != -1) && ((auxInputOffset - prevOfs) > 0)) {
             ofs = auxInputOffset - prevOfs;
             AddImm(regPrevBcastAddr, regPrevBcastAddr, ofs,
@@ -403,36 +538,12 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFma(int urW, int padL, int padR
         }
         dtp == TypeT::F32 ? Ld1rqw(ZRegS(jj), pAllOne, Ptr(regPrevBcastAddr)) :
             Ld1rqh(ZRegH(jj), pAllOne, Ptr(regPrevBcastAddr));
-        prevOfs = auxInputOffset;
+        prevOfs = static_cast<IntType>(auxInputOffset);
         return prevOfs;
     };
 
-    auto weiLoadF32 = [this](int auxKernelOffset, int regIdx, int prevOfs) {
-        int ofs = auxKernelOffset;
-        if (KudnnLdrImmCheck<int, isa>(ofs)) {
-            Ldr(ZRegS(regIdx), AdrScImm(Ptr(auxRegKer, static_cast<int32_t>(GetVlenOfs(ofs, isa)))));
-        } else {
-            int ofsTmp = ofs - prevOfs;
-            if ((prevOfs != -1) && KudnnLdrImmCheck<int, isa>(ofsTmp)) {
-                Ldr(ZRegS(regIdx), AdrScImm(Ptr(regPrevWeiAddr, static_cast<int32_t>(GetVlenOfs(ofsTmp, isa)))));
-            } else {
-                if ((prevOfs != -1) && (ofsTmp > 0)) {
-                    ofsTmp = auxKernelOffset - prevOfs;
-                    AddImm(regPrevWeiAddr, regPrevWeiAddr, ofsTmp,
-                        regTmpImm);
-                } else {
-                    AddImm(regPrevWeiAddr, auxRegKer, ofs, regTmpImm);
-                }
-                Ld1w(ZRegS(regIdx), pAllOne / PredType::T_Z,
-                    Ptr(regPrevWeiAddr));
-                prevOfs = ofs;
-            }
-        }
-        return prevOfs;
-    };
-
-    auto weiLoadF16OrBF16 = [this](int auxKernelOffset, int regIdx, int prevOfs) {
-        int ofs;
+    auto weiLoadF16OrBF16 = [this](SizeType auxKernelOffset, IntType regIdx, IntType prevOfs) {
+        SizeType ofs;
         if ((prevOfs != -1) && (auxKernelOffset - prevOfs > 0)) {
             ofs = auxKernelOffset - prevOfs;
             AddImm(regPrevWeiAddr, regPrevWeiAddr, ofs,
@@ -443,7 +554,7 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFma(int urW, int padL, int padR
         }
         dtp == TypeT::F16 ? Ld1h(ZRegH(regIdx), pAllOne / PredType::T_Z,
             Ptr(regPrevWeiAddr)) : Ld1h(ZRegS(regIdx), pAllOne / PredType::T_Z, Ptr(regPrevWeiAddr));
-        prevOfs = auxKernelOffset;
+        prevOfs = static_cast<IntType>(auxKernelOffset);
         return prevOfs;
     };
 
@@ -454,49 +565,49 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFma(int urW, int padL, int padR
     }
     L(khLabel);
     {
-        int prevBcastOfs = -1;
-        int prevWeiOfs = -1;
-        for (int ki = 0; ki < kw; ki++) {
-            int jjStart = GetOwStart(ki, padL);
-            int jjEnd = GetOwEnd(urW, ki, padR);
-            int weiRegOfs = REG_INDEX30;
-            for (int ic = 0; ic < icBlock; ic++) {
-                int weiCount = 0;
-                for (int ii = 0; ii < nbOcBlock; ii++) {
-                    int regIdx = weiRegOfs + ii;
+        IntType prevBcastOfs = -1;
+        IntType prevWeiOfs = -1;
+        for (IntType ki = 0; ki < kw; ki++) {
+            IntType jjStart = GetOwStart(ki, padL);
+            IntType jjEnd = GetOwEnd(urW, ki, padR);
+            IntType weiRegOfs = REG_INDEX30;
+            for (IntType ic = 0; ic < icBlock; ic++) {
+                IntType weiCount = 0;
+                for (IntType ii = 0; ii < nbOcBlock; ii++) {
+                    IntType regIdx = weiRegOfs + ii;
                     if (regIdx >= REG_INDEX32) {
                         break;
                     }
-                    int auxKernelOffset = jcp.typeSizeIn
+                    SizeType auxKernelOffset = jcp.typeSizeIn
                             * (ii * jcp.nbIc * jcp.kh * jcp.kw * jcp.kd
                                             * icBlock * ocBlock
                                     + ki * icBlock * ocBlock + ic * ocBlock);
                     weiCount++;
                     if (jjEnd - jjStart > 0) {
-                        prevWeiOfs = dtp == TypeT::F32 ? weiLoadF32(auxKernelOffset,
+                        prevWeiOfs = dtp == TypeT::F32 ? WeiLoadVC(auxKernelOffset,
                             weiRegOfs + (ii % KERNEL_C_LEN2),
                             prevWeiOfs) : weiLoadF16OrBF16(auxKernelOffset, weiRegOfs + (ii % KERNEL_C_LEN2),
                             prevWeiOfs);
                     }
                 }
 
-                int tmpKernelClen = dtp == TypeT::F32 ? KERNEL_C_LEN4 : KERNEL_C_LEN8;
+                IntType tmpKernelClen = dtp == TypeT::F32 ? KERNEL_C_LEN4 : KERNEL_C_LEN8;
                 if (ic % tmpKernelClen == 0) {
-                    for (int jj = jjStart; jj < jjEnd; jj++) {
-                        size_t auxInputOffset
+                    for (IntType jj = jjStart; jj < jjEnd; jj++) {
+                        SizeType auxInputOffset
                             = GetInputOffset(ki, ic, jj, padL);
                         prevBcastOfs = bcastLoad(jj,
                             auxInputOffset, prevBcastOfs);
                     }
                 }
 
-                for (int ii = 0; ii < nbOcBlock; ii++) {
-                    int auxKernelOffset = jcp.typeSizeIn
+                for (IntType ii = 0; ii < nbOcBlock; ii++) {
+                    SizeType auxKernelOffset = jcp.typeSizeIn
                             * ((ii + weiCount) * jcp.nbIc * jcp.kh * jcp.kw
                                             * jcp.kd * icBlock * ocBlock
                                     + ki * icBlock * ocBlock + ic * ocBlock);
 
-                    for (int jj = jjStart; jj < jjEnd; jj++) {
+                    for (IntType jj = jjStart; jj < jjEnd; jj++) {
                         if (dtp == TypeT::F32) {
                             Fmla(zregOutS(jj, ii),
                                 ZRegS(weiRegOfs + (ii % KERNEL_C_LEN2)),
@@ -513,7 +624,7 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFma(int urW, int padL, int padR
                     }
                     if ((jjEnd - jjStart > 0)
                             && ((weiCount + ii) < nbOcBlock)) {
-                        prevWeiOfs = dtp == TypeT::F32 ? weiLoadF32(auxKernelOffset,
+                        prevWeiOfs = dtp == TypeT::F32 ? WeiLoadVC(auxKernelOffset,
                             weiRegOfs + ((ii + weiCount) % KERNEL_C_LEN2), prevWeiOfs) :
                             weiLoadF16OrBF16(auxKernelOffset, weiRegOfs + ((ii + weiCount) % KERNEL_C_LEN2),
                             prevWeiOfs);
@@ -531,121 +642,84 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFma(int urW, int padL, int padR
         Cmp(regKj, 0);
         B(Cond::GT, khLabel);
     }
-
-    if (jcp.ndims == KERNEL_DIMS_5) {
-        int dtpSize = dtp == TypeT::F32 ? TYPE_SIZE : HALF_TYPE_SIZE;
-        AddImm(auxRegInpD, auxRegInpD,
-            dtpSize * (jcp.dilateD + 1) * jcp.ih * jcp.iw * inpMul,
-            regTmpImm);
-        const int kerShift
-                = dtpSize * jcp.kw * jcp.kh * jcp.ocBlock * jcp.icBlock;
-        AddImm(auxRegKerD, auxRegKerD, kerShift, regTmpImm);
-
-        Sub(regKi, regKi, 1);
-        Cmp(regKi, 0);
-        B(Cond::GT, kdLabel);
-
-        if (icbLoopInComputeFunction) {
-            Mov(auxRegKerD, auxRegKerOrg);
-        }
-        Mov(regOut, regOutOrg);
-    }
 }
 
 template <CPUISAT isa, TypeT dtp>
-void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFmaCore(
-    int urW, int padL, int padR)
+void KdnnJitConvFwdKernel<isa, dtp>::ComputeLoopFmaCore(
+    IntType urW, IntType padL, IntType padR)
 {
-    int kw = jcp.kw;
-    int icBlock = jcp.icBlock;
-    int ocBlock = jcp.ocBlock;
-    int nbOcBlock = jcp.nbOcBlocking;
+    IntType kw = jcp.kw;
+    IntType icBlock = jcp.icBlock;
+    IntType ocBlock = jcp.ocBlock;
+    IntType nbOcBlock = jcp.nbOcBlocking;
     const bool isSourceLayoutNxc = IsSrcLayoutNxc();
-    const bool icbLoopInComputeFunction = isSourceLayoutNxc;
 
     Label khLabel;
-    Label kdLabel;
 
     std::vector<Label> icTailJmp(kw);
-    int shiftKernelPtr
-            = jcp.typeSizeIn * jcp.kw * jcp.ocBlock * jcp.icBlock;
-    int inpMul = isSourceLayoutNxc ? jcp.ngroups * jcp.ic
-                                       : (!jcp.is1stConv ? icBlock : 1);
+    SizeType kernelShift = jcp.typeSizeIn * kw * ocBlock * icBlock;
+    SizeType inpMul = isSourceLayoutNxc ? jcp.ngroups * jcp.ic
+                                   : (!jcp.is1stConv ? icBlock : 1);
 
-    int shiftInputPtr
-            = jcp.typeSizeIn * (jcp.dilateH + 1) * jcp.iw * inpMul;
+    SizeType inputShift = jcp.typeSizeIn * (jcp.dilateH + 1) * jcp.iw * inpMul;
 
-    if (jcp.ndims == KERNEL_DIMS_3 || jcp.ndims == KERNEL_DIMS_4) {
-        Mov(auxRegInp, regInp);
-        AddImm(auxRegInp2, auxRegInp, 0x100, regTmpImm);
-        AddImm(auxRegInp3, auxRegInp2, 0x100, regTmpImm);
-        Mov(auxRegKer, regKer);
-    }
-
-    if (jcp.ndims == KERNEL_DIMS_5) {
-        Mov(regOutOrg, regOut);
-        Ldr(regKi, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KudnnConvJitCallS, kdPadding))));
-        if (icbLoopInComputeFunction) {
-            // need to continue with the same kernel pointer, but as
-            // auxRegKerD == regKer we need to save its value and restore
-            // it after kd loop
-            Mov(auxRegKerOrg, auxRegKerD);
-        } else {
-            Mov(auxRegKerD, auxRegKerOrg);
-        }
-        Mov(auxRegInpD, regInp);
-
-        L(kdLabel);
-        Ldr(regKj, Ptr(ABI_PARAM1, static_cast<uint32_t>(offsetof(KudnnConvJitCallS, khPadding))));
-    } else {
-        Mov(regKj, regKh);
-    }
-
-    if (jcp.ndims == KERNEL_DIMS_5) {
-        Mov(auxRegInp, auxRegInpD);
-        AddImm(auxRegInp2, auxRegInp, 0x100, regTmpImm);
-        AddImm(auxRegInp3, auxRegInp2, 0x100, regTmpImm);
-        Mov(auxRegKer, auxRegKerD);
-    }
-
-    auto zregInp = [this](int iIc, int nbXBlocking) {
+    auto zregInp = [this](IntType iIc, IntType nbXBlocking) {
         return ZReg(iIc + nbXBlocking * jcp.urW);
     };
-    auto zregInpS = [this](int iIc, int nbXBlocking) {
+    auto zregInpS = [this](IntType iIc, IntType nbXBlocking) {
         return ZRegS(iIc + nbXBlocking * jcp.urW);
     };
-    auto zregInpH = [this](int iIc, int nbXBlocking) {
+    auto zregInpH = [this](IntType iIc, IntType nbXBlocking) {
         return ZRegH(iIc + nbXBlocking * jcp.urW);
     };
-    auto zregOutS = [this](int iUr, int iOc) {
+    auto zregOutS = [this](IntType iUr, IntType iOc) {
         return ZRegS(iUr + iOc * jcp.urW);
     };
-    auto zregOutH = [this](int iUr, int iOc) {
+    auto zregOutH = [this](IntType iUr, IntType iOc) {
         return ZRegH(iUr + iOc * jcp.urW);
     };
 
-    auto bcastLoadF32 = [this, zregInpS](int jj, int tNbOcBlock, int auxInputOffset,
-                              int prevOfs) {
-        if (KudnnLd1rwImmCheck(auxInputOffset)) {
+    auto bcastLoadF32 = [this, zregInpS](IntType jj, IntType tNbOcBlock, SizeType auxInputOffset,
+                              IntType prevOfs) {
+#ifdef KUDNNL_920B
+        auto bcastLoadVReg = [this](IntType subjj, IntType subTNbOcBlock,
+            IntType subAuxInputOffset, IntType subPrevOfs) {
+            SizeType ofs;
+            if ((subPrevOfs != -1) && ((subAuxInputOffset - subPrevOfs) > 0)) {
+                ofs = subAuxInputOffset - subPrevOfs;
+                AddImm(regPrevBcastAddr, regPrevBcastAddr, ofs, regTmpImm);
+            } else {
+                ofs = subAuxInputOffset;
+                AddImm(regPrevBcastAddr, auxRegInp, ofs, regTmpImm);
+            }
+            Ld1r(VReg4SList(VReg(subjj + subTNbOcBlock * jcp.urW).s), Ptr(regPrevBcastAddr));
+            subPrevOfs = subAuxInputOffset;
+            return subPrevOfs;
+        };
+        if (jcp.icBlock == 4 && jcp.ocBlock == 4) {
+            return bcastLoadVReg(jj, tNbOcBlock, auxInputOffset, prevOfs);
+        }
+#endif
+        if (KdnnLd1rwImmCheck(auxInputOffset)) {
             Ld1rw(zregInpS(jj, tNbOcBlock), pAllOne,
                 AdrScImm(Ptr(auxRegInp, static_cast<int32_t>(auxInputOffset))));
-        } else if (KudnnLd1rwImmCheck(auxInputOffset - 0x100)) {
+        } else if (KdnnLd1rwImmCheck(auxInputOffset - 0x100)) {
             Ld1rw(zregInpS(jj, tNbOcBlock), pAllOne,
                 AdrScImm(Ptr(auxRegInp2,
                     static_cast<int32_t>(auxInputOffset - 0x100))));
-        } else if (KudnnLd1rwImmCheck(auxInputOffset - 0x200)) {
+        } else if (KdnnLd1rwImmCheck(auxInputOffset - 0x200)) {
             Ld1rw(zregInpS(jj, tNbOcBlock), pAllOne,
                 AdrScImm(Ptr(auxRegInp3,
                     static_cast<int32_t>(auxInputOffset - 0x200))));
         } else {
             if ((prevOfs != -1) &&
-                KudnnLd1rwImmCheck(auxInputOffset - prevOfs)) {
+                KdnnLd1rwImmCheck(auxInputOffset - prevOfs)) {
                 Ld1rw(zregInpS(jj, tNbOcBlock), pAllOne,
                     AdrScImm(Ptr(regPrevBcastAddr,
                         static_cast<int32_t>(
                             auxInputOffset - prevOfs))));
             } else {
-                int ofs;
+                SizeType ofs;
                 if ((prevOfs != -1) && ((auxInputOffset - prevOfs) > 0)) {
                     ofs = auxInputOffset - prevOfs;
                     AddImm(regPrevBcastAddr, regPrevBcastAddr, ofs, regTmpImm);
@@ -655,16 +729,15 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFmaCore(
                 }
                 Ld1rw(zregInpS(jj, tNbOcBlock), pAllOne,
                     Ptr(regPrevBcastAddr));
-                prevOfs = auxInputOffset;
+                prevOfs = static_cast<IntType>(auxInputOffset);
             }
         }
-
         return prevOfs;
     };
 
-    auto bcastLoad = [this, zregInpH, zregInp](int jj, int tNbOcBlock, int auxInputOffset,
-                              int prevOfs) {
-        int ofs;
+    auto bcastLoad = [this, zregInpH, zregInp](IntType jj, IntType tNbOcBlock, SizeType auxInputOffset,
+                              IntType prevOfs) {
+        SizeType ofs;
         if ((prevOfs != -1) && ((auxInputOffset - prevOfs) > 0)) {
             ofs = auxInputOffset - prevOfs;
             AddImm(regPrevBcastAddr, regPrevBcastAddr, ofs, regTmpImm);
@@ -674,188 +747,258 @@ void KudnnJitConvFwdKernel<isa, dtp>::ComputeLoopFmaCore(
         }
         dtp == TypeT::F16 ? Ld1rh(zregInpH(jj, tNbOcBlock), pAllOne,
             Ptr(regPrevBcastAddr)) : Ld1rh(zregInp(jj, tNbOcBlock).s, pAllOne, Ptr(regPrevBcastAddr));
-        prevOfs = auxInputOffset;
+        prevOfs = static_cast<IntType>(auxInputOffset);
         return prevOfs;
     };
 
-    auto weiLoadF32 = [this](int auxKernelOffset, int regIdx, int prevOfs) {
-        int ofs = auxKernelOffset;
-
-        if (KudnnLdrImmCheck<int, isa>(ofs)) {
-            Ldr(ZRegS(regIdx), AdrScImm(Ptr(auxRegKer, static_cast<int32_t>(GetVlenOfs(ofs, isa)))));
-        } else {
-            int ofsTmp = ofs - prevOfs;
-            if ((prevOfs != -1) && KudnnLdrImmCheck<int, isa>(ofsTmp)) {
-                Ldr(ZRegS(regIdx), AdrScImm(Ptr(regPrevWeiAddr, static_cast<int32_t>(GetVlenOfs(ofsTmp, isa)))));
+    auto weiLoadF32 = [this](SizeType auxKernelOffset, IntType regIdx, IntType prevOfs) {
+#ifdef KUDNNL_920B
+        auto weiLoadVreg = [this](SizeType subAuxKernelOffset, IntType subRegIdx, IntType subPrevOfs) {
+            SizeType ofs;
+            if ((subPrevOfs != -1) && (subAuxKernelOffset - subPrevOfs > 0)) {
+                ofs = subAuxKernelOffset - subPrevOfs;
+                AddImm(regPrevWeiAddr, regPrevWeiAddr, ofs, regTmpImm);
             } else {
-                if ((prevOfs != -1) && (ofsTmp > 0)) {
-                    ofsTmp = auxKernelOffset - prevOfs;
-                    AddImm(regPrevWeiAddr, regPrevWeiAddr, ofsTmp,
-                            regTmpImm);
-                } else {
-                    AddImm(regPrevWeiAddr, auxRegKer, ofs, regTmpImm);
-                }
-                Ld1w(ZRegS(regIdx), pAllOne / PredType::T_Z,
-                    Ptr(regPrevWeiAddr));
-                prevOfs = ofs;
+                ofs = subAuxKernelOffset;
+                AddImm(regPrevWeiAddr, auxRegKer, ofs, regTmpImm);
             }
+            Ld1(VReg4SList(VReg(subRegIdx).s), Ptr(regPrevWeiAddr));
+            subPrevOfs = subAuxKernelOffset;
+            return subPrevOfs;
+        };
+        if (jcp.icBlock == 4 && jcp.ocBlock == 4) {
+            return weiLoadVreg(auxKernelOffset, regIdx, prevOfs);
         }
-        return prevOfs;
+#endif
+        return WeiLoadVC(auxKernelOffset, regIdx, prevOfs);
     };
 
-    auto weiLoadF16OrF16 = [this](int auxKernelOffset, int regIdx, int prevOfs) {
-        int ofs;
+    auto weiLoadF16OrF16 = [this](SizeType auxKernelOffset, IntType regIdx, IntType prevOfs) {
+        SizeType ofs;
         if ((prevOfs != -1) && (auxKernelOffset - prevOfs > 0)) {
             ofs = auxKernelOffset - prevOfs;
             AddImm(regPrevWeiAddr, regPrevWeiAddr, ofs,
                     regTmpImm);
         } else {
-            ofs = auxKernelOffset;
+            ofs = static_cast<IntType>(auxKernelOffset);
             AddImm(regPrevWeiAddr, auxRegKer, ofs, regTmpImm);
         }
         dtp == TypeT::F16 ? Ld1h(ZRegH(regIdx), pAllOne / PredType::T_Z,
             Ptr(regPrevWeiAddr)) : Ld1h(ZRegS(regIdx), pAllOne / PredType::T_Z, Ptr(regPrevWeiAddr));
-        prevOfs = auxKernelOffset;
+        prevOfs = static_cast<IntType>(auxKernelOffset);
         return prevOfs;
     };
 
     Align(REG_INDEX32);
     L(khLabel);
     {
-        int prevBcastOfs = -1;
-        int prevWeiOfs = -1;
-        for (int ki = 0; ki < kw; ki++) {
-            int jjStart = GetOwStart(ki, padL);
-            int jjEnd = GetOwEnd(urW, ki, padR);
+        IntType prevBcastOfs = -1;
+        IntType prevWeiOfs = -1;
+        for (IntType ki = 0; ki < kw; ki++) {
+            IntType jjStart = GetOwStart(ki, padL);
+            IntType jjEnd = GetOwEnd(urW, ki, padR);
 
-            int weiRegOfs = nbOcBlock * jcp.urW;
+            IntType weiRegOfs = nbOcBlock * jcp.urW;
             weiRegOfs += urW >= KERNEL_UR_W_LEN16 ? KERNEL_UR_W_LEN1 : jjEnd;
-            int numRegs4wei = REG_INDEX32 - weiRegOfs;
-            for (int ic = 0; ic < icBlock; ic++) {
-                int weiCount = 0;
-                for (int ii = 0; ii < nbOcBlock; ii++) {
-                    int regIdx = weiRegOfs + ii;
+            IntType numRegs4wei = REG_INDEX32 - weiRegOfs;
+            for (IntType ic = 0; ic < icBlock; ic++) {
+                IntType weiCount = 0;
+                for (IntType nb = 0; nb < nbOcBlock; nb++) {
+                    IntType regIdx = weiRegOfs + nb;
                     if (regIdx >= REG_INDEX32) {
                         break;
                     }
-                    int auxKernelOffset = jcp.typeSizeIn
-                            * (ii * jcp.nbIc * jcp.kh * jcp.kw * jcp.kd
+                    SizeType auxKernelOffset = jcp.typeSizeIn
+                            * (nb * jcp.nbIc * jcp.kh * jcp.kw * jcp.kd
                                             * icBlock * ocBlock
                                     + ki * icBlock * ocBlock + ic * ocBlock);
                     weiCount++;
                     if (jjEnd - jjStart > 0) {
                         prevWeiOfs = dtp == TypeT::F32 ? weiLoadF32(auxKernelOffset,
-                            weiRegOfs + (ii % numRegs4wei), prevWeiOfs) :
-                            weiLoadF16OrF16(auxKernelOffset, weiRegOfs + (ii % numRegs4wei), prevWeiOfs);
+                            weiRegOfs + (nb % numRegs4wei), prevWeiOfs) :
+                            weiLoadF16OrF16(auxKernelOffset, weiRegOfs + (nb % numRegs4wei), prevWeiOfs);
                     }
                 }
-                for (int jj = jjStart; jj < jjEnd; jj++) {
-                    size_t auxInputOffset = GetInputOffset(ki, ic, jj, padL);
+                for (IntType jj = jjStart; jj < jjEnd; jj++) {
+                    SizeType auxInputOffset = GetInputOffset(ki, ic, jj, padL);
                     prevBcastOfs = dtp == TypeT::F32 ? bcastLoadF32(jj, nbOcBlock,
                         auxInputOffset, prevBcastOfs) : bcastLoad(jj, nbOcBlock,
                         auxInputOffset, prevBcastOfs);
                 }
 
-                for (int ii = 0; ii < nbOcBlock; ii++) {
-                    int auxKernelOffset = jcp.typeSizeIn
-                            * ((ii + weiCount) * jcp.nbIc * jcp.kh * jcp.kw * jcp.kd
+                for (IntType nb = 0; nb < nbOcBlock; nb++) {
+                    SizeType auxKernelOffset = jcp.typeSizeIn
+                            * ((nb + weiCount) * jcp.nbIc * jcp.kh * jcp.kw * jcp.kd
                                             * icBlock * ocBlock
                                     + ki * icBlock * ocBlock + ic * ocBlock);
-                    for (int jj = jjStart; jj < jjEnd; jj++) {
-                        if (jcp.kernelKind == KudnnConvKernelKindT::KUDNN_EXPL_BCAST) {
+                    for (IntType jj = jjStart; jj < jjEnd; jj++) {
+                        if (jcp.kernelKind == KdnnConvKernelKindT::KUDNN_EXPL_BCAST) {
                             if (dtp == TypeT::F32) {
-                                Fmla(zregOutS(jj, ii), pAllOne, zregInpS(jj, nbOcBlock),
-                                    ZRegS(weiRegOfs + (ii % numRegs4wei)));
+                                Fmla(zregOutS(jj, nb), pAllOne, zregInpS(jj, nbOcBlock),
+                                    ZRegS(weiRegOfs + (nb % numRegs4wei)));
                             } else if (dtp == TypeT::F16) {
-                                Fmla(zregOutH(jj, ii), pAllOne, zregInpH(jj, nbOcBlock),
-                                    ZRegH(weiRegOfs + (ii % numRegs4wei)));
+                                Fmla(zregOutH(jj, nb), pAllOne, zregInpH(jj, nbOcBlock),
+                                    ZRegH(weiRegOfs + (nb % numRegs4wei)));
                             } else if (dtp == TypeT::BF16) {
-                                Bfmlalb(zregOutS(jj, ii),
+                                Bfmlalb(zregOutS(jj, nb),
                                     zregInp(jj, nbOcBlock).h,
-                                    ZRegH(weiRegOfs + (ii % numRegs4wei)));
+                                    ZRegH(weiRegOfs + (nb % numRegs4wei)));
                             }
+                        } else if (jcp.kernelKind == KdnnConvKernelKindT::KUDNN_EMBD_BCAST) {
+                            Fmla(VReg(jj + nb * jcp.urW).s, VReg(jj + nbOcBlock * jcp.urW).s,
+                                VReg(weiRegOfs + (nb % numRegs4wei)).s);
                         }
                     }
                     if ((jjEnd - jjStart > 0)
-                           && ((ii + weiCount) < nbOcBlock)) {
+                           && ((nb + weiCount) < nbOcBlock)) {
                         prevWeiOfs = dtp == TypeT::F32 ? weiLoadF32(auxKernelOffset,
-                            weiRegOfs + ((ii + weiCount) % numRegs4wei), prevWeiOfs) :
-                            weiLoadF16OrF16(auxKernelOffset, weiRegOfs + ((ii + weiCount) % numRegs4wei), prevWeiOfs);
+                            weiRegOfs + ((nb + weiCount) % numRegs4wei), prevWeiOfs) :
+                            weiLoadF16OrF16(auxKernelOffset, weiRegOfs + ((nb + weiCount) % numRegs4wei), prevWeiOfs);
                     }
                 }
             }
             L(icTailJmp[ki]);
         }
 
-        AddImm(auxRegKer, auxRegKer, shiftKernelPtr, regTmpImm);
-        AddImm(auxRegInp, auxRegInp, shiftInputPtr, regTmpImm);
+        AddImm(auxRegKer, auxRegKer, kernelShift, regTmpImm);
+        AddImm(auxRegInp, auxRegInp, inputShift, regTmpImm);
         AddImm(auxRegInp2, auxRegInp, 0x100, regTmpImm);
         AddImm(auxRegInp3, auxRegInp2, 0x100, regTmpImm);
         Sub(regKj, regKj, 1);
         Cmp(regKj, 0);
         B(Cond::GT, khLabel);
     }
+}
 
-    if (jcp.ndims == KERNEL_DIMS_5) {
-        int dtpSize = dtp == TypeT::F32 ? TYPE_SIZE : HALF_TYPE_SIZE;
-        AddImm(auxRegInpD, auxRegInpD,
-            dtpSize * (jcp.dilateD + 1) * jcp.ih * jcp.iw * inpMul,
-            regTmpImm);
-        const int kerShift = dtpSize * jcp.kw * jcp.kh * jcp.ocBlock * jcp.icBlock;
-        AddImm(auxRegKerD, auxRegKerD, kerShift, regTmpImm);
-
-        Sub(regKi, regKi, 1);
-        Cmp(regKi, 0);
-        B(Cond::GT, kdLabel);
-
-        if (icbLoopInComputeFunction) {
-            Mov(auxRegKerD, auxRegKerOrg);
+template <CPUISAT isa, TypeT dtp>
+void KdnnJitConvFwdKernel<isa, dtp>::DealNoiIsZero(IntType oShift, IntType urw, IntType leftPad,
+    IntType rightPad, IntType rightPad1, SizeType inShiftPad, IntType sw, IntType urwTail)
+{
+    AddImm(regOutPrf, regOutPrf, oShift, regTmpImm);
+    ComputeLoop(urw, leftPad, rightPad1);
+    AddImm(regOut, regOut, oShift, regTmpImm);
+    if (urwTail != 0) {
+        AddImm(regOutPrf, regOutPrf, oShift, regTmpImm);
+        IntType lPad1 = leftPad - urw * sw;
+        if (lPad1 > 0) {
+            ComputeLoop(urwTail, lPad1, rightPad);
+        } else {
+            AddImm(regInp, regInp, inShiftPad, regTmpImm);
+            ComputeLoop(urwTail, 0, rightPad);
         }
-        Mov(regOut, regOutOrg);
+    }
+}
+ 
+template <CPUISAT isa, TypeT dtp>
+void KdnnJitConvFwdKernel<isa, dtp>::DealLpadLessThanUrw(IntType oShift, SizeType iShift, IntType urw,
+    IntType leftPad, IntType rightPad, IntType rightPad1, IntType inShiftPad,
+    IntType urwTail, IntType noi)
+{
+    Mov(regOi, 0);
+    if (leftPad > 0) {
+        AddImm(regOutPrf, regOutPrf, oShift, regTmpImm);
+        ComputeLoop(urw, leftPad, 0);
+        AddImm(regInp, regInp, inShiftPad, regTmpImm);
+        AddImm(regOut, regOut, oShift, regTmpImm);
+        AddImm(regOi, regOi, 1, regTmpImm);
+    }
+    if ((leftPad <= 0 && noi > 0) || (leftPad > 0 && noi > 1)) {
+        Label owLoopLabel;
+        L(owLoopLabel);
+        {
+            AddImm(regOutPrf, regOutPrf, oShift,
+                    regTmpImm);
+            ComputeLoop(urw, 0, 0);
+ 
+            AddImm(regInp, regInp, iShift, regTmpImm);
+            AddImm(regOut, regOut, oShift, regTmpImm);
+            AddImm(regOi, regOi, 1, regTmpImm);
+            CmpImm(regOi, noi, regTmpImm);
+ 
+            B(Cond::LT, owLoopLabel);
+        }
+    }
+    if (rightPad1 > 0) {
+        AddImm(regOutPrf, regOutPrf, oShift, regTmpImm);
+        ComputeLoop(urw, 0, rightPad1);
+        AddImm(regInp, regInp, iShift, regTmpImm);
+        AddImm(regOut, regOut, oShift, regTmpImm);
+    }
+    if (urwTail != 0) {
+        AddImm(regOutPrf, regOutPrf, oShift, regTmpImm);
+        ComputeLoop(urwTail, 0, rightPad);
+    }
+}
+ 
+template <CPUISAT isa, TypeT dtp>
+void KdnnJitConvFwdKernel<isa, dtp>::DealGeneralLoop(IntType oShift, IntType inMult, IntType urw, IntType leftPad,
+    IntType rightPad, IntType rightPad1, IntType urwTail, IntType sw, IntType iw, IntType kw, IntType& noi)
+{
+    noi = rightPad1 > 0 ? noi : noi - 1;
+    SizeType inpShiftPadl = 0;
+    SizeType preInpShiftPadl = 0;
+    for (IntType oi = 1; oi <= noi + 1; oi++) {
+        AddImm(regOutPrf, regOutPrf, oShift, regTmpImm);
+        IntType lPadL = leftPad - (oi - 1) * urw * sw;
+        IntType lPadR = lPadL > 0 ? lPadL : 0;
+        IntType rPadL = CalculateEndPadding(leftPad, oi * urw, iw, sw,
+            CalculateExtendedFilterSize(kw, jcp.dilateW));
+        IntType rPadR = rPadL > 0 ? rPadL : 0;
+        ComputeLoop(urw, lPadR, rPadR);
+        if (leftPad - oi * urw * sw < 0) {
+            inpShiftPadl = jcp.typeSizeIn * (oi * urw * sw - leftPad) * inMult;
+            AddImm(regInp, regInp, inpShiftPadl - preInpShiftPadl, regTmpImm);
+            preInpShiftPadl = inpShiftPadl;
+        }
+        AddImm(regOut, regOut, oShift, regTmpImm);
+        AddImm(regOi, regOi, 1, regTmpImm);
+    }
+    if (urwTail != 0) {
+        AddImm(regOutPrf, regOutPrf, oShift, regTmpImm);
+        IntType lPadM = leftPad - (noi + 1) * urw * sw;
+        IntType lPadN = lPadM > 0 ? lPadM : 0;
+        ComputeLoop(urwTail, lPadN, rightPad);
     }
 }
 
 template <CPUISAT isa, TypeT dtp>
-void KudnnJitConvFwdKernel<isa, dtp>::Generate()
+void KdnnJitConvFwdKernel<isa, dtp>::Generate()
 {
-    int iw = jcp.iw;
-    int ow = jcp.ow;
-    int owBlock = jcp.owBlock;
-    int nbOw = jcp.nbOw;
-    assert(owBlock == jcp.ow && nbOw == 1);
-    int kw = jcp.kw;
-    int lPad = jcp.lPad;
-    int urW = jcp.urW;
-    int urWTail = jcp.urWTail;
-    int strideW = jcp.strideW;
+    IntType iw = jcp.iw;
+    IntType ow = jcp.ow;
+    IntType kw = jcp.kw;
+    IntType lPad = jcp.lPad;
+    IntType urW = jcp.urW;
+    IntType urWTail = jcp.urWTail;
+    IntType strideW = jcp.strideW;
 
-    int inpMult = IsSrcLayoutNxc() ? jcp.ngroups * jcp.ic
+    IntType inpMult = IsSrcLayoutNxc() ? jcp.ngroups * jcp.ic
                                    : (jcp.is1stConv ? 1 : jcp.icBlock);
-    int inpShiftPad = jcp.typeSizeIn * (urW * strideW - lPad) * inpMult;
-    int inpShift = jcp.typeSizeIn * urW * strideW * inpMult;
-    int outShift = jcp.typeSizeOut * urW
+    SizeType inpShiftPad = jcp.typeSizeIn * (urW * strideW - lPad) * inpMult;
+    SizeType inpShift = jcp.typeSizeIn * urW * strideW * inpMult;
+    IntType outShift = jcp.typeSizeOut * urW
             * (IsDstLayoutNxc() ? jcp.ngroups * jcp.oc : jcp.ocBlock);
 
     Preamble();
 
     Ldr(regInp, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-        offsetof(KudnnConvJitCallS, src))));
+        offsetof(KdnnConvJitCallS, src))));
     Ldr(regOut, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-        offsetof(KudnnConvJitCallS, dst))));
+        offsetof(KdnnConvJitCallS, dst))));
     Ldr(regKer, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-        offsetof(KudnnConvJitCallS, filt))));
+        offsetof(KdnnConvJitCallS, filt))));
     Ldr(regKh, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-        offsetof(KudnnConvJitCallS, khPadding))));
+        offsetof(KdnnConvJitCallS, khPadding))));
     if (jcp.ndims == KERNEL_DIMS_5) {
         Mov(auxRegKerOrg, regKer);
     }
 
-    int rPad = std::max(0, static_cast<int>(jcp.rPad));
-    int nOi = ow / urW;
-    int rPad1 = CalculateEndPadding(lPad, urW * nOi, iw, strideW,
+    IntType rPad = jcp.rPad > 0 ? jcp.rPad : 0;
+    IntType nOi = ow / urW;
+    IntType rPad1 = CalculateEndPadding(lPad, urW * nOi, iw, strideW,
         CalculateExtendedFilterSize(kw, jcp.dilateW));
-    int nOiLast2 = nOi - 1 > 0 ? nOi - 1 : 0;
-    int rPadLast2 = CalculateEndPadding(lPad, urW * nOiLast2, iw, strideW,
+    IntType nOiLast2 = nOi - 1 > 0 ? nOi - 1 : 0;
+    IntType rPadLast2 = CalculateEndPadding(lPad, urW * nOiLast2, iw, strideW,
         CalculateExtendedFilterSize(kw, jcp.dilateW));
     // ow is being processed as a whole - with left and right paddings
     // nOi is # of output width blocks
@@ -865,100 +1008,33 @@ void KudnnJitConvFwdKernel<isa, dtp>::Generate()
 
     if (ow == urW) {
         Ldr(regOutPrf, Ptr(ABI_PARAM1, static_cast<uint32_t>(
-            offsetof(KudnnConvJitCallS, dstPrf))));
+            offsetof(KdnnConvJitCallS, dstPrf))));
         ComputeLoop(urW, lPad, rPad);
     } else {
         Mov(regOutPrf, regOut);
         if (nOi == 0) {
-            AddImm(regOutPrf, regOutPrf, outShift, regTmpImm);
-            ComputeLoop(urW, lPad, rPad1);
-            AddImm(regOut, regOut, outShift, regTmpImm);
-            if (urWTail != 0) {
-                AddImm(regOutPrf, regOutPrf, outShift, regTmpImm);
-                int lPad1 = lPad - urW * strideW;
-                if (lPad1 > 0) {
-                    ComputeLoop(urWTail, lPad1, rPad);
-                } else {
-                    AddImm(regInp, regInp, inpShiftPad, regTmpImm);
-                    ComputeLoop(urWTail, 0, rPad);
-                }
-            }
+            DealNoiIsZero(outShift, urW, lPad, rPad, rPad1, inpShiftPad, strideW, urWTail);
         } else if (lPad <= urW && rPadLast2 <= 0) {
             // generate loop for simplify when lpad <= ur_w
-            Mov(regOi, 0);
-            if (lPad > 0) {
-                AddImm(regOutPrf, regOutPrf, outShift, regTmpImm);
-                ComputeLoop(urW, lPad, 0);
-                AddImm(regInp, regInp, inpShiftPad, regTmpImm);
-                AddImm(regOut, regOut, outShift, regTmpImm);
-                AddImm(regOi, regOi, 1, regTmpImm);
-            }
-            if ((lPad <= 0 && nOi > 0) || (lPad > 0 && nOi > 1)) {
-                Label owLoopLabel;
-                L(owLoopLabel);
-                {
-                    AddImm(regOutPrf, regOutPrf, outShift,
-                            regTmpImm);
-                    ComputeLoop(urW, 0, 0);
-
-                    AddImm(regInp, regInp, inpShift, regTmpImm);
-                    AddImm(regOut, regOut, outShift, regTmpImm);
-                    AddImm(regOi, regOi, 1, regTmpImm);
-                    CmpImm(regOi, nOi, regTmpImm);
-
-                    B(Cond::LT, owLoopLabel);
-                }
-            }
-            if (rPad1 > 0) {
-                AddImm(regOutPrf, regOutPrf, outShift, regTmpImm);
-                ComputeLoop(urW, 0, rPad1);
-                AddImm(regInp, regInp, inpShift, regTmpImm);
-                AddImm(regOut, regOut, outShift, regTmpImm);
-            }
-            if (urWTail != 0) {
-                AddImm(regOutPrf, regOutPrf, outShift, regTmpImm);
-                ComputeLoop(urWTail, 0, rPad);
-            }
+            DealLpadLessThanUrw(outShift, inpShift, urW, lPad, rPad, rPad1,
+                inpShiftPad, urWTail, nOi);
         } else {
-            nOi = rPad1 > 0 ? nOi : nOi - 1;
-            int inpShiftPadl = 0;
-            int preInpShiftPadl = 0;
-            for (int oi = 1; oi <= nOi + 1; oi++) {
-                AddImm(regOutPrf, regOutPrf, outShift, regTmpImm);
-                int lPadL = lPad - (oi - 1) * urW * strideW;
-                int lPadR = lPadL > 0 ? lPadL : 0;
-                int rPadL = CalculateEndPadding(lPad, oi * urW, iw, strideW,
-                    CalculateExtendedFilterSize(kw, jcp.dilateW));
-                int rPadR = rPadL > 0 ? rPadL : 0;
-                ComputeLoop(urW, lPadR, rPadR);
-                if (lPad - oi * urW * strideW < 0) {
-                    inpShiftPadl = jcp.typeSizeIn * (oi * urW * strideW - lPad) * inpMult;
-                    AddImm(regInp, regInp, inpShiftPadl - preInpShiftPadl, regTmpImm);
-                    preInpShiftPadl = inpShiftPadl;
-                }
-                AddImm(regOut, regOut, outShift, regTmpImm);
-                AddImm(regOi, regOi, 1, regTmpImm);
-            }
-            if (urWTail != 0) {
-                AddImm(regOutPrf, regOutPrf, outShift, regTmpImm);
-                int lPadM = lPad - (nOi + 1) * urW * strideW;
-                int lPadN = lPadM > 0 ? lPadM : 0;
-                ComputeLoop(urWTail, lPadN, rPad);
-            }
+            DealGeneralLoop(outShift, inpMult, urW, lPad,
+                rPad, rPad1, urWTail, strideW, iw, kw, nOi);
         }
     }
     Postamble();
 }
 
 /* struct instantiation */
-#ifdef KUDNNL_920Pro
-template struct KudnnJitConvFwdKernel<CPUISAT::VectorComputation_512, Element::TypeT::F32>;
-template struct KudnnJitConvFwdKernel<CPUISAT::VectorComputation_512, Element::TypeT::F16>;
-template struct KudnnJitConvFwdKernel<CPUISAT::VectorComputation_512, Element::TypeT::BF16>;
+#ifdef KUDNNL_920F
+template struct KdnnJitConvFwdKernel<CPUISAT::VC_512, Element::TypeT::F32>;
+template struct KdnnJitConvFwdKernel<CPUISAT::VC_512, Element::TypeT::F16>;
+template struct KdnnJitConvFwdKernel<CPUISAT::VC_512, Element::TypeT::BF16>;
 #else
-template struct KudnnJitConvFwdKernel<CPUISAT::VectorComputation_256, Element::TypeT::F32>;
-template struct KudnnJitConvFwdKernel<CPUISAT::VectorComputation_256, Element::TypeT::F16>;
-template struct KudnnJitConvFwdKernel<CPUISAT::VectorComputation_256, Element::TypeT::BF16>;
+template struct KdnnJitConvFwdKernel<CPUISAT::VC_256, Element::TypeT::F32>;
+template struct KdnnJitConvFwdKernel<CPUISAT::VC_256, Element::TypeT::F16>;
+template struct KdnnJitConvFwdKernel<CPUISAT::VC_256, Element::TypeT::BF16>;
 #endif
 
 } // namespace KuDNN

@@ -1,0 +1,12 @@
+--dt=f32
+--batch=dir
+--dt=f16
+--batch=dir
+--dt=bf16
+--batch=dir
+--dt=s8
+--batch=dir
+--dt=u8
+--batch=dir
+--dt=s32
+--batch=dir

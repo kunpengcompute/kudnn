@@ -1,0 +1,31 @@
+# forward: int precision
+--alg=AUTO --dt=u8:s8:u8 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=u8:s8:s8 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=u8:s8:s32 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=u8:s8:f32 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=u8:s8:bf16 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=s8:s8:u8 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=s8:s8:s8 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=s8:s8:s32 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=s8:s8:f32 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=s8:s8:bf16 --dir=FWD_B --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic128ih56oc512oh28kh1sh2ph0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any g4ic256ih56oc512oh28kh1sh2ph0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any g2ic256ih56oc512oh28kh1sh2ph0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic16id33oc32od1kd33pd0n
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic128id16ih16iw8oc256od8oh8ow4kd2kh2kw2sd2sh2sw2pd0ph0pw0n"vnet:conv3"
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic128iw56oc512ow28kw1sw2pw0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any g2ic128iw56oc512ow28kw1sw2pw0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic64id56oc512od28kd1sd2pd0
+
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic32iw15oc32ow14kw3sw1pw1
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic32iw18oc32ow18kw3sw1pw0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic32iw7oc32ow8kw4sw1pw1
+
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic66ih27oc32oh26kh2ph0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any g1ic66iw27oc32ow26kw2pw0
+
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic66id27oc32od25kd3pd0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic66id27oc24od25kd3pd0
+--alg=AUTO --dt=s8,s8:s8:u8,s8:s8:s32,s8:s8:f32,u8:s8:s32,u8:s8:f32,u8:s8:u8,u8:s8:s8 --dir=FWD_B --stag=axb --dtag=axb --wtag=any ic64ih1000oc64oh1000kh3ph128dh127

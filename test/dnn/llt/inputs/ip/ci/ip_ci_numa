@@ -1,0 +1,18 @@
+--dir=FWD_B,FWD_D,FWD_I,BWD_D,BWD_W,BWD_WB --dt=f32:f32:f32 --stag=ab --wtag=ba --dtag=ab mb4096ic50176oc33792
+--dir=FWD_B,FWD_D,FWD_I,BWD_D,BWD_W,BWD_WB --dt=f32:f32:f32 --stag=ab --wtag=ba --dtag=ab mb4096ic50176oc32768
+--dir=FWD_B,FWD_D,FWD_I,BWD_D,BWD_W,BWD_WB --dt=f32:f32:f32 --stag=ab --wtag=ba --dtag=ab mb4096ic50176oc31744
+
+--dir=FWD_B,FWD_D,FWD_I 
+--dt=f16:f16:f16,bf16:bf16:bf16,f16:f16:f32,bf16:bf16:f32,u8:s8:u8,u8:s8:s8,s8:s8:u8,s8:s8:s8
+--stag=ab --wtag=ba --dtag=ab
+--batch=shapes_numa
+
+--dir=BWD_W,BWD_WB
+--dt=f16:f16:f16,bf16:bf16:bf16,f16:f32:f16,bf16:f32:bf16
+--stag=ab --wtag=ba --dtag=ab
+--batch=shapes_numa
+
+--dir=BWD_D
+--dt=f16:f16:f16,bf16:bf16:bf16,f32:f16:f16,f32:bf16:bf16
+--stag=ab --wtag=ba --dtag=ab
+--batch=shapes_numa

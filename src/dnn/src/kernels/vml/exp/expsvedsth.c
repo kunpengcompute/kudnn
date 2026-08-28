@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,19 +16,19 @@
 static void ExpMainKernelF16(const __fp16 *src, const __fp16 *dd, int step, __fp16 *ds)
 {
     svbool_t pg = svptrue_b16();
-    VML_VectorComputation_DECLARE(svfloat16_t, srcX);
-    VML_VectorComputation_DECLARE(svfloat16_t, ddX);
-    VML_VectorComputation_LD_STEP(srcX, svld1_f16, pg, src, step);
-    VML_VectorComputation_LD_STEP(ddX, svld1_f16, pg, dd, step);
-    VML_VectorComputation_FUNC_PG_2PARA(srcX, svmul_f16_x, pg, srcX, ddX);
-    VML_VectorComputation_ST_STEP(svst1_f16, pg, ds, step, srcX);
+    VML_VC_DECLARE(svfloat16_t, srcX);
+    VML_VC_DECLARE(svfloat16_t, ddX);
+    VML_VC_LD_STEP(srcX, svld1_f16, pg, src, step);
+    VML_VC_LD_STEP(ddX, svld1_f16, pg, dd, step);
+    VML_VC_FUNC_PG_2PARA(srcX, svmul_f16_x, pg, srcX, ddX);
+    VML_VC_ST_STEP(svst1_f16, pg, ds, step, srcX);
 }
 
-void ExpLaDstSveBWDF16(const int64_t len, const __fp16 *src, const __fp16 *dd, __fp16 *ds)
+void ExpLaDstVCBWDF16(const int64_t len, const __fp16 *src, const __fp16 *dd, __fp16 *ds)
 {
     int size = svcnth();
     int64_t i = 0;
-    for (; i <= len - size * VML_VectorComputation_UNFOLD_N; i += size * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - size * VML_VC_UNFOLD_N; i += size * VML_VC_UNFOLD_N) {
         ExpMainKernelF16(src + i, dd + i, size, ds + i);
     }
 

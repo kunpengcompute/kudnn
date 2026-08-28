@@ -1,0 +1,14 @@
+--sdt=f32:f32,f32:f32:f32,f32:f32:f32:f32
+--ddt=f32
+--scales=1.0,3.8,-2.6
+--batch=shapes_single
+
+--sdt=f16:f16,f16:f16:f16,f16:f16:f16:f16
+--ddt=f16
+--scales=1.0,3.8,-2.6
+--batch=shapes_single
+
+--sdt=bf16:bf16,bf16:bf16:bf16,bf16:bf16:bf16:bf16
+--ddt=bf16
+--scales=1.0,3.8,-2.6
+--batch=shapes_single

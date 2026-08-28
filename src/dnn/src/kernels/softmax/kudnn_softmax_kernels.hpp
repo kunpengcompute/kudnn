@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -23,21 +23,21 @@ namespace Softmax {
 
 template <typename CompType, typename InType, typename OutType>
 void EvaluateLastAxisFWD(const InType *src, OutType *dst, SizeType axisSize,
-    SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;
+    SizeType outerSize, AlgorithmKind algorithm) noexcept;
 
 template <typename CompType, typename InType, typename OutType>
 void EvaluateCrossAxisFWD(const InType *src, OutType *dst, SizeType innerSize,
-    SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;
+    SizeType axisSize, SizeType outerSize, AlgorithmKind algorithm) noexcept;
 
 // for BWD
 
 template <typename CompType, typename InType, typename OutType>
 void EvaluateLastAxisBWD(const OutType *dst, const OutType *dstDiff, InType *srcDiff,
-    SizeType axisSize, SizeType outerSize, SizeType axisNum, SoftmaxAlgorithmKind algorithm) noexcept;
+    SizeType axisSize, SizeType outerSize, SizeType axisNum, AlgorithmKind algorithm) noexcept;
 
 template <typename CompType, typename InType, typename OutType>
 void EvaluateCrossAxisBWD(const OutType *dst, const OutType *dstDiff, InType *srcDiff,
-    SizeType innerSize, SizeType axisSize, SizeType outerSize, SoftmaxAlgorithmKind algorithm) noexcept;
+    SizeType innerSize, SizeType axisSize, SizeType outerSize, AlgorithmKind algorithm) noexcept;
 
 
 } // Softmax

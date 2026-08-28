@@ -1,0 +1,44 @@
+# forward
+# abx
+--tag=abcde:any
+--inplace=false,true
+--dt=f32:f32,f16:f16,bf16:bf16,s8:s8,u8:u8,s32:s32
+--dir=FWD_D,FWD_I
+--flags=G,,C,H,CH,GCH
+--batch=gnorm_shapes_func
+
+# axb
+--tag=acdeb:any
+--inplace=false,true
+--dt=f32:f32,f16:f16,bf16:bf16,s8:s8,u8:u8,s32:s32
+--dir=FWD_D,FWD_I
+--flags=G,,C,H,CH,GCH
+--batch=gnorm_shapes_func
+
+# backward
+# abx
+--tag=abcde:any
+--inplace=false,true
+--dt=f32:f32,f16:f16,bf16:bf16
+--dir=BWD_D,BWD_DW
+--flags=G,,C,H,CH,GCH
+--batch=gnorm_shapes_func
+
+# axb
+--tag=acdeb:any
+--inplace=false,true
+--dt=f32:f32,f16:f16,bf16:bf16
+--dir=BWD_D,BWD_DW
+--flags=G,,C,H,CH,GCH
+--batch=gnorm_shapes_func
+
+# DTS2024102971382
+--dir=FWD_I --dt=bf16:bf16 --tag=acb --inplace=false --flags=H g1mb1ic8_iw127_eps0.1
+--dir=FWD_I --dt=f32:f32 --tag=abcd --inplace=true g1mb35ic49_ih48iw2_eps9.9
+
+# DTS2025030718201
+--dir=BWD_D --dt=f16:bf16 --tag=abc --inplace=false --flags=G g1mb127ic6_iw1_eps0x1p-60
+--dir=BWD_D --dt=f16:f16 --tag=abc --inplace=true --flags=G g1mb75ic8_iw123_eps0.169
+
+# DTS2026012843752
+--dir=FWD_I --dt=u8:bf16 --tag=acdeb --inplace=false --flags=C g42mb48ic378_id29ih36iw31_eps0.183

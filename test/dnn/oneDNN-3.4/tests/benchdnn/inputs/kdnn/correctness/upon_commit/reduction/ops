@@ -1,0 +1,22 @@
+# for all test for norm_lp_max, norm_lp_sum, norm_lp_power_p_max, norm_lp_power_p_sum
+# value of |p| <=2, this is due to limitations of input values in tests.
+# The maximum value of an element in the array is 16 and non-zero numbers in the array can be <= 10^5.
+# This means that the maximum sum of the numbers at p = 3 will be 16^3 *10^5, which is > 2^23 (max mantissa/integer)
+--alg=max,min,sum,mul,mean
+--batch=sizes
+--alg=norm_lp_max
+--p=2
+--eps=100
+--batch=sizes
+--alg=norm_lp_sum
+--p=2
+--eps=-15
+--batch=sizes
+--alg=norm_lp_power_p_max
+--p=1.8
+--eps=1000
+--batch=sizes
+--alg=norm_lp_power_p_sum
+--p=1.5
+--eps=100
+--batch=sizes

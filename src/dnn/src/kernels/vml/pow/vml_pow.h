@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -24,7 +24,7 @@
 #define POWF_LOG2_N             (1 << (POWF_LOG2_BIT_N - 1))
 #define POWF_LOG2_POLY_N        POWF_LOG2_N
 
-extern const float G_VML_VSPOW_LOG2_TAB_VectorComputation[POWF_LOG2_N * 0x2];
-extern const float G_VML_VSPOW_LOG2_POLY_LOW_TAB_VectorComputation[POWF_LOG2_POLY_N * 0x2];
+extern const float G_VML_VSPOW_LOG2_TAB_VC[POWF_LOG2_N * 0x2];
+extern const float G_VML_VSPOW_LOG2_POLY_LOW_TAB_VC[POWF_LOG2_POLY_N * 0x2];
 
 #endif

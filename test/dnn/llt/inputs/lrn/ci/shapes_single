@@ -1,0 +1,6 @@
+ic320_n"lrn_ci_1d"
+mb4ic80_n"lrn_ci_2d"
+mb4ic32_iw8_n"lrn_ci_3d"
+mb4ic32_id2ih4iw2_n"lrn_ci_5d"
+mb4ic16_id2ih2iw2n"lrn_ci_5d:non_square_shape"
+mb4ic16_id2ih2iw2_ls7n"lrn_ci_5d:non_default_local_size"

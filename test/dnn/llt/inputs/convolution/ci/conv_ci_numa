@@ -1,0 +1,33 @@
+--dir=FWD_I,FWD_B,FWD_D --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic32iw100oc32ow103kw2pw2n"conv1d:17"
+--dir=FWD_I,FWD_B,FWD_D --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic512iw100oc512ow103kw2pw2n"conv1d:20"
+--dir=FWD_I,FWD_B,FWD_D --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb96ic832ih7oc160oh7kh1ph0n"googlenet_v1:inception_5a/3x3_reduce"
+--dir=FWD_I,FWD_B,FWD_D --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic16id189ih191iw27oc32od38oh20ow4kd2kh2kw2sd5sh10sw7pd3ph9pw8dd4dh8dw8
+--dir=FWD_I,FWD_B,FWD_D --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic160id38ih151iw54oc800od2oh2ow3kd3kh70kw14sd19sh19sw21pd4ph636pw37dd2dh10dw2
+
+--dir=FWD_I,FWD_B,FWD_D --dt=f16:f16:f16 --stag=abx --dtag=abx --wtag=abx g1mb50ic256iw56oc512ow28kw1sw2pw0n"conv1d:3"
+--dir=FWD_I,FWD_B,FWD_D --dt=f16:f16:f16 --stag=abx --dtag=abx --wtag=abx mb1ic512iw300oc512ow300kw1pw0n"conv1d:12"
+--dir=FWD_I,FWD_B,FWD_D --dt=f16:f16:f16 --stag=abx --dtag=abx --wtag=abx g1mb22ic2048ih8oc192oh8kh1ph0n"googlenet_v3:mixed_10_tower_2_conv_conv2d"
+
+--dir=FWD_I,FWD_B,FWD_D --dt=bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx g1mb50ic256iw56oc512ow28kw1sw2pw0n"conv1d:3"
+--dir=FWD_I,FWD_B,FWD_D --dt=bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx mb1ic512iw32oc512ow30kw5pw1n"conv1d:19"
+ 
+--dir=FWD_I,FWD_B,FWD_D --dt=f16:f16:f32 --stag=abx --dtag=abx --wtag=abx mb1ic3ih224oc64oh224kh3ph1n"vgg_19:conv1_1"
+--dir=FWD_I,FWD_B,FWD_D --dt=f16:f16:f32 --stag=abx --dtag=abx --wtag=abx mb1ic64ih224oc64oh224kh3ph1n"vgg_19:conv1_2"
+--dir=FWD_I,FWD_B,FWD_D --dt=f16:f16:f32 --stag=abx --dtag=abx --wtag=abx mb1ic64ih112oc128oh112kh3ph1n"vgg_19:conv2_1"
+
+--dir=FWD_I,FWD_B,FWD_D --dt=bf16:bf16:f32 --stag=abx --dtag=abx --wtag=abx g1mb8ic32iw10543oc32ow10542kw2pw0n"wavenet:conv1d_4"
+--dir=FWD_I,FWD_B,FWD_D --dt=bf16:bf16:f32 --stag=abx --dtag=abx --wtag=abx g1mb16ic32iw5271oc32ow5270kw2pw0n"wavenet:conv1d_5"
+--dir=FWD_I,FWD_B,FWD_D --dt=bf16:bf16:f32 --stag=abx --dtag=abx --wtag=abx g1mb32ic32iw2635oc32ow2634kw2pw0n"wavenet:conv1d_6"
+
+--dir=BWD_D --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx g1mb1ic512iw812oc256ow812kw1pw0n"wavenet:conv1d_1x1_2"
+--dir=BWD_D --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx g1mb1ic512iw812oc512ow812kw1pw0n"wavenet:conv1d_1x1_3"
+--dir=BWD_D --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx mb1ic64ih112oc128oh112kh3ph1n"vgg_19:conv2_1"
+
+--dir=BWD_W --dt=f32:f32:f32 --stag=abx --dtag=abx --wtag=abx  mb1ic256id12ih13iw13oc256od10oh11ow11kd3kh3kw3pd0ph0pw0n"3d_unet:conv_7"
+--dir=BWD_W --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx mb1ic512iw100oc512ow103kw2pw2n"conv1d:20"
+--dir=BWD_W --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx g1mb1ic512iw812oc256ow812kw1pw0n"wavenet:conv1d_1x1_2"
+
+--dir=BWD_WB --dt=f32:f32:f32 --stag=abx --dtag=abx --wtag=abx  mb1ic256id12ih13iw13oc256od10oh11ow11kd3kh3kw3pd0ph0pw0n"3d_unet:conv_7"
+--dir=BWD_WB --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx mb1ic512iw300oc512ow300kw1pw0n"conv1d:12"
+--dir=BWD_WB --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx g1mb1ic512iw812oc512ow812kw1pw0n"wavenet:conv1d_1x1_3"
+--dir=BWD_WB --dt=f16:f16:f16,bf16:bf16:bf16 --stag=abx --dtag=abx --wtag=abx g1mb1ic256ih56iw56oc512oh28ow28kh1kw1sh2sw2ph0pw0n"resnet_50:res3a_branch1"

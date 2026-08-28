@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 #include "cg_codegen.hpp"
 
 #include "src/cg_error.hpp"
@@ -20,76 +19,76 @@
 
 namespace ARMCG {
 
-// VectorComputation Integer Binary Arithmetic - Predicated Group
-void CodeGenerator::SveIntBinArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
+// VC Integer Binary Arithmetic - Predicated Group
+void CodeGenerator::VCIntBinArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t size = GenSize(zd);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(type, BITFIELD_19),
         LeftShift(opc, BITFIELD_16), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(zn.GetIdx(), BITFIELD_5),
         LeftShift(zd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation bitwize Logical Operation (predicated)
-void CodeGenerator::SveBitwiseLOpPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
+// VC bitwize Logical Operation (predicated)
+void CodeGenerator::VCBitwiseLOpPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
 {
-    SveIntBinArPred(opc, 0x3, zd, pg, zn);
+    VCIntBinArPred(opc, 0x3, zd, pg, zn);
 }
 
-// VectorComputation Integer min/max/diffrence (predicated)
-void CodeGenerator::SveIntMinMaxDiffPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
+// VC Integer min/max/diffrence (predicated)
+void CodeGenerator::VCIntMinMaxDiffPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn)
 {
-    SveIntBinArPred(((opc << OFFSET_ONE) | u), 0x1, zd, pg, zn);
+    VCIntBinArPred(((opc << OFFSET_ONE) | u), 0x1, zd, pg, zn);
 }
 
-// VectorComputation Integer multiply/divide vectors (predicated)
-void CodeGenerator::SveIntMultDivVecPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
+// VC Integer multiply/divide vectors (predicated)
+void CodeGenerator::VCIntMultDivVecPred(uint32_t opc, uint32_t u, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn)
 {
-    SveIntBinArPred(((opc << OFFSET_ONE) | u), 0x2, zd, pg, zn);
+    VCIntBinArPred(((opc << OFFSET_ONE) | u), 0x2, zd, pg, zn);
 }
 
-// VectorComputation Integer Reduction Group
-void CodeGenerator::SveIntReduction(uint32_t opc, uint32_t type, const Reg &rd, const PRegBase &pg, const Reg &rn)
+// VC Integer Reduction Group
+void CodeGenerator::VCIntReduction(uint32_t opc, uint32_t type, const Reg &rd, const PRegBase &pg, const Reg &rn)
 {
     uint32_t size = GenSize(rn);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(type, BITFIELD_19),
         LeftShift(opc, BITFIELD_16), LeftShift(0x1, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(rn.GetIdx(), BITFIELD_5), LeftShift(rd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation integer add reduction (predicated)
-void CodeGenerator::SveIntAddReductPred(uint32_t opc, uint32_t u, const VRegSc &vd,
+// VC integer add reduction (predicated)
+void CodeGenerator::VCIntAddReductPred(uint32_t opc, uint32_t u, const VRegSc &vd,
     const PRegBase &pg, const ZRegBase &zn)
 {
-    SveIntReduction(((opc << 1) | u), 0, vd, pg, zn);
+    VCIntReduction(((opc << 1) | u), 0, vd, pg, zn);
 }
 
-// VectorComputation constructive prefix (predicated)
-void CodeGenerator::SveConstPrefPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
+// VC constructive prefix (predicated)
+void CodeGenerator::VCConstPrefPred(uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
 {
-    SveIntReduction((opc << OFFSET_ONE | (static_cast<uint32_t>(pg.IsM()))), 0x2, zd, pg, zn);
+    VCIntReduction((opc << OFFSET_ONE | (static_cast<uint32_t>(pg.IsM()))), 0x2, zd, pg, zn);
 }
 
-// VectorComputation Bitwise Shift - Predicate Group
-void CodeGenerator::SveBitShPred(uint32_t opc, uint32_t type, const ZRegBase &zdn,
+// VC Bitwise Shift - Predicate Group
+void CodeGenerator::VCBitShPred(uint32_t opc, uint32_t type, const ZRegBase &zdn,
     const PRegBase &pg, const ZRegBase &zm)
 {
     uint32_t size = GenSize(zdn);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(type, BITFIELD_19),
         LeftShift(opc, BITFIELD_16), LeftShift(0x4, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(zm.GetIdx(), BITFIELD_5), LeftShift(zdn.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation bitwise shift by immediate (predicated)
-void CodeGenerator::SveBitwiseShByImmPred(
+// VC bitwise shift by immediate (predicated)
+void CodeGenerator::VCBitwiseShByImmPred(
     uint32_t opc, uint32_t l, uint32_t u, const ZRegBase &zdn, const PRegBase &pg, uint32_t amount)
 {
     bool lsl = (l == 0x1);
@@ -100,7 +99,7 @@ void CodeGenerator::SveBitwiseShByImmPred(
     uint32_t tszh = Field(tsz, BITFIELD_3, BITFIELD_2);
     uint32_t tszl = Field(tsz, BITFIELD_1, BITFIELD_0);
 
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     VerifyIncRange(amount, (OFFSET_ONE - lsl), (zdn.GetBit() - lsl), Err::ILLEGAL_CONST_RANGE);
 
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(tszh, BITFIELD_22), LeftShift(opc, BITFIELD_18),
@@ -110,38 +109,38 @@ void CodeGenerator::SveBitwiseShByImmPred(
     WriteData(code);
 }
 
-// VectorComputation bitwise shift by vector (predicated)
-void CodeGenerator::SveBitwiseShVecPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
+// VC bitwise shift by vector (predicated)
+void CodeGenerator::VCBitwiseShVecPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
 {
-    SveBitShPred(opc, 0x2, zdn, pg, zm);
+    VCBitShPred(opc, 0x2, zdn, pg, zm);
 }
 
-// VectorComputation Integer Unary Arithmetic - Predicated Group
-void CodeGenerator::SveIntUnaryArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
+// VC Integer Unary Arithmetic - Predicated Group
+void CodeGenerator::VCIntUnaryArPred(uint32_t opc, uint32_t type, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t size = GenSize(zd);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(type, BITFIELD_19),
         LeftShift(opc, BITFIELD_16), LeftShift(0x5, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(zn.GetIdx(), BITFIELD_5), LeftShift(zd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation bitwise unary operations (predicated)
-void CodeGenerator::SveBitwiseUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
+// VC bitwise unary operations (predicated)
+void CodeGenerator::VCBitwiseUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
 {
-    SveIntUnaryArPred(opc, 0x3, zdn, pg, zm);
+    VCIntUnaryArPred(opc, 0x3, zdn, pg, zm);
 }
 
-// VectorComputation integer unary operations (predicated)
-void CodeGenerator::SveIntUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
+// VC integer unary operations (predicated)
+void CodeGenerator::VCIntUnaryOpPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
 {
-    SveIntUnaryArPred(opc, 0x2, zdn, pg, zm);
+    VCIntUnaryArPred(opc, 0x2, zdn, pg, zm);
 }
 
-// VectorComputation integer add/subtract vectors (unpredicated)
-void CodeGenerator::SveIntAddSubUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
+// VC integer add/subtract vectors (unpredicated)
+void CodeGenerator::VCIntAddSubUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t size = GenSize(zd);
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
@@ -150,8 +149,8 @@ void CodeGenerator::SveIntAddSubUnpred(uint32_t opc, const ZRegBase &zd, const Z
     WriteData(code);
 }
 
-// VectorComputation bitwise logical operations (unpredicated)
-void CodeGenerator::SveBitwiseLOpUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
+// VC bitwise logical operations (unpredicated)
+void CodeGenerator::VCBitwiseLOpUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
         LeftShift(zm.GetIdx(), BITFIELD_16), LeftShift(0xc, BITFIELD_10),
@@ -159,8 +158,8 @@ void CodeGenerator::SveBitwiseLOpUnpred(uint32_t opc, const ZRegBase &zd, const 
     WriteData(code);
 }
 
-// VectorComputation index generation (immediate start, immediate increment)
-void CodeGenerator::SveIndexGenImmImmInc(const ZRegBase &zd, int32_t imm1, int32_t imm2)
+// VC index generation (immediate start, immediate increment)
+void CodeGenerator::VCIndexGenImmImmInc(const ZRegBase &zd, int32_t imm1, int32_t imm2)
 {
     uint32_t size = GenSize(zd);
     uint32_t imm5b = static_cast<uint32_t>(imm2) & Ones(IMM5_BIT_LENGTH);
@@ -175,8 +174,8 @@ void CodeGenerator::SveIndexGenImmImmInc(const ZRegBase &zd, int32_t imm1, int32
     WriteData(code);
 }
 
-// VectorComputation stack frame adjustment
-void CodeGenerator::SveStackFrameAdjust(uint32_t op, const XReg &xd, const XReg &xn, int32_t imm)
+// VC stack frame adjustment
+void CodeGenerator::VCStackFrameAdjust(uint32_t op, const XReg &xd, const XReg &xn, int32_t imm)
 {
     uint32_t imm6 = static_cast<uint32_t>(imm) & Ones(IMM6_BIT_LENGTH);
     VerifyIncRange(imm, IMM6_RANGE_LOW, IMM6_RANGE_HIGH, Err::ILLEGAL_IMM_RANGE, true);
@@ -186,8 +185,8 @@ void CodeGenerator::SveStackFrameAdjust(uint32_t op, const XReg &xd, const XReg 
     WriteData(code);
 }
 
-// VectorComputation bitwise shift by immediate (unpredicated)
-void CodeGenerator::SveBitwiseShByImmUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, uint32_t amount)
+// VC bitwise shift by immediate (unpredicated)
+void CodeGenerator::VCBitwiseShByImmUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, uint32_t amount)
 {
     bool lsl = (opc == 0x3);
     uint32_t size = GenSize(zd);
@@ -206,8 +205,8 @@ void CodeGenerator::SveBitwiseShByImmUnpred(uint32_t opc, const ZRegBase &zd, co
     WriteData(code);
 }
 
-// VectorComputation Integer Misc - Unpredicated Group
-void CodeGenerator::SveIntMiscUnpred(uint32_t size, uint32_t opc, uint32_t type,
+// VC Integer Misc - Unpredicated Group
+void CodeGenerator::VCIntMiscUnpred(uint32_t size, uint32_t opc, uint32_t type,
     const ZRegBase &zd, const ZRegBase &zn)
 {
     uint32_t code = Concat({LeftShift(0x4, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
@@ -216,15 +215,15 @@ void CodeGenerator::SveIntMiscUnpred(uint32_t size, uint32_t opc, uint32_t type,
     WriteData(code);
 }
 
-// VectorComputation floating-point exponential accelerator
-void CodeGenerator::SveFpExpAccel(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn)
+// VC floating-point exponential accelerator
+void CodeGenerator::VCFpExpAccel(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn)
 {
     uint32_t size = GenSize(zd);
-    SveIntMiscUnpred(size, opc, 0x2, zd, zn);
+    VCIntMiscUnpred(size, opc, 0x2, zd, zn);
 }
 
-// VectorComputation Element Count Group
-void CodeGenerator::SveElemCountGrp(
+// VC Element Count Group
+void CodeGenerator::VCElemCountGrp(
     uint32_t size, uint32_t op, uint32_t type1, uint32_t type2, const Reg &rd, Pattern pat, ExtMod mod, uint32_t imm)
 {
     uint32_t imm4 = (imm - OFFSET_ONE) & Ones(IMM4_BIT_LENGTH);
@@ -236,22 +235,22 @@ void CodeGenerator::SveElemCountGrp(
     WriteData(code);
 }
 
-// VectorComputation element count
-void CodeGenerator::SveElemCount(
+// VC element count
+void CodeGenerator::VCElemCount(
     uint32_t size, uint32_t op, const XReg &xd, Pattern pat, ExtMod mod, uint32_t imm)
 {
-    SveElemCountGrp(size, op, 0x2, 0x1c, xd, pat, mod, imm);
+    VCElemCountGrp(size, op, 0x2, 0x1c, xd, pat, mod, imm);
 }
 
-// VectorComputation inc/dec register by element count
-void CodeGenerator::SveIncDecRegByElemCount(
+// VC inc/dec register by element count
+void CodeGenerator::VCIncDecRegByElemCount(
     uint32_t size, uint32_t d, const XReg &xd, Pattern pat, ExtMod mod, uint32_t imm)
 {
-    SveElemCountGrp(size, d, 0x3, 0x1c, xd, pat, mod, imm);
+    VCElemCountGrp(size, d, 0x3, 0x1c, xd, pat, mod, imm);
 }
 
-// VectorComputation Bitwise Immeidate Group
-void CodeGenerator::SveBitwiseImm(uint32_t opc, const ZRegBase &zd, uint64_t imm)
+// VC Bitwise Immeidate Group
+void CodeGenerator::VCBitwiseImm(uint32_t opc, const ZRegBase &zd, uint64_t imm)
 {
     uint32_t imm13 = GenNImmrImms(imm, zd.GetBit());
     uint32_t code = Concat({LeftShift(0x5, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(imm13, BITFIELD_5),
@@ -259,20 +258,20 @@ void CodeGenerator::SveBitwiseImm(uint32_t opc, const ZRegBase &zd, uint64_t imm
     WriteData(code);
 }
 
-// VectorComputation bitwise logical with immediate (unpredicated)
-void CodeGenerator::SveBitwiseLogicalImmUnpred(uint32_t opc, const ZRegBase &zdn, uint64_t imm)
+// VC bitwise logical with immediate (unpredicated)
+void CodeGenerator::VCBitwiseLogicalImmUnpred(uint32_t opc, const ZRegBase &zdn, uint64_t imm)
 {
-    SveBitwiseImm(opc, zdn, imm);
+    VCBitwiseImm(opc, zdn, imm);
 }
 
-// VectorComputation broadcast bitmask immediate
-void CodeGenerator::SveBcBitmaskImm(const ZRegBase &zdn, uint64_t imm)
+// VC broadcast bitmask immediate
+void CodeGenerator::VCBcBitmaskImm(const ZRegBase &zdn, uint64_t imm)
 {
-    SveBitwiseImm(0x3, zdn, imm);
+    VCBitwiseImm(0x3, zdn, imm);
 }
 
-// VectorComputation copy floating-point immediate (predicated)
-void CodeGenerator::SveCopyFpImmPred(const ZRegBase &zd, const PRegBase &pg, double imm)
+// VC copy floating-point immediate (predicated)
+void CodeGenerator::VCCopyFpImmPred(const ZRegBase &zd, const PRegBase &pg, double imm)
 {
     uint32_t size = GenSize(zd);
     uint32_t imm8 = Code8bitFloat(imm);
@@ -282,8 +281,8 @@ void CodeGenerator::SveCopyFpImmPred(const ZRegBase &zd, const PRegBase &pg, dou
     WriteData(code);
 }
 
-// VectorComputation copy integer immediate (predicated)
-void CodeGenerator::SveCopyIntImmPred(const ZRegBase &zd, const PRegBase &pg, uint32_t imm, ShMod mod, uint32_t sh)
+// VC copy integer immediate (predicated)
+void CodeGenerator::VCCopyIntImmPred(const ZRegBase &zd, const PRegBase &pg, uint32_t imm, ShMod mod, uint32_t sh)
 {
     VerifyIncList(static_cast<uint64_t>(mod), {static_cast<uint64_t>(ShMod::LSL)}, Err::ILLEGAL_SHMOD);
     VerifyIncList(sh, {0, IMM8_BIT_LENGTH}, Err::ILLEGAL_CONST_VALUE);
@@ -296,8 +295,8 @@ void CodeGenerator::SveCopyIntImmPred(const ZRegBase &zd, const PRegBase &pg, ui
     WriteData(code);
 }
 
-// VectorComputation extract vector (immediate offset)
-void CodeGenerator::SveExtVec(const ZRegBase &zdn, const ZRegBase &zm, uint32_t imm)
+// VC extract vector (immediate offset)
+void CodeGenerator::VCExtVec(const ZRegBase &zdn, const ZRegBase &zm, uint32_t imm)
 {
     uint32_t imm8h = Field(imm, BITFIELD_7, BITFIELD_3);
     uint32_t imm8l = Field(imm, BITFIELD_2, BITFIELD_0);
@@ -307,8 +306,8 @@ void CodeGenerator::SveExtVec(const ZRegBase &zdn, const ZRegBase &zm, uint32_t 
     WriteData(code);
 }
 
-// VectorComputation Permute Vector - Unpredicate Group
-void CodeGenerator::SvePerVecUnpred(uint32_t size, uint32_t type1, uint32_t type2, const ZRegBase &zd, const Reg &rn)
+// VC Permute Vector - Unpredicate Group
+void CodeGenerator::VCPerVecUnpred(uint32_t size, uint32_t type1, uint32_t type2, const ZRegBase &zd, const Reg &rn)
 {
     uint32_t code = Concat({LeftShift(0x5, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
         LeftShift(type1, BITFIELD_16), LeftShift(type2, BITFIELD_10),
@@ -316,15 +315,15 @@ void CodeGenerator::SvePerVecUnpred(uint32_t size, uint32_t type1, uint32_t type
     WriteData(code);
 }
 
-// VectorComputation broadcast general register
-void CodeGenerator::SveBcGeneralReg(const ZRegBase &zd, const RReg &rn)
+// VC broadcast general register
+void CodeGenerator::VCBcGeneralReg(const ZRegBase &zd, const RReg &rn)
 {
     uint32_t size = GenSize(zd);
-    SvePerVecUnpred(size, 0, 0xe, zd, rn);
+    VCPerVecUnpred(size, 0, 0xe, zd, rn);
 }
 
-// VectorComputation broadcast indexed element
-void CodeGenerator::SveBcIndexedElem(const ZRegBase &zd, const ZRegElem &zn)
+// VC broadcast indexed element
+void CodeGenerator::VCBcIndexedElem(const ZRegBase &zd, const ZRegElem &zn)
 {
     uint32_t eidx = zn.GetElemIdx();
     uint32_t pos = static_cast<uint32_t>(std::log2(zn.GetBit()) - 0x2);
@@ -332,23 +331,23 @@ void CodeGenerator::SveBcIndexedElem(const ZRegBase &zd, const ZRegElem &zn)
     uint32_t imm2 = Field(imm, BITFIELD_6, BITFIELD_5);
     uint32_t tsz = Field(imm, BITFIELD_4, BITFIELD_0);
 
-    if (zd.GetBit() == VectorComputation_ELT_BITLEN_Q) {
+    if (zd.GetBit() == VC_ELT_BITLEN_Q) {
         VerifyIncList(Field(tsz, BITFIELD_4, BITFIELD_0), {0x10}, Err::ILLEGAL_IMM_COND);
-    } else if (zd.GetBit() == VectorComputation_ELT_BITLEN_D) {
+    } else if (zd.GetBit() == VC_ELT_BITLEN_D) {
         VerifyIncList(Field(tsz, BITFIELD_3, BITFIELD_0), {0x8}, Err::ILLEGAL_IMM_COND);
-    } else if (zd.GetBit() == VectorComputation_ELT_BITLEN_S) {
+    } else if (zd.GetBit() == VC_ELT_BITLEN_S) {
         VerifyIncList(Field(tsz, BITFIELD_2, BITFIELD_0), {0x4}, Err::ILLEGAL_IMM_COND);
-    } else if (zd.GetBit() == VectorComputation_ELT_BITLEN_H) {
+    } else if (zd.GetBit() == VC_ELT_BITLEN_H) {
         VerifyIncList(Field(tsz, BITFIELD_1, BITFIELD_0), {0x2}, Err::ILLEGAL_IMM_COND);
-    } else if (zd.GetBit() == VectorComputation_ELT_BITLEN_B) {
+    } else if (zd.GetBit() == VC_ELT_BITLEN_B) {
         VerifyIncList(Field(tsz, BITFIELD_0, BITFIELD_0), {0x1}, Err::ILLEGAL_IMM_COND);
     }
 
-    SvePerVecUnpred(imm2, tsz, 0x8, zd, zn);
+    VCPerVecUnpred(imm2, tsz, 0x8, zd, zn);
 }
 
-// VectorComputation permute predicate elements
-void CodeGenerator::SvePermutePredElem(uint32_t opc, uint32_t h, const PRegBase &pd,
+// VC permute predicate elements
+void CodeGenerator::VCPermutePredElem(uint32_t opc, uint32_t h, const PRegBase &pd,
     const PRegBase &pn, const PRegBase &pm)
 {
     uint32_t size = GenSize(pd);
@@ -358,8 +357,8 @@ void CodeGenerator::SvePermutePredElem(uint32_t opc, uint32_t h, const PRegBase 
     WriteData(code);
 }
 
-// VectorComputation permute vector elements
-void CodeGenerator::SvePermuteVecElem(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
+// VC permute vector elements
+void CodeGenerator::VCPermuteVecElem(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t size = GenSize(zd);
     uint32_t code = Concat({LeftShift(0x5, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
@@ -368,30 +367,30 @@ void CodeGenerator::SvePermuteVecElem(uint32_t opc, const ZRegBase &zd, const ZR
     WriteData(code);
 }
 
-// VectorComputation copy general register to vector (predicated)
-void CodeGenerator::SveCopyGeneralRegToVecPred(const ZRegBase &zd, const PRegBase &pg, const RReg &rn)
+// VC copy general register to vector (predicated)
+void CodeGenerator::VCCopyGeneralRegToVecPred(const ZRegBase &zd, const PRegBase &pg, const RReg &rn)
 {
     uint32_t size = GenSize(zd);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x5, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x14, BITFIELD_17),
         LeftShift(0x5, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(rn.GetIdx(), BITFIELD_5),
         LeftShift(zd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation vector splice
-void CodeGenerator::SveSelVecSplice(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
+// VC vector splice
+void CodeGenerator::VCSelVecSplice(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t size = GenSize(zd);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x5, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0xb, BITFIELD_18),
         LeftShift(0x4, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(zn.GetIdx(), BITFIELD_5),
         LeftShift(zd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation select vector elements (predicated)
-void CodeGenerator::SveSelVecElemPred(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm)
+// VC select vector elements (predicated)
+void CodeGenerator::VCSelVecElemPred(const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t size = GenSize(zd);
     uint32_t code = Concat({LeftShift(0x5, BITFIELD_24), LeftShift(size, 22), LeftShift(0x1, BITFIELD_21),
@@ -400,8 +399,8 @@ void CodeGenerator::SveSelVecElemPred(const ZRegBase &zd, const PRegBase &pg, co
     WriteData(code);
 }
 
-// VectorComputation Integer Compare - Vector Group
-void CodeGenerator::SveIntCompVecGrp(uint32_t opc, uint32_t ne, const PRegBase &pd,
+// VC Integer Compare - Vector Group
+void CodeGenerator::VCIntCompVecGrp(uint32_t opc, uint32_t ne, const PRegBase &pd,
     const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t size = GenSize(pd);
@@ -411,16 +410,16 @@ void CodeGenerator::SveIntCompVecGrp(uint32_t opc, uint32_t ne, const PRegBase &
     WriteData(code);
 }
 
-// VectorComputation integer compare vectors
-void CodeGenerator::SveIntCompVec(uint32_t op, uint32_t o2, uint32_t ne, const PRegBase &pd,
+// VC integer compare vectors
+void CodeGenerator::VCIntCompVec(uint32_t op, uint32_t o2, uint32_t ne, const PRegBase &pd,
     const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm)
 {
-    uint32_t opc = (op << VectorComputation_COMPVEC_2) | o2;
-    SveIntCompVecGrp(opc, ne, pd, pg, zn, zm);
+    uint32_t opc = (op << VC_COMPVEC_2) | o2;
+    VCIntCompVecGrp(opc, ne, pd, pg, zn, zm);
 }
 
-// VectorComputation predicate logical operations
-void CodeGenerator::SvePredLOp(uint32_t op, uint32_t s, uint32_t o2, uint32_t o3, const PRegBase &pd,
+// VC predicate logical operations
+void CodeGenerator::VCPredLOp(uint32_t op, uint32_t s, uint32_t o2, uint32_t o3, const PRegBase &pd,
     const PRegBase &pg, const PRegBase &pn, const PRegBase &pm)
 {
     uint32_t code = Concat({LeftShift(0x25, BITFIELD_24), LeftShift(op, BITFIELD_23), LeftShift(s, BITFIELD_22),
@@ -430,8 +429,8 @@ void CodeGenerator::SvePredLOp(uint32_t op, uint32_t s, uint32_t o2, uint32_t o3
     WriteData(code);
 }
 
-// VectorComputation predicate initialize
-void CodeGenerator::SvePredInit(uint32_t s, const PRegBase &pd, Pattern pat)
+// VC predicate initialize
+void CodeGenerator::VCPredInit(uint32_t s, const PRegBase &pd, Pattern pat)
 {
     uint32_t size = GenSize(pd);
     uint32_t code = Concat({LeftShift(0x25, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x3, BITFIELD_19),
@@ -440,8 +439,8 @@ void CodeGenerator::SvePredInit(uint32_t s, const PRegBase &pd, Pattern pat)
     WriteData(code);
 }
 
-// VectorComputation predicate zero
-void CodeGenerator::SvePredZero(uint32_t op, uint32_t s, const PRegBase &pd)
+// VC predicate zero
+void CodeGenerator::VCPredZero(uint32_t op, uint32_t s, const PRegBase &pd)
 {
     uint32_t code = Concat({LeftShift(0x25, BITFIELD_24), LeftShift(op, BITFIELD_23), LeftShift(s, BITFIELD_22),
         LeftShift(0x3, BITFIELD_19), LeftShift(0x7, BITFIELD_13), LeftShift(0x1, BITFIELD_10),
@@ -449,13 +448,13 @@ void CodeGenerator::SvePredZero(uint32_t op, uint32_t s, const PRegBase &pd)
     WriteData(code);
 }
 
-// VectorComputation integer compare with signed immediate
-void CodeGenerator::SveIntCompSImm(
+// VC integer compare with signed immediate
+void CodeGenerator::VCIntCompSImm(
     uint32_t op, uint32_t o2, uint32_t ne, const PRegBase &pd, const PRegBase &pg, const ZRegBase &zn, int32_t imm)
 {
     uint32_t size = GenSize(pd);
     uint32_t imm5 = static_cast<uint32_t>(imm) & Ones(IMM5_BIT_LENGTH);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     VerifyIncRange(imm, IMM5_RANGE_LOW, IMM5_RANGE_HIGH, Err::ILLEGAL_IMM_RANGE, true);
     uint32_t code = Concat({LeftShift(0x25, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(imm5, BITFIELD_16),
         LeftShift(op, BITFIELD_15), LeftShift(o2, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
@@ -463,8 +462,8 @@ void CodeGenerator::SveIntCompSImm(
     WriteData(code);
 }
 
-// VectorComputation integer compare scalar count and limit
-void CodeGenerator::SveIntCompScalarCountAndLimit(
+// VC integer compare scalar count and limit
+void CodeGenerator::VCIntCompScalarCountAndLimit(
     uint32_t u, uint32_t lt, uint32_t eq, const PRegBase &pd, const RReg &rn, const RReg &rm)
 {
     uint32_t size = GenSize(pd);
@@ -476,8 +475,8 @@ void CodeGenerator::SveIntCompScalarCountAndLimit(
     WriteData(code);
 }
 
-// VectorComputation broadcast floating-point immediate (unpredicated)
-void CodeGenerator::SveBcFpImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zd, double imm)
+// VC broadcast floating-point immediate (unpredicated)
+void CodeGenerator::VCBcFpImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zd, double imm)
 {
     uint32_t size = GenSize(zd);
     uint32_t imm8 = Code8bitFloat(imm);
@@ -487,8 +486,8 @@ void CodeGenerator::SveBcFpImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &
     WriteData(code);
 }
 
-// VectorComputation broadcast integer immediate (unpredicated)
-void CodeGenerator::SveBcIntImmUnpred(uint32_t opc, const ZRegBase &zd, int32_t imm, ShMod mod, uint32_t sh)
+// VC broadcast integer immediate (unpredicated)
+void CodeGenerator::VCBcIntImmUnpred(uint32_t opc, const ZRegBase &zd, int32_t imm, ShMod mod, uint32_t sh)
 {
     VerifyIncList(static_cast<uint64_t>(mod), {static_cast<uint64_t>(ShMod::LSL)}, Err::ILLEGAL_SHMOD);
     VerifyIncList(sh, {0, IMM8_BIT_LENGTH}, Err::ILLEGAL_CONST_VALUE);
@@ -502,8 +501,8 @@ void CodeGenerator::SveBcIntImmUnpred(uint32_t opc, const ZRegBase &zd, int32_t 
     WriteData(code);
 }
 
-// VectorComputation integer min/max immediate (unpredicated)
-void CodeGenerator::SveIntMinMaxImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zdn, int32_t imm)
+// VC integer min/max immediate (unpredicated)
+void CodeGenerator::VCIntMinMaxImmUnpred(uint32_t opc, uint32_t o2, const ZRegBase &zdn, int32_t imm)
 {
     if ((opc & 0x1)) {
         VerifyIncRange(imm, 0, UIMM8_RANGE_HIGH, Err::ILLEGAL_IMM_RANGE);
@@ -519,37 +518,37 @@ void CodeGenerator::SveIntMinMaxImmUnpred(uint32_t opc, uint32_t o2, const ZRegB
     WriteData(code);
 }
 
-// VectorComputation Integer Multiply-Add - Unpredicated
-void CodeGenerator::SveIntMultAddUnpredGroup(
+// VC Integer Multiply-Add - Unpredicated
+void CodeGenerator::VCIntMultAddUnpredGroup(
     uint32_t op0, const ZRegBase &zda, const ZRegBase &zn, const ZRegBase &zm, uint32_t rot)
 {
     uint32_t size = GenSize(zda);
 
     // If instruction has no "rot" opernad, 0 is passed.
-    VerifyIncList(rot, {VectorComputation_ROTATION_0, VectorComputation_ROTATION_90, VectorComputation_ROTATION_180, VectorComputation_ROTATION_270},
+    VerifyIncList(rot, {VC_ROTATION_0, VC_ROTATION_90, VC_ROTATION_180, VC_ROTATION_270},
         Err::ILLEGAL_CONST_VALUE);
     uint32_t code = Concat({LeftShift(0x44, BITFIELD_24), LeftShift(size, BITFIELD_22),
-        LeftShift(zm.GetIdx(), BITFIELD_16), LeftShift(op0 | (rot / VectorComputation_ROTATION_90), BITFIELD_10),
+        LeftShift(zm.GetIdx(), BITFIELD_16), LeftShift(op0 | (rot / VC_ROTATION_90), BITFIELD_10),
         LeftShift(zn.GetIdx(), BITFIELD_5), LeftShift(zda.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation floating-point multiply-add (indexed)
-void CodeGenerator::SveFpMultAddIndexed(uint32_t op, const ZRegBase &zda, const ZRegBase &zn, const ZRegElem &zm)
+// VC floating-point multiply-add (indexed)
+void CodeGenerator::VCFpMultAddIndexed(uint32_t op, const ZRegBase &zda, const ZRegBase &zn, const ZRegElem &zm)
 {
     uint32_t zmIdx = zm.GetIdx();
     uint32_t zmBit = zm.GetBit();
     uint32_t zmEidx = zm.GetElemIdx();
-    uint32_t size = (zmBit == VectorComputation_ELT_BITLEN_H) ? (0 | Field(zmEidx, BITFIELD_2, BITFIELD_2)) : GenSize(zda);
-    uint32_t opc = (zmBit == VectorComputation_ELT_BITLEN_D) ?
-        (((zmEidx & Ones(VectorComputation_ELT_BITLEN_D_MASK)) << VectorComputation_ELT_BITLEN_D_SHIFT) | zmIdx) :
-        (((zmEidx & Ones(VectorComputation_ELT_BITLEN_S_MASK)) << VectorComputation_ELT_BITLEN_S_SHIFT) | zmIdx);
+    uint32_t size = (zmBit == VC_ELT_BITLEN_H) ? (0 | Field(zmEidx, BITFIELD_2, BITFIELD_2)) : GenSize(zda);
+    uint32_t opc = (zmBit == VC_ELT_BITLEN_D) ?
+        (((zmEidx & Ones(VC_ELT_BITLEN_D_MASK)) << VC_ELT_BITLEN_D_SHIFT) | zmIdx) :
+        (((zmEidx & Ones(VC_ELT_BITLEN_S_MASK)) << VC_ELT_BITLEN_S_SHIFT) | zmIdx);
 
-    VerifyIncRange(zmEidx, 0, ((zmBit == VectorComputation_ELT_BITLEN_H) ? VectorComputation_ELT_BITLEN_H_RANGE :
-        (zmBit == VectorComputation_ELT_BITLEN_S) ? VectorComputation_ELT_BITLEN_S_RANGE : VectorComputation_ELT_BITLEN_B_RANGE),
+    VerifyIncRange(zmEidx, 0, ((zmBit == VC_ELT_BITLEN_H) ? VC_ELT_BITLEN_H_RANGE :
+        (zmBit == VC_ELT_BITLEN_S) ? VC_ELT_BITLEN_S_RANGE : VC_ELT_BITLEN_B_RANGE),
         Err::ILLEGAL_REG_ELEM_IDX);
-    VerifyIncRange(zmEidx, 0, ((zmBit == VectorComputation_ELT_BITLEN_D) ?
-        VectorComputation_ELT_BITLEN_D_RANGE : VectorComputation_ELT_BITLEN_H_RANGE), Err::ILLEGAL_REG_ELEM_IDX);
+    VerifyIncRange(zmEidx, 0, ((zmBit == VC_ELT_BITLEN_D) ?
+        VC_ELT_BITLEN_D_RANGE : VC_ELT_BITLEN_H_RANGE), Err::ILLEGAL_REG_ELEM_IDX);
 
     uint32_t code = Concat({LeftShift(0x64, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21),
         LeftShift(opc, BITFIELD_16), LeftShift(op, BITFIELD_10),
@@ -557,8 +556,19 @@ void CodeGenerator::SveFpMultAddIndexed(uint32_t op, const ZRegBase &zda, const 
     WriteData(code);
 }
 
-// VectorComputation floating-point reciprocal estimate unpredicated
-void CodeGenerator::SveFpReciproEstUnPred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn)
+// VC floating-point recursive reduction
+void CodeGenerator::VCFpRecurReduct(uint32_t opc, const VRegSc &vd, const PRegBase &pg, const ZRegBase &zn)
+{
+    uint32_t size = GenSize(vd);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(opc, BITFIELD_16),
+        LeftShift(1, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(zn.GetIdx(), BITFIELD_5),
+        LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// VC floating-point reciprocal estimate unpredicated
+void CodeGenerator::VCFpReciproEstUnPred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn)
 {
     uint32_t size = GenSize(zd);
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_19),
@@ -567,13 +577,13 @@ void CodeGenerator::SveFpReciproEstUnPred(uint32_t opc, const ZRegBase &zd, cons
     WriteData(code);
 }
 
-// VectorComputation floating-point compare with zero
-void CodeGenerator::SveFpCompWithZero(
+// VC floating-point compare with zero
+void CodeGenerator::VCFpCompWithZero(
     uint32_t eq, uint32_t lt, uint32_t ne, const PRegBase &pd, const PRegBase &pg, const ZRegBase &zn, double zero)
 {
     uint32_t size = GenSize(pd);
-    VerifyIncList(std::lround(zero * VectorComputation_COMPZERO_FACTOR), {0}, Err::ILLEGAL_CONST_VALUE);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncList(std::lround(zero * VC_COMPZERO_FACTOR), {0}, Err::ILLEGAL_CONST_VALUE);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_20),
         LeftShift(eq, BITFIELD_17), LeftShift(lt, BITFIELD_16), LeftShift(0x1, BITFIELD_13),
         LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(zn.GetIdx(), BITFIELD_5), LeftShift(ne, BITFIELD_4),
@@ -581,8 +591,8 @@ void CodeGenerator::SveFpCompWithZero(
     WriteData(code);
 }
 
-// VectorComputation floating-point arithmetic (unpredicated)
-void CodeGenerator::SveFpArithmeticUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
+// VC floating-point arithmetic (unpredicated)
+void CodeGenerator::VCFpArithmeticUnpred(uint32_t opc, const ZRegBase &zd, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t size = GenSize(zd);
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22),
@@ -591,32 +601,32 @@ void CodeGenerator::SveFpArithmeticUnpred(uint32_t opc, const ZRegBase &zd, cons
     WriteData(code);
 }
 
-// VectorComputation floating-point arithmetic (predicated)
-void CodeGenerator::SveFpArithmeticPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
+// VC floating-point arithmetic (predicated)
+void CodeGenerator::VCFpArithmeticPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm)
 {
     uint32_t size = GenSize(zdn);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(opc, BITFIELD_16),
         LeftShift(0x4, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(zm.GetIdx(), BITFIELD_5),
         LeftShift(zdn.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation floating-point arithmetic with immediate (predicated)
-void CodeGenerator::SveFpArithmeticImmPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, float ct)
+// VC floating-point arithmetic with immediate (predicated)
+void CodeGenerator::VCFpArithmeticImmPred(uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, float ct)
 {
     uint32_t size = GenSize(zdn);
-    uint32_t i1 = (std::lround(ct * VectorComputation_ARITH_IMM_STEP_10) < VectorComputation_ARITH_IMM_STEP_10) ? 0 : MODE_ENCODE_ONE;
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    uint32_t i1 = (std::lround(ct * VC_ARITH_IMM_STEP_10) < VC_ARITH_IMM_STEP_10) ? 0 : MODE_ENCODE_ONE;
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
 
-    if (opc == VectorComputation_ARITH_IMM_OPC_0 || opc == VectorComputation_ARITH_IMM_OPC_1 || opc == VectorComputation_ARITH_IMM_OPC_3) {
-        VerifyIncList(std::lround(ct * VectorComputation_ARITH_IMM_STEP_10), {VectorComputation_ARITH_IMM_STEP_5, VectorComputation_ARITH_IMM_STEP_10},
+    if (opc == VC_ARITH_IMM_OPC_0 || opc == VC_ARITH_IMM_OPC_1 || opc == VC_ARITH_IMM_OPC_3) {
+        VerifyIncList(std::lround(ct * VC_ARITH_IMM_STEP_10), {VC_ARITH_IMM_STEP_5, VC_ARITH_IMM_STEP_10},
             Err::ILLEGAL_CONST_VALUE);
-    } else if (opc == VectorComputation_ARITH_IMM_OPC_2) {
-        VerifyIncList(std::lround(ct * VectorComputation_ARITH_IMM_STEP_10), {VectorComputation_ARITH_IMM_STEP_5, VectorComputation_ARITH_IMM_STEP_20},
+    } else if (opc == VC_ARITH_IMM_OPC_2) {
+        VerifyIncList(std::lround(ct * VC_ARITH_IMM_STEP_10), {VC_ARITH_IMM_STEP_5, VC_ARITH_IMM_STEP_20},
             Err::ILLEGAL_CONST_VALUE);
     } else {
-        VerifyIncList(std::lround(ct * VectorComputation_ARITH_IMM_STEP_10), {0, VectorComputation_ARITH_IMM_STEP_10},
+        VerifyIncList(std::lround(ct * VC_ARITH_IMM_STEP_10), {0, VC_ARITH_IMM_STEP_10},
             Err::ILLEGAL_CONST_VALUE);
     }
 
@@ -626,8 +636,8 @@ void CodeGenerator::SveFpArithmeticImmPred(uint32_t opc, const ZRegBase &zdn, co
     WriteData(code);
 }
 
-// VectorComputation floating-point convert precision
-void CodeGenerator::SveFpCvtPrecision(uint32_t opc, uint32_t opc2, const ZRegBase &zd,
+// VC floating-point convert precision
+void CodeGenerator::VCFpCvtPrecision(uint32_t opc, uint32_t opc2, const ZRegBase &zd,
     const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(0x1, BITFIELD_19),
@@ -636,8 +646,8 @@ void CodeGenerator::SveFpCvtPrecision(uint32_t opc, uint32_t opc2, const ZRegBas
     WriteData(code);
 }
 
-// VectorComputation floating-point convert to integer
-void CodeGenerator::SveFpCvtToInt(
+// VC floating-point convert to integer
+void CodeGenerator::VCFpCvtToInt(
     uint32_t opc, uint32_t opc2, uint32_t u, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(0x3, BITFIELD_19),
@@ -646,32 +656,32 @@ void CodeGenerator::SveFpCvtToInt(
     WriteData(code);
 }
 
-// VectorComputation floating-point round to integral value
-void CodeGenerator::SveFpRoundToIntegral(
+// VC floating-point round to integral value
+void CodeGenerator::VCFpRoundToIntegral(
     uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t size = GenSize(zd);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(opc, BITFIELD_16),
         LeftShift(0x5, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(zn.GetIdx(), BITFIELD_5), LeftShift(zd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation floating-point unary operations
-void CodeGenerator::SveFpUnaryOp(
+// VC floating-point unary operations
+void CodeGenerator::VCFpUnaryOp(
     uint32_t opc, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t size = GenSize(zd);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_HALF_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22), LeftShift(0x3, BITFIELD_18),
         LeftShift(opc, BITFIELD_16), LeftShift(0x5, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(zn.GetIdx(), BITFIELD_5), LeftShift(zd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation integer convert to floationg-point
-void CodeGenerator::SveIntCvtToFp(
+// VC integer convert to floationg-point
+void CodeGenerator::VCIntCvtToFp(
     uint32_t opc, uint32_t opc2, uint32_t u, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
 {
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(0x2, BITFIELD_19),
@@ -680,12 +690,12 @@ void CodeGenerator::SveIntCvtToFp(
     WriteData(code);
 }
 
-// VectorComputation floationg-point compare vectors
-void CodeGenerator::SveFpCompVec(uint32_t op, uint32_t o2, uint32_t o3, const PRegBase &pd,
+// VC floationg-point compare vectors
+void CodeGenerator::VCFpCompVec(uint32_t op, uint32_t o2, uint32_t o3, const PRegBase &pd,
     const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t size = GenSize(pd);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_COMPVEC_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_COMPVEC_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x65, BITFIELD_24), LeftShift(size, BITFIELD_22),
         LeftShift(zm.GetIdx(), BITFIELD_16), LeftShift(op, BITFIELD_15), LeftShift(0x1, BITFIELD_14),
         LeftShift(o2, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(zn.GetIdx(), BITFIELD_5),
@@ -693,8 +703,8 @@ void CodeGenerator::SveFpCompVec(uint32_t op, uint32_t o2, uint32_t o3, const PR
     WriteData(code);
 }
 
-// VectorComputation floationg-point multiply-accumulate writing addend
-void CodeGenerator::SveFpMultAccumAddend(
+// VC floationg-point multiply-accumulate writing addend
+void CodeGenerator::VCFpMultAccumAddend(
     uint32_t opc, const ZRegBase &zda, const PRegBase &pg, const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t size = GenSize(zda);
@@ -704,8 +714,8 @@ void CodeGenerator::SveFpMultAccumAddend(
     WriteData(code);
 }
 
-// VectorComputation floationg-point multiply-accumulate writing multiplicand
-void CodeGenerator::SveFpMultAccumMulti(
+// VC floationg-point multiply-accumulate writing multiplicand
+void CodeGenerator::VCFpMultAccumMulti(
     uint32_t opc, const ZRegBase &zdn, const PRegBase &pg, const ZRegBase &zm, const ZRegBase &za)
 {
     uint32_t size = GenSize(zdn);
@@ -715,12 +725,12 @@ void CodeGenerator::SveFpMultAccumMulti(
     WriteData(code);
 }
 
-// VectorComputation 32-bit gather load (scalar plus 32-bit unscaled offsets)
-void CodeGenerator::Sve32GatherLdSc32U(
+// VC 32-bit gather load (scalar plus 32-bit unscaled offsets)
+void CodeGenerator::VC32GatherLdSc32U(
     uint32_t msz, uint32_t u, uint32_t ff, const ZRegBase &zt, const PRegBase &pg, const AdrSc32U &adr)
 {
     uint32_t xs = (adr.GetMod() == ExtMod::SXTW) ? MODE_ENCODE_ONE : 0;
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(msz, BITFIELD_23), LeftShift(xs, BITFIELD_22),
         LeftShift(adr.GetZm().GetIdx(), BITFIELD_16), LeftShift(u, BITFIELD_14), LeftShift(ff, BITFIELD_13),
         LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
@@ -728,12 +738,12 @@ void CodeGenerator::Sve32GatherLdSc32U(
     WriteData(code);
 }
 
-// VectorComputation 32-bit gather load words (scalar plus 32-bit scaled offsets)
-void CodeGenerator::Sve32GatherLdWSc32S(uint32_t u, uint32_t ff, const ZRegBase &zt,
+// VC 32-bit gather load words (scalar plus 32-bit scaled offsets)
+void CodeGenerator::VC32GatherLdWSc32S(uint32_t u, uint32_t ff, const ZRegBase &zt,
     const PRegBase &pg, const AdrSc32S &adr)
 {
     uint32_t xs = (adr.GetMod() == ExtMod::SXTW) ? MODE_ENCODE_ONE : 0;
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(0x2, BITFIELD_23), LeftShift(xs, BITFIELD_22),
         LeftShift(0x1, BITFIELD_21), LeftShift(adr.GetZm().GetIdx(), BITFIELD_16), LeftShift(u, BITFIELD_14),
         LeftShift(ff, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
@@ -741,42 +751,42 @@ void CodeGenerator::Sve32GatherLdWSc32S(uint32_t u, uint32_t ff, const ZRegBase 
     WriteData(code);
 }
 
-// VectorComputation 32-bit contiguous prefetch (scalar plus immediate)
-void CodeGenerator::Sve32ContiPfScImm(PrfopSve prfopSve, uint32_t msz, const PRegBase &pg, const AdrScImm &adr)
+// VC 32-bit contiguous prefetch (scalar plus immediate)
+void CodeGenerator::VC32ContiPfScImm(PrfopVC prfopVC, uint32_t msz, const PRegBase &pg, const AdrScImm &adr)
 {
     int32_t simm = adr.GetSimm();
-    uint32_t imm6 = static_cast<uint32_t>(simm) & Ones(VectorComputation_CONTIPRF_IMM_BIT_LENGTH);
-    VerifyIncRange(simm, VectorComputation_CONTIPRF_IMM_RANGE_LOW, VectorComputation_CONTIPRF_IMM_RANGE_HIGH,
+    uint32_t imm6 = static_cast<uint32_t>(simm) & Ones(VC_CONTIPRF_IMM_BIT_LENGTH);
+    VerifyIncRange(simm, VC_CONTIPRF_IMM_RANGE_LOW, VC_CONTIPRF_IMM_RANGE_HIGH,
         Err::ILLEGAL_IMM_RANGE, true);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_PREFETCH_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_PREFETCH_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(0x7, BITFIELD_22), LeftShift(imm6, BITFIELD_16),
         LeftShift(msz, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
-        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(static_cast<uint32_t>(prfopSve), BITFIELD_0)});
+        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(static_cast<uint32_t>(prfopVC), BITFIELD_0)});
     WriteData(code);
 }
 
-void CodeGenerator::Sve32ContiPfScImm(PrfopSve prfopSve, uint32_t msz, const PRegBase &pg, const AdrNoOfs &adr)
+void CodeGenerator::VC32ContiPfScImm(PrfopVC prfopVC, uint32_t msz, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_PREFETCH_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_PREFETCH_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(0x7, BITFIELD_22), LeftShift(0x0, BITFIELD_16),
         LeftShift(msz, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
-        LeftShift(static_cast<uint32_t>(prfopSve), BITFIELD_0)});
+        LeftShift(static_cast<uint32_t>(prfopVC), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation load and broadcast element
-void CodeGenerator::SveLoadAndBcElem(
+// VC load and broadcast element
+void CodeGenerator::VCLoadAndBcElem(
     uint32_t dtypeh, uint32_t dtypel, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr)
 {
     int32_t uimm = adr.GetSimm();
-    uint32_t dtype = (dtypeh << VectorComputation_BCLDR_DTYPE_SHIFT) | dtypel;
+    uint32_t dtype = (dtypeh << VC_BCLDR_DTYPE_SHIFT) | dtypel;
     uint32_t size = GenSize(dtype);
-    uint32_t imm6 = (static_cast<uint32_t>(uimm) >> size) & Ones(VectorComputation_BCLDR_UIMM_BIT_LENGTH);
+    uint32_t imm6 = (static_cast<uint32_t>(uimm) >> size) & Ones(VC_BCLDR_UIMM_BIT_LENGTH);
 
-    VerifyIncRange(uimm, 0, VectorComputation_BCLDR_IMM_BLOCK * (0x1 << size), Err::ILLEGAL_IMM_RANGE);
+    VerifyIncRange(uimm, 0, VC_BCLDR_IMM_BLOCK * (0x1 << size), Err::ILLEGAL_IMM_RANGE);
     VerifyCond(
         uimm, [=](uint64_t x) {return (x % ((static_cast<uint64_t>(0x1)) << size)) == 0;}, Err::ILLEGAL_IMM_COND);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
 
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(dtypeh, BITFIELD_23), LeftShift(0x1, BITFIELD_22),
         LeftShift(imm6, BITFIELD_16), LeftShift(0x1, BITFIELD_15), LeftShift(dtypel, BITFIELD_13),
@@ -785,10 +795,10 @@ void CodeGenerator::SveLoadAndBcElem(
     WriteData(code);
 }
 
-void CodeGenerator::SveLoadAndBcElem(
+void CodeGenerator::VCLoadAndBcElem(
     uint32_t dtypeh, uint32_t dtypel, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(dtypeh, BITFIELD_23), LeftShift(0x1, BITFIELD_22),
         LeftShift(0x0, BITFIELD_16), LeftShift(0x1, BITFIELD_15), LeftShift(dtypel, BITFIELD_13),
         LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
@@ -796,13 +806,13 @@ void CodeGenerator::SveLoadAndBcElem(
     WriteData(code);
 }
 
-// VectorComputation load predicate register
-void CodeGenerator::SveLoadPredReg(const PRegBase &pt, const AdrScImm &adr)
+// VC load predicate register
+void CodeGenerator::VCLoadPredReg(const PRegBase &pt, const AdrScImm &adr)
 {
     int32_t imm = adr.GetSimm();
     uint32_t imm9h = Field(imm, BITFIELD_8, BITFIELD_3);
     uint32_t imm9l = Field(imm, BITFIELD_2, BITFIELD_0);
-    VerifyIncRange(imm, VectorComputation_PREDLDR_IMM_RANGE_LOW, VectorComputation_PREDLDR_IMM_RANGE_HIGH,
+    VerifyIncRange(imm, VC_PREDLDR_IMM_RANGE_LOW, VC_PREDLDR_IMM_RANGE_HIGH,
         Err::ILLEGAL_IMM_RANGE, true);
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(0x3, BITFIELD_23), LeftShift(imm9h, BITFIELD_16),
         LeftShift(imm9l, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
@@ -810,21 +820,21 @@ void CodeGenerator::SveLoadPredReg(const PRegBase &pt, const AdrScImm &adr)
     WriteData(code);
 }
 
-void CodeGenerator::SveLoadPredReg(const PRegBase &pt, const AdrNoOfs &adr)
+void CodeGenerator::VCLoadPredReg(const PRegBase &pt, const AdrNoOfs &adr)
 {
     uint32_t code = Concat({LeftShift(0x42, BITFIELD_25), LeftShift(0x3, BITFIELD_23), LeftShift(0x0, BITFIELD_16),
         LeftShift(0x0, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(pt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation load predicate vector
-void CodeGenerator::SveLoadPredVec(const ZRegBase &zt, const AdrScImm &adr)
+// VC load predicate vector
+void CodeGenerator::VCLoadPredVec(const ZRegBase &zt, const AdrScImm &adr)
 {
     int32_t imm = adr.GetSimm();
     uint32_t imm9h = Field(imm,  BITFIELD_8,  BITFIELD_3);
     uint32_t imm9l = Field(imm,  BITFIELD_2,  BITFIELD_0);
 
-    VerifyIncRange(imm, VectorComputation_PREDLDR_IMM_RANGE_LOW, VectorComputation_PREDLDR_IMM_RANGE_HIGH,
+    VerifyIncRange(imm, VC_PREDLDR_IMM_RANGE_LOW, VC_PREDLDR_IMM_RANGE_HIGH,
         Err::ILLEGAL_IMM_RANGE, true);
 
     uint32_t code = Concat({LeftShift(0x42,  BITFIELD_25), LeftShift(0x3,  BITFIELD_23), LeftShift(imm9h,  BITFIELD_16),
@@ -833,7 +843,7 @@ void CodeGenerator::SveLoadPredVec(const ZRegBase &zt, const AdrScImm &adr)
     WriteData(code);
 }
 
-void CodeGenerator::SveLoadPredVec(const ZRegBase &zt, const AdrNoOfs &adr)
+void CodeGenerator::VCLoadPredVec(const ZRegBase &zt, const AdrNoOfs &adr)
 {
     uint32_t code = Concat({LeftShift(0x42,  BITFIELD_25), LeftShift(0x3,  BITFIELD_23), LeftShift(0x0,  BITFIELD_16),
         LeftShift(0x1,  BITFIELD_14), LeftShift(0x0,  BITFIELD_10),
@@ -841,103 +851,117 @@ void CodeGenerator::SveLoadPredVec(const ZRegBase &zt, const AdrNoOfs &adr)
     WriteData(code);
 }
 
-// VectorComputation contiguous load (scalar plus immediate)
-void CodeGenerator::SveContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr)
+// VC contiguous load (scalar plus immediate)
+void CodeGenerator::VCContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr)
 {
     int32_t imm = adr.GetSimm();
-    uint32_t imm4 = static_cast<uint32_t>(imm) & Ones(VectorComputation_CONTILDR_IMM_BIT_LENGTH);
-    VerifyIncRange(imm, VectorComputation_CONTILDR_IMM_RANGE_LOW, VectorComputation_CONTILDR_IMM_RANGE_HIGH,
+    uint32_t imm4 = static_cast<uint32_t>(imm) & Ones(VC_CONTILDR_IMM_BIT_LENGTH);
+    VerifyIncRange(imm, VC_CONTILDR_IMM_RANGE_LOW, VC_CONTILDR_IMM_RANGE_HIGH,
         Err::ILLEGAL_IMM_RANGE, true);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x52, BITFIELD_25), LeftShift(dtype, BITFIELD_21), LeftShift(imm4, BITFIELD_16),
         LeftShift(0x5, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-void CodeGenerator::SveContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr)
+void CodeGenerator::VCContiLdScImm(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x52, BITFIELD_25), LeftShift(dtype, BITFIELD_21), LeftShift(0x0, BITFIELD_16),
         LeftShift(0x5, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
         LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation contiguous load (scalar plus scalar)
-void CodeGenerator::SveContiLdScSc(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr)
+// VC contiguous load (scalar plus scalar)
+void CodeGenerator::VCContiLdScSc(uint32_t dtype, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr)
 {
     VerifyIncList(adr.GetSh(), {GenSize(dtype)}, Err::ILLEGAL_CONST_VALUE);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x52, BITFIELD_25), LeftShift(dtype, BITFIELD_21),
         LeftShift(adr.GetXm().GetIdx(), BITFIELD_16), LeftShift(0x2, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-void CodeGenerator::SveLdBcQuadScImm(uint32_t msz, uint32_t num, const ZRegBase &zt,
+void CodeGenerator::VCLdBcQuadScImm(uint32_t msz, uint32_t num, const ZRegBase &zt,
     const PRegBase &pg, const AdrNoOfs &adr)
 {
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_LDR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x52, BITFIELD_25), LeftShift(msz, BITFIELD_23), LeftShift(num, BITFIELD_21),
         LeftShift(0x0, BITFIELD_16), LeftShift(0x1, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-void CodeGenerator::SveContiNTStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr)
+void CodeGenerator::VCLdBcQuadScImm(uint32_t msz, uint32_t num, const ZRegBase &zt,
+    const PRegBase &pg, const AdrScImm &adr)
 {
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    int32_t imm = adr.GetSimm();
+    uint32_t imm4 = (imm >> BITFIELD_4) & Ones(BITFIELD_4);
+    VerifyIncRange(imm, VC_BCLDR_IMM_RANGE_LOW, VC_BCLDR_IMM_RANGE_HIGH, Err::ILLEGAL_IMM_RANGE, true);
+    VerifyCond(imm, [](uint64_t x) { return (x % RINDEX16) == 0; }, Err::ILLEGAL_IMM_COND);
+    VerifyIncRange(pg.GetIdx(), RINDEX0, RINDEX7, Err::ILLEGAL_REG_IDX);
+    uint32_t code = Concat({LeftShift(0x52, BITFIELD_25), LeftShift(msz, BITFIELD_23), LeftShift(num, BITFIELD_21),
+        LeftShift(imm4, BITFIELD_16), LeftShift(0x1, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
+        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+void CodeGenerator::VCContiNTStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr)
+{
+    VerifyIncRange(pg.GetIdx(), 0, VC_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(msz, BITFIELD_23), LeftShift(0x1, BITFIELD_20),
         LeftShift(0x0, BITFIELD_16), LeftShift(0x7, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation contiguous store (scalar plus immediate)
-void CodeGenerator::SveContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr)
+// VC contiguous store (scalar plus immediate)
+void CodeGenerator::VCContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScImm &adr)
 {
     uint32_t size = GenSize(zt);
     int32_t imm = adr.GetSimm();
-    uint32_t imm4 = static_cast<uint32_t>(imm) & Ones(VectorComputation_CONTISTR_IMM_BIT_LENGTH);
-    VerifyIncRange(imm, VectorComputation_CONTISTR_IMM_RANGE_LOW, VectorComputation_CONTISTR_IMM_RANGE_HIGH,
+    uint32_t imm4 = static_cast<uint32_t>(imm) & Ones(VC_CONTISTR_IMM_BIT_LENGTH);
+    VerifyIncRange(imm, VC_CONTISTR_IMM_RANGE_LOW, VC_CONTISTR_IMM_RANGE_HIGH,
         Err::ILLEGAL_IMM_RANGE, true);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(msz, BITFIELD_23), LeftShift(size, BITFIELD_21),
         LeftShift(imm4, BITFIELD_16), LeftShift(0x7, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-void CodeGenerator::SveContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr)
+void CodeGenerator::VCContiStScImm(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
     uint32_t size = GenSize(zt);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(msz, BITFIELD_23), LeftShift(size, BITFIELD_21),
         LeftShift(0x0, BITFIELD_16), LeftShift(0x7, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation contiguous store (scalar plus scalar)
-void CodeGenerator::SveContiStScSc(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr)
+// VC contiguous store (scalar plus scalar)
+void CodeGenerator::VCContiStScSc(uint32_t msz, const ZRegBase &zt, const PRegBase &pg, const AdrScSc &adr)
 {
     VerifyIncList(adr.GetSh(), {msz}, Err::ILLEGAL_CONST_VALUE);
     uint32_t size = GenSize(zt);
-    VerifyIncRange(pg.GetIdx(), 0, VectorComputation_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
+    VerifyIncRange(pg.GetIdx(), 0, VC_CONTISTR_PG_RANGE, Err::ILLEGAL_REG_IDX);
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(msz, BITFIELD_23), LeftShift(size, BITFIELD_21),
         LeftShift(adr.GetXm().GetIdx(), BITFIELD_16), LeftShift(2, BITFIELD_13), LeftShift(pg.GetIdx(), BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(zt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation store predicate register
-void CodeGenerator::SveStorePredReg(const PRegBase &pt, const AdrScImm &adr)
+// VC store predicate register
+void CodeGenerator::VCStorePredReg(const PRegBase &pt, const AdrScImm &adr)
 {
     int32_t imm = adr.GetSimm();
     uint32_t imm9h = Field(imm, BITFIELD_8, BITFIELD_3);
     uint32_t imm9l = Field(imm, BITFIELD_2, BITFIELD_0);
-    VerifyIncRange(imm, VectorComputation_STR_IMM_RANGE_LOW, VectorComputation_STR_IMM_RANGE_HIGH,
+    VerifyIncRange(imm, VC_STR_IMM_RANGE_LOW, VC_STR_IMM_RANGE_HIGH,
         Err::ILLEGAL_IMM_RANGE, true);
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(0x3, BITFIELD_23), LeftShift(imm9h, BITFIELD_16),
         LeftShift(imm9l, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
@@ -945,20 +969,20 @@ void CodeGenerator::SveStorePredReg(const PRegBase &pt, const AdrScImm &adr)
     WriteData(code);
 }
 
-void CodeGenerator::SveStorePredReg(const PRegBase &pt, const AdrNoOfs &adr)
+void CodeGenerator::VCStorePredReg(const PRegBase &pt, const AdrNoOfs &adr)
 {
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(0x3, BITFIELD_23), LeftShift(0x0, BITFIELD_16),
         LeftShift(0x0, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(pt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
-// VectorComputation store predicate vector
-void CodeGenerator::SveStorePredVec(const ZRegBase &zt, const AdrScImm &adr)
+// VC store predicate vector
+void CodeGenerator::VCStorePredVec(const ZRegBase &zt, const AdrScImm &adr)
 {
     int32_t imm = adr.GetSimm();
     uint32_t imm9h = Field(imm, BITFIELD_8, BITFIELD_3);
     uint32_t imm9l = Field(imm, BITFIELD_2, BITFIELD_0);
-    VerifyIncRange(imm, VectorComputation_STR_IMM_RANGE_LOW, VectorComputation_STR_IMM_RANGE_HIGH,
+    VerifyIncRange(imm, VC_STR_IMM_RANGE_LOW, VC_STR_IMM_RANGE_HIGH,
         Err::ILLEGAL_IMM_RANGE, true);
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(0x3, BITFIELD_23), LeftShift(imm9h, BITFIELD_16),
         LeftShift(0x2, BITFIELD_13), LeftShift(imm9l, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
@@ -966,7 +990,7 @@ void CodeGenerator::SveStorePredVec(const ZRegBase &zt, const AdrScImm &adr)
     WriteData(code);
 }
 
-void CodeGenerator::SveStorePredVec(const ZRegBase &zt, const AdrNoOfs &adr)
+void CodeGenerator::VCStorePredVec(const ZRegBase &zt, const AdrNoOfs &adr)
 {
     uint32_t code = Concat({LeftShift(0x72, BITFIELD_25), LeftShift(0x3, BITFIELD_23), LeftShift(0x0, BITFIELD_16),
         LeftShift(0x2, BITFIELD_13), LeftShift(0x0, BITFIELD_10), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
@@ -1022,7 +1046,7 @@ void CodeGenerator::ConversionFpInt(uint32_t sf, uint32_t s, uint32_t type, uint
     WriteData(code);
 }
 
-void CodeGenerator::SveFpWideMultAddGroup(uint32_t bit10, const ZRegBase &zda,
+void CodeGenerator::VCFpWideMultAddGroup(uint32_t bit10, const ZRegBase &zda,
     const ZRegBase &zn, const ZRegBase &zm)
 {
     uint32_t code = Concat({LeftShift(0x64, BITFIELD_24), LeftShift(zm.GetIdx(), BITFIELD_16),
@@ -1030,7 +1054,7 @@ void CodeGenerator::SveFpWideMultAddGroup(uint32_t bit10, const ZRegBase &zda,
     WriteData(code);
 }
 
-void CodeGenerator::SveFpWideMultAddIndexedGroup(uint32_t bit10, const ZRegBase &zda,
+void CodeGenerator::VCFpWideMultAddIndexedGroup(uint32_t bit10, const ZRegBase &zda,
     const ZRegBase &zn, const ZRegElem &zm)
 {
     uint32_t zmEidx = zm.GetElemIdx();
@@ -1055,1074 +1079,1249 @@ void CodeGenerator::SveFpWideMultAddIndexedGroup(uint32_t bit10, const ZRegBase 
     WriteData(code);
 }
 
+// VC floating-point convert precision odd elements
+void CodeGenerator::VCFpConvPrecOddElem(uint32_t bit, const ZRegBase &zd, const PRegBase &pg, const ZRegBase &zn)
+{
+    uint32_t bit23 = 0;
+    VerifyIncRange(pg.GetIdx(), 0, RINDEX7, Err::ILLEGAL_REG_IDX);
+
+    if (bit == 0x445) { // FCVTN
+        bit23 = (GenSize(zd) == VAL_1) ? 0x445 : 0x655;
+    } else if (bit == 0x44d) { // FCVTL
+        bit23 = (GenSize(zd) == VAL_2) ? 0x44d : 0x65d;
+    }
+
+    uint32_t code = Concat({LeftShift(0x64, BITFIELD_24), LeftShift((bit | bit23), BITFIELD_13),
+        LeftShift(pg.GetIdx(), BITFIELD_10), LeftShift(zn.GetIdx(), BITFIELD_5),
+        LeftShift(zd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// VC unpack vector elements
+void CodeGenerator::VCUnpackVecElem(uint32_t u, uint32_t h, const ZRegBase &zd, const ZRegBase &zn)
+{
+    uint32_t size = GenSize(zd);
+    VCPerVecUnpred(size, (0x10 | (u << 1) | h), 0xe, zd, zn);
+}
+
+// VC Misc
+void CodeGenerator::VCMiscGroup(uint32_t bit2310, const ZRegBase &zd, const ZRegBase &zda, const ZRegBase &zn,
+    const ZRegBase &zm, uint32_t amount)
+{
+    uint32_t size = GenSize(zd);
+    uint32_t tmpBit2310 = 0;
+
+    // 0x28 -> SSHLLB
+    // 0x29 -> SSHLLT
+    // 0x2a -> USHLLB
+    // 0x2b -> USHLLT
+    if (bit2310 == 0x28 || bit2310 == 0x29 || bit2310 == 0x2a || bit2310 == 0x2b) {
+        uint32_t esize = 1 << (VAL_2 + size);
+        uint32_t imm = amount + esize;
+        uint32_t tszh = Field(imm, VAL_5, VAL_5);
+        uint32_t tszl = Field(imm, VAL_4, VAL_3);
+        uint32_t imm3 = imm & Ones(VAL_3);
+
+        VerifyIncRange(amount, 0, esize - 1, Err::ILLEGAL_IMM_RANGE);
+
+        tmpBit2310 = (tszh << VAL_12) | (tszl << VAL_9) | (imm3 << VAL_6);
+        size = 0;
+    }
+
+    uint32_t code = Concat({LeftShift(0x45, BITFIELD_24), LeftShift(size, BITFIELD_22),
+        LeftShift(zm.GetIdx(), BITFIELD_16), LeftShift(bit2310 | tmpBit2310, BITFIELD_10),
+        LeftShift(zn.GetIdx(), BITFIELD_5), LeftShift((zd.GetIdx() | zda.GetIdx()), 0)});
+    WriteData(code);
+}
+
 void CodeGenerator::Orr(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveBitwiseLOpPred(0, zdn, pg, zm);
+    VCBitwiseLOpPred(0, zdn, pg, zm);
 }
 
 void CodeGenerator::Eor(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveBitwiseLOpPred(VAL_1, zdn, pg, zm);
+    VCBitwiseLOpPred(VAL_1, zdn, pg, zm);
 }
 
 void CodeGenerator::And(const ZRegB &zdn, const PRegBase &pg, const ZRegB &zm)
 {
-    SveBitwiseLOpPred(VAL_2, zdn, pg, zm);
+    VCBitwiseLOpPred(VAL_2, zdn, pg, zm);
 }
 
 void CodeGenerator::And(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveBitwiseLOpPred(VAL_2, zdn, pg, zm);
+    VCBitwiseLOpPred(VAL_2, zdn, pg, zm);
 }
 
 void CodeGenerator::Smin(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveIntMinMaxDiffPred(VAL_1, 0, zdn, pg, zm);
+    VCIntMinMaxDiffPred(VAL_1, 0, zdn, pg, zm);
 }
 
 void CodeGenerator::Mul(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveIntMultDivVecPred(0, 0, zdn, pg, zm);
+    VCIntMultDivVecPred(0, 0, zdn, pg, zm);
 }
 
 void CodeGenerator::Movprfx(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveConstPrefPred(0, zd, pg, zn);
+    VCConstPrefPred(0, zd, pg, zn);
 }
 
 void CodeGenerator::Asr(const ZRegS &zdn, const PRegBase &pg, const uint32_t amount)
 {
-    SveBitwiseShByImmPred(0x0, 0, 0, zdn, pg, amount);
+    VCBitwiseShByImmPred(0x0, 0, 0, zdn, pg, amount);
 }
 
 void CodeGenerator::Lsl(const ZRegS &zdn, const PRegBase &pg, const uint32_t amount)
 {
-    SveBitwiseShByImmPred(0x0, VAL_1, VAL_1, zdn, pg, amount);
+    VCBitwiseShByImmPred(0x0, VAL_1, VAL_1, zdn, pg, amount);
 }
 
 void CodeGenerator::Lsl(const ZRegH &zdn, const PRegBase &pg, const ZRegH &zm)
 {
-    SveBitwiseShVecPred(VAL_3, zdn, pg, zm);
+    VCBitwiseShVecPred(VAL_3, zdn, pg, zm);
 }
 
 void CodeGenerator::Lsl(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveBitwiseShVecPred(VAL_3, zdn, pg, zm);
+    VCBitwiseShVecPred(VAL_3, zdn, pg, zm);
 }
 
 void CodeGenerator::Fabs(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveBitwiseUnaryOpPred(VAL_4, zd, pg, zn);
+    VCBitwiseUnaryOpPred(VAL_4, zd, pg, zn);
 }
 
 void CodeGenerator::Fneg(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveBitwiseUnaryOpPred(VAL_5, zd, pg, zn);
+    VCBitwiseUnaryOpPred(VAL_5, zd, pg, zn);
 }
 
 void CodeGenerator::Sxtb(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveIntUnaryOpPred(0, zd, pg, zn);
+    VCIntUnaryOpPred(0, zd, pg, zn);
 }
 
 void CodeGenerator::Uxtb(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveIntUnaryOpPred(VAL_1, zd, pg, zn);
+    VCIntUnaryOpPred(VAL_1, zd, pg, zn);
 }
 
 void CodeGenerator::Add(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SveIntAddSubUnpred(0, zd, zn, zm);
+    VCIntAddSubUnpred(0, zd, zn, zm);
 }
 
 void CodeGenerator::Sub(const ZRegB &zd, const ZRegB &zn, const ZRegB &zm)
 {
-    SveIntAddSubUnpred(VAL_1, zd, zn, zm);
+    VCIntAddSubUnpred(VAL_1, zd, zn, zm);
 }
 
 void CodeGenerator::Sub(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SveIntAddSubUnpred(VAL_1, zd, zn, zm);
+    VCIntAddSubUnpred(VAL_1, zd, zn, zm);
 }
 
 void CodeGenerator::And(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
 {
-    SveBitwiseLOpUnpred(0, zd, zn, zm);
+    VCBitwiseLOpUnpred(0, zd, zn, zm);
 }
 
 void CodeGenerator::Orr(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
 {
-    SveBitwiseLOpUnpred(VAL_1, zd, zn, zm);
+    VCBitwiseLOpUnpred(VAL_1, zd, zn, zm);
 }
 
 void CodeGenerator::Mov(const ZRegD &zd, const ZRegD &zn)
 {
-    SveBitwiseLOpUnpred(VAL_1, zd, zn, zn);
+    VCBitwiseLOpUnpred(VAL_1, zd, zn, zn);
 }
 
 void CodeGenerator::Eor(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
 {
-    SveBitwiseLOpUnpred(VAL_2, zd, zn, zm);
+    VCBitwiseLOpUnpred(VAL_2, zd, zn, zm);
 }
 
 void CodeGenerator::Index(const ZRegH &zd, const int32_t imm1, const int32_t imm2)
 {
-    SveIndexGenImmImmInc(zd, imm1, imm2);
+    VCIndexGenImmImmInc(zd, imm1, imm2);
 }
 
 void CodeGenerator::Index(const ZRegS &zd, const int32_t imm1, const int32_t imm2)
 {
-    SveIndexGenImmImmInc(zd, imm1, imm2);
+    VCIndexGenImmImmInc(zd, imm1, imm2);
 }
 
 void CodeGenerator::Addvl(const XReg &xd, const XReg &xn, const int32_t imm)
 {
-    SveStackFrameAdjust(0, xd, xn, imm);
+    VCStackFrameAdjust(0, xd, xn, imm);
 }
 
 void CodeGenerator::Asr(const ZRegS &zd, const ZRegS &zn, const uint32_t amount)
 {
-    SveBitwiseShByImmUnpred(0, zd, zn, amount);
+    VCBitwiseShByImmUnpred(0, zd, zn, amount);
 }
 
 void CodeGenerator::Lsr(const ZRegS &zd, const ZRegS &zn, const uint32_t amount)
 {
-    SveBitwiseShByImmUnpred(VAL_1, zd, zn, amount);
+    VCBitwiseShByImmUnpred(VAL_1, zd, zn, amount);
 }
 
 void CodeGenerator::Lsl(const ZRegS &zd, const ZRegS &zn, const uint32_t amount)
 {
-    SveBitwiseShByImmUnpred(VAL_3, zd, zn, amount);
+    VCBitwiseShByImmUnpred(VAL_3, zd, zn, amount);
 }
 
 void CodeGenerator::Fexpa(const ZRegS &zd, const ZRegS &zn)
 {
-    SveFpExpAccel(0, zd, zn);
+    VCFpExpAccel(0, zd, zn);
 }
 
 void CodeGenerator::Cntw(const XReg &xd, const Pattern pat, const ExtMod mod, const uint32_t imm)
 {
-    SveElemCount(VAL_2, 0, xd, pat, mod, imm);
+    VCElemCount(VAL_2, 0, xd, pat, mod, imm);
 }
 
 void CodeGenerator::Incb(const XReg &xd, const Pattern pat, const ExtMod mod, const uint32_t imm)
 {
-    SveIncDecRegByElemCount(0, 0, xd, pat, mod, imm);
+    VCIncDecRegByElemCount(0, 0, xd, pat, mod, imm);
 }
 
 void CodeGenerator::Inch(const XReg &xd, const Pattern pat, const ExtMod mod, const uint32_t imm)
 {
-    SveIncDecRegByElemCount(VAL_1, 0, xd, pat, mod, imm);
+    VCIncDecRegByElemCount(VAL_1, 0, xd, pat, mod, imm);
 }
 
 void CodeGenerator::Incw(const XReg &xd, const Pattern pat, const ExtMod mod, const uint32_t imm)
 {
-    SveIncDecRegByElemCount(VAL_2, 0, xd, pat, mod, imm);
+    VCIncDecRegByElemCount(VAL_2, 0, xd, pat, mod, imm);
 }
 
 void CodeGenerator::Decw(const XReg &xd, const Pattern pat, const ExtMod mod, const uint32_t imm)
 {
-    SveIncDecRegByElemCount(VAL_2, VAL_1, xd, pat, mod, imm);
+    VCIncDecRegByElemCount(VAL_2, VAL_1, xd, pat, mod, imm);
 }
 
 void CodeGenerator::Eor(const ZRegS &zdn, const uint64_t imm)
 {
-    SveBitwiseLogicalImmUnpred(VAL_1, zdn, imm);
+    VCBitwiseLogicalImmUnpred(VAL_1, zdn, imm);
 }
 
 void CodeGenerator::And(const ZRegS &zdn, const uint64_t imm)
 {
-    SveBitwiseLogicalImmUnpred(VAL_2, zdn, imm);
+    VCBitwiseLogicalImmUnpred(VAL_2, zdn, imm);
 }
 
 void CodeGenerator::Dupm(const ZRegS &zd, const uint64_t imm)
 {
-    SveBcBitmaskImm(zd, imm);
+    VCBcBitmaskImm(zd, imm);
 }
 
 void CodeGenerator::Fcpy(const ZRegS &zd, const PRegBase &pg, const double imm)
 {
-    SveCopyFpImmPred(zd, pg, imm);
+    VCCopyFpImmPred(zd, pg, imm);
 }
 
 void CodeGenerator::Fmov(const ZRegS &zd, const PRegBase &pg, const double imm)
 {
-    SveCopyFpImmPred(zd, pg, imm);
+    VCCopyFpImmPred(zd, pg, imm);
 }
 
 void CodeGenerator::Mov(const ZRegB &zd, const PRegBase &pg, const uint32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveCopyIntImmPred(zd, pg, imm, mod, sh);
+    VCCopyIntImmPred(zd, pg, imm, mod, sh);
 }
 
 void CodeGenerator::Mov(const ZRegS &zd, const PRegBase &pg, const uint32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveCopyIntImmPred(zd, pg, imm, mod, sh);
+    VCCopyIntImmPred(zd, pg, imm, mod, sh);
 }
 
 void CodeGenerator::Ext(const ZRegB &zdn, const ZRegB &zm, const uint32_t imm)
 {
-    SveExtVec(zdn, zm, imm);
+    VCExtVec(zdn, zm, imm);
 }
 
 void CodeGenerator::Dup(const ZRegH &zd, const WReg &rn)
 {
-    SveBcGeneralReg(zd, rn);
+    VCBcGeneralReg(zd, rn);
 }
 
 void CodeGenerator::Dup(const ZRegS &zd, const WReg &rn)
 {
-    SveBcGeneralReg(zd, rn);
+    VCBcGeneralReg(zd, rn);
 }
 
 void CodeGenerator::Mov(const ZRegS &zd, const WReg &rn)
 {
-    SveBcGeneralReg(zd, rn);
+    VCBcGeneralReg(zd, rn);
+}
+
+void CodeGenerator::Mov(const ZRegH &zd, const HReg &vn)
+{
+    VCBcIndexedElem(zd, ZRegElem(vn.GetIdx(), 0, vn.GetBit()));
 }
 
 void CodeGenerator::Mov(const ZRegS &zd, const SReg &vn)
 {
-    SveBcIndexedElem(zd, ZRegElem(vn.GetIdx(), 0, vn.GetBit()));
+    VCBcIndexedElem(zd, ZRegElem(vn.GetIdx(), 0, vn.GetBit()));
 }
 
 void CodeGenerator::Dup(const ZRegB &zd, const ZRegBElem &zn)
 {
-    SveBcIndexedElem(zd, zn);
+    VCBcIndexedElem(zd, zn);
 }
 
 void CodeGenerator::Dup(const ZRegS &zd, const ZRegSElem &zn)
 {
-    SveBcIndexedElem(zd, zn);
+    VCBcIndexedElem(zd, zn);
 }
 
 void CodeGenerator::Zip1(const PRegB &pd, const PRegB &pn, const PRegB &pm)
 {
-    SvePermutePredElem(0, 0, pd, pn, pm);
+    VCPermutePredElem(0, 0, pd, pn, pm);
 }
 
 void CodeGenerator::Zip1(const PRegH &pd, const PRegH &pn, const PRegH &pm)
 {
-    SvePermutePredElem(0, 0, pd, pn, pm);
+    VCPermutePredElem(0, 0, pd, pn, pm);
 }
 
 void CodeGenerator::Uzp1(const PRegB &pd, const PRegB &pn, const PRegB &pm)
 {
-    SvePermutePredElem(VAL_1, 0, pd, pn, pm);
+    VCPermutePredElem(VAL_1, 0, pd, pn, pm);
 }
 
 void CodeGenerator::Uzp1(const PRegH &pd, const PRegH &pn, const PRegH &pm)
 {
-    SvePermutePredElem(VAL_1, 0, pd, pn, pm);
+    VCPermutePredElem(VAL_1, 0, pd, pn, pm);
 }
 
 void CodeGenerator::Trn1(const PRegS &pd, const PRegS &pn, const PRegS &pm)
 {
-    SvePermutePredElem(VAL_2, 0, pd, pn, pm);
+    VCPermutePredElem(VAL_2, 0, pd, pn, pm);
 }
 
 void CodeGenerator::Trn1(const PRegD &pd, const PRegD &pn, const PRegD &pm)
 {
-    SvePermutePredElem(VAL_2, 0, pd, pn, pm);
+    VCPermutePredElem(VAL_2, 0, pd, pn, pm);
 }
 
 void CodeGenerator::Zip1(const ZRegB &zd, const ZRegB &zn, const ZRegB &zm)
 {
-    SvePermuteVecElem(0, zd, zn, zm);
+    VCPermuteVecElem(0, zd, zn, zm);
 }
 
 void CodeGenerator::Zip1(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
 {
-    SvePermuteVecElem(0, zd, zn, zm);
+    VCPermuteVecElem(0, zd, zn, zm);
 }
 
 void CodeGenerator::Zip1(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SvePermuteVecElem(0, zd, zn, zm);
+    VCPermuteVecElem(0, zd, zn, zm);
+}
+
+void CodeGenerator::Zip1(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
+{
+    VCPermuteVecElem(0, zd, zn, zm);
 }
 
 void CodeGenerator::Zip2(const ZRegB &zd, const ZRegB &zn, const ZRegB &zm)
 {
-    SvePermuteVecElem(VAL_1, zd, zn, zm);
+    VCPermuteVecElem(VAL_1, zd, zn, zm);
 }
 
 void CodeGenerator::Zip2(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
 {
-    SvePermuteVecElem(VAL_1, zd, zn, zm);
+    VCPermuteVecElem(VAL_1, zd, zn, zm);
 }
 
 void CodeGenerator::Zip2(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SvePermuteVecElem(VAL_1, zd, zn, zm);
+    VCPermuteVecElem(VAL_1, zd, zn, zm);
+}
+
+void CodeGenerator::Zip2(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
+{
+    VCPermuteVecElem(VAL_1, zd, zn, zm);
 }
 
 void CodeGenerator::Uzp1(const ZRegB &zd, const ZRegB &zn, const ZRegB &zm)
 {
-    SvePermuteVecElem(VAL_2, zd, zn, zm);
+    VCPermuteVecElem(VAL_2, zd, zn, zm);
 }
 
 void CodeGenerator::Uzp1(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
 {
-    SvePermuteVecElem(VAL_2, zd, zn, zm);
+    VCPermuteVecElem(VAL_2, zd, zn, zm);
+}
+
+void CodeGenerator::Uzp1(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
+{
+    VCPermuteVecElem(VAL_2, zd, zn, zm);
+}
+
+void CodeGenerator::Uzp1(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
+{
+    VCPermuteVecElem(VAL_2, zd, zn, zm);
+}
+
+void CodeGenerator::Uzp2(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
+{
+    VCPermuteVecElem(VAL_3, zd, zn, zm);
+}
+
+void CodeGenerator::Uzp2(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
+{
+    VCPermuteVecElem(VAL_3, zd, zn, zm);
 }
 
 void CodeGenerator::Uzp2(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
 {
-    SvePermuteVecElem(VAL_3, zd, zn, zm);
+    VCPermuteVecElem(VAL_3, zd, zn, zm);
+}
+
+void CodeGenerator::Trn1(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
+{
+    VCPermuteVecElem(VAL_4, zd, zn, zm);
 }
 
 void CodeGenerator::Trn1(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SvePermuteVecElem(VAL_4, zd, zn, zm);
+    VCPermuteVecElem(VAL_4, zd, zn, zm);
 }
 
 void CodeGenerator::Trn1(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
 {
-    SvePermuteVecElem(VAL_4, zd, zn, zm);
+    VCPermuteVecElem(VAL_4, zd, zn, zm);
+}
+
+void CodeGenerator::Trn2(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
+{
+    VCPermuteVecElem(VAL_5, zd, zn, zm);
 }
 
 void CodeGenerator::Trn2(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SvePermuteVecElem(VAL_5, zd, zn, zm);
+    VCPermuteVecElem(VAL_5, zd, zn, zm);
 }
 
 void CodeGenerator::Trn2(const ZRegD &zd, const ZRegD &zn, const ZRegD &zm)
 {
-    SvePermuteVecElem(VAL_5, zd, zn, zm);
+    VCPermuteVecElem(VAL_5, zd, zn, zm);
 }
 
 void CodeGenerator::Cpy(const ZRegS &zd, const PRegBase &pg, const WReg &rn)
 {
-    SveCopyGeneralRegToVecPred(zd, pg, rn);
+    VCCopyGeneralRegToVecPred(zd, pg, rn);
 }
 
 void CodeGenerator::Splice(const ZRegD &zdn, const PRegBase &pg, const ZRegD &zm)
 {
-    SveSelVecSplice(zdn, pg, zm);
+    VCSelVecSplice(zdn, pg, zm);
 }
 
 void CodeGenerator::Sel(const ZRegB &zd, const PRegBase &pg, const ZRegB &zn, const ZRegB &zm)
 {
-    SveSelVecElemPred(zd, pg, zn, zm);
+    VCSelVecElemPred(zd, pg, zn, zm);
 }
 
 void CodeGenerator::Sel(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveSelVecElemPred(zd, pg, zn, zm);
+    VCSelVecElemPred(zd, pg, zn, zm);
 }
 
 void CodeGenerator::Mov(const ZRegB &zd, const PRegBase &pg, const ZRegB &zn)
 {
-    SveSelVecElemPred(zd, pg, zn, zd);
+    VCSelVecElemPred(zd, pg, zn, zd);
 }
 
 void CodeGenerator::Mov(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveSelVecElemPred(zd, pg, zn, zd);
+    VCSelVecElemPred(zd, pg, zn, zd);
 }
 
 void CodeGenerator::Mov(const ZRegD &zd, const PRegBase &pg, const ZRegD &zn)
 {
-    SveSelVecElemPred(zd, pg, zn, zd);
+    VCSelVecElemPred(zd, pg, zn, zd);
 }
 
 void CodeGenerator::Cmpeq(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveIntCompVec(VAL_1, VAL_1, 0, pd, pg, zn, zm);
+    VCIntCompVec(VAL_1, VAL_1, 0, pd, pg, zn, zm);
 }
 
 void CodeGenerator::Cmpls(const PRegB &pd, const PRegBase &pg, const ZRegB &zn, const ZRegB &zm)
 {
-    SveIntCompVec(0, 0, 0, pd, pg, zm, zn);
+    VCIntCompVec(0, 0, 0, pd, pg, zm, zn);
 }
 
 void CodeGenerator::Cmplt(const PRegB &pd, const PRegBase &pg, const ZRegB &zn, const ZRegB &zm)
 {
-    SveIntCompVec(VAL_1, 0, VAL_1, pd, pg, zm, zn);
+    VCIntCompVec(VAL_1, 0, VAL_1, pd, pg, zm, zn);
 }
 
 void CodeGenerator::Cmplt(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveIntCompVec(VAL_1, 0, VAL_1, pd, pg, zm, zn);
+    VCIntCompVec(VAL_1, 0, VAL_1, pd, pg, zm, zn);
 }
 
 void CodeGenerator::And(const PRegB &pd, const PRegBase &pg, const PRegB &pn, const PRegB &pm)
 {
-    SvePredLOp(0, 0, 0, 0, pd, pg, pn, pm);
+    VCPredLOp(0, 0, 0, 0, pd, pg, pn, pm);
 }
 
 void CodeGenerator::Mov(const PRegB &pd, const PRegBase &pg, const PRegB &pn)
 {
-    SvePredLOp(0, 0, pg.IsM(), pg.IsM(), pd, pg, pn, (pg.IsZ()) ? pn : pd);
+    VCPredLOp(0, 0, pg.IsM(), pg.IsM(), pd, pg, pn, (pg.IsZ()) ? pn : pd);
 }
 
 void CodeGenerator::Eor(const PRegB &pd, const PRegBase &pg, const PRegB &pn, const PRegB &pm)
 {
-    SvePredLOp(0, 0, VAL_1, 0, pd, pg, pn, pm);
+    VCPredLOp(0, 0, VAL_1, 0, pd, pg, pn, pm);
 }
 
 void CodeGenerator::Not(const PRegB &pd, const PRegBase &pg, const PRegB &pn)
 {
-    SvePredLOp(0, 0, VAL_1, 0, pd, pg, pn, pg);
+    VCPredLOp(0, 0, VAL_1, 0, pd, pg, pn, pg);
 }
 
 void CodeGenerator::Mov(const PRegB &pd, const PRegB &pn)
 {
-    SvePredLOp(VAL_1, 0, 0, 0, pd, pn, pn, pn);
+    VCPredLOp(VAL_1, 0, 0, 0, pd, pn, pn, pn);
 }
 
 void CodeGenerator::Ptrue(const PRegB &pd, const Pattern pat)
 {
-    SvePredInit(0, pd, pat);
+    VCPredInit(0, pd, pat);
 }
 
 void CodeGenerator::Ptrue(const PRegH &pd, const Pattern pat)
 {
-    SvePredInit(0, pd, pat);
+    VCPredInit(0, pd, pat);
 }
 
 void CodeGenerator::Ptrue(const PRegS &pd, const Pattern pat)
 {
-    SvePredInit(0, pd, pat);
+    VCPredInit(0, pd, pat);
 }
 
 void CodeGenerator::Ptrue(const PRegD &pd, const Pattern pat)
 {
-    SvePredInit(0, pd, pat);
+    VCPredInit(0, pd, pat);
 }
 
 void CodeGenerator::Pfalse(const PRegB &pd)
 {
-    SvePredZero(0, 0, pd);
+    VCPredZero(0, 0, pd);
 }
 
 void CodeGenerator::Cmplt(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const int32_t imm)
 {
-    SveIntCompSImm(0, VAL_1, 0, pd, pg, zn, imm);
-}
-
-void CodeGenerator::Cmple(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const int32_t imm)
-{
-    SveIntCompSImm(0, VAL_1, VAL_1, pd, pg, zn, imm);
+    VCIntCompSImm(0, VAL_1, 0, pd, pg, zn, imm);
 }
 
 void CodeGenerator::Cmpeq(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const int32_t imm)
 {
-    SveIntCompSImm(VAL_1, 0, 0, pd, pg, zn, imm);
+    VCIntCompSImm(VAL_1, 0, 0, pd, pg, zn, imm);
 }
 
 void CodeGenerator::Cmpne(const PRegH &pd, const PRegBase &pg, const ZRegH &zn, const int32_t imm)
 {
-    SveIntCompSImm(VAL_1, 0, VAL_1, pd, pg, zn, imm);
+    VCIntCompSImm(VAL_1, 0, VAL_1, pd, pg, zn, imm);
 }
 
 void CodeGenerator::Cmpne(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const int32_t imm)
 {
-    SveIntCompSImm(VAL_1, 0, VAL_1, pd, pg, zn, imm);
+    VCIntCompSImm(VAL_1, 0, VAL_1, pd, pg, zn, imm);
 }
 
 void CodeGenerator::Whilelt(const PRegB &pd, const XReg &rn, const XReg &rm)
 {
-    SveIntCompScalarCountAndLimit(0, VAL_1, 0, pd, rn, rm);
+    VCIntCompScalarCountAndLimit(0, VAL_1, 0, pd, rn, rm);
 }
 
 void CodeGenerator::Whilelt(const PRegH &pd, const XReg &rn, const XReg &rm)
 {
-    SveIntCompScalarCountAndLimit(0, VAL_1, 0, pd, rn, rm);
+    VCIntCompScalarCountAndLimit(0, VAL_1, 0, pd, rn, rm);
 }
 
 void CodeGenerator::Whilelt(const PRegS &pd, const XReg &rn, const XReg &rm)
 {
-    SveIntCompScalarCountAndLimit(0, VAL_1, 0, pd, rn, rm);
+    VCIntCompScalarCountAndLimit(0, VAL_1, 0, pd, rn, rm);
+}
+
+void CodeGenerator::Whilelt(const PRegD &pd, const XReg &rn, const XReg &rm)
+{
+    VCIntCompScalarCountAndLimit(0, VAL_1, 0, pd, rn, rm);
 }
 
 void CodeGenerator::Fdup(const ZRegS &zd, const double imm)
 {
-    SveBcFpImmUnpred(0, 0, zd, imm);
+    VCBcFpImmUnpred(0, 0, zd, imm);
 }
 
 void CodeGenerator::Fmov(const ZRegS &zd, const double imm)
 {
-    SveBcFpImmUnpred(0, 0, zd, imm);
+    VCBcFpImmUnpred(0, 0, zd, imm);
 }
 
 void CodeGenerator::Dup(const ZRegB &zd, const int32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveBcIntImmUnpred(0, zd, imm, mod, sh);
+    VCBcIntImmUnpred(0, zd, imm, mod, sh);
+}
+
+void CodeGenerator::Dup(const ZRegH &zd, const int32_t imm, const ShMod mod, const uint32_t sh)
+{
+    VCBcIntImmUnpred(0, zd, imm, mod, sh);
 }
 
 void CodeGenerator::Dup(const ZRegS &zd, const int32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveBcIntImmUnpred(0, zd, imm, mod, sh);
+    VCBcIntImmUnpred(0, zd, imm, mod, sh);
 }
 
 void CodeGenerator::Dup(const ZRegD &zd, const int32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveBcIntImmUnpred(0, zd, imm, mod, sh);
+    VCBcIntImmUnpred(0, zd, imm, mod, sh);
 }
 
 void CodeGenerator::Mov(const ZRegB &zd, const int32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveBcIntImmUnpred(0, zd, imm, mod, sh);
+    VCBcIntImmUnpred(0, zd, imm, mod, sh);
 }
 
 void CodeGenerator::Mov(const ZRegH &zd, const int32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveBcIntImmUnpred(0, zd, imm, mod, sh);
+    VCBcIntImmUnpred(0, zd, imm, mod, sh);
 }
 
 void CodeGenerator::Mov(const ZRegS &zd, const int32_t imm, const ShMod mod, const uint32_t sh)
 {
-    SveBcIntImmUnpred(0, zd, imm, mod, sh);
+    VCBcIntImmUnpred(0, zd, imm, mod, sh);
 }
 
 void CodeGenerator::Fmov(const ZRegH &zd, const float imm)
 {
-    SveBcIntImmUnpred(0, zd, static_cast<uint32_t>(imm), ShMod::LSL, 0);
+    VCBcIntImmUnpred(0, zd, static_cast<uint32_t>(imm), ShMod::LSL, 0);
 }
 
 void CodeGenerator::Fmov(const ZRegS &zd, const float imm)
 {
-    SveBcIntImmUnpred(0, zd, static_cast<uint32_t>(imm), ShMod::LSL, 0);
+    VCBcIntImmUnpred(0, zd, static_cast<uint32_t>(imm), ShMod::LSL, 0);
 }
 
 void CodeGenerator::Smax(const ZRegS &zdn, const int32_t imm)
 {
-    SveIntMinMaxImmUnpred(0, 0, zdn, imm);
+    VCIntMinMaxImmUnpred(0, 0, zdn, imm);
 }
 
 void CodeGenerator::Smin(const ZRegS &zdn, const int32_t imm)
 {
-    SveIntMinMaxImmUnpred(VAL_2, 0, zdn, imm);
+    VCIntMinMaxImmUnpred(VAL_2, 0, zdn, imm);
 }
 
 void CodeGenerator::Umin(const ZRegS &zdn, const int32_t imm)
 {
-    SveIntMinMaxImmUnpred(VAL_3, 0, zdn, imm);
+    VCIntMinMaxImmUnpred(VAL_3, 0, zdn, imm);
+}
+
+void CodeGenerator::Udot(const ZRegS &zda, const ZRegB &zn, const ZRegB &zm)
+{
+    VCIntMultAddUnpredGroup(VAL_1, zda, zn, zm, 0);
+}
+
+void CodeGenerator::Usdot(const ZRegS &zda, const ZRegB &zn, const ZRegB &zm)
+{
+    VCIntMultAddUnpredGroup(VAL_30, zda, zn, zm, 0);
 }
 
 void CodeGenerator::Sdot(const ZRegS &zda, const ZRegB &zn, const ZRegB &zm)
 {
-    SveIntMultAddUnpredGroup(0, zda, zn, zm, 0);
+    VCIntMultAddUnpredGroup(0, zda, zn, zm, 0);
 }
 
 void CodeGenerator::Saddv(const DReg &vd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveIntAddReductPred(0, 0, vd, pg, zn);
+    VCIntAddReductPred(0, 0, vd, pg, zn);
 }
 
 void CodeGenerator::Uaddv(const DReg &vd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveIntAddReductPred(0, VAL_1, vd, pg, zn);
+    VCIntAddReductPred(0, VAL_1, vd, pg, zn);
 }
 
 void CodeGenerator::Fmla(const ZRegS &zda, const ZRegS &zn, const ZRegSElem &zm)
 {
-    SveFpMultAddIndexed(0, zda, zn, zm);
+    VCFpMultAddIndexed(0, zda, zn, zm);
 }
 
 void CodeGenerator::Fmla(const ZRegH &zda, const ZRegH &zn, const ZRegHElem &zm)
 {
-    SveFpMultAddIndexed(0, zda, zn, zm);
+    VCFpMultAddIndexed(0, zda, zn, zm);
 }
 
 void CodeGenerator::Frecpe(const ZRegS &zd, const ZRegS &zn)
 {
-    SveFpReciproEstUnPred(VAL_6, zd, zn);
+    VCFpReciproEstUnPred(VAL_6, zd, zn);
 }
 
 void CodeGenerator::Fcmge(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const double zero)
 {
-    SveFpCompWithZero(0, 0, 0, pd, pg, zn, zero);
+    VCFpCompWithZero(0, 0, 0, pd, pg, zn, zero);
 }
 
 void CodeGenerator::Fcmgt(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const double zero)
 {
-    SveFpCompWithZero(0, 0, VAL_1, pd, pg, zn, zero);
+    VCFpCompWithZero(0, 0, VAL_1, pd, pg, zn, zero);
 }
 
 void CodeGenerator::Fcmlt(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const double zero)
 {
-    SveFpCompWithZero(0, VAL_1, 0, pd, pg, zn, zero);
-}
-
-void CodeGenerator::Fcmle(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const double zero)
-{
-    SveFpCompWithZero(0, VAL_1, VAL_1, pd, pg, zn, zero);
+    VCFpCompWithZero(0, VAL_1, 0, pd, pg, zn, zero);
 }
 
 void CodeGenerator::Fcmeq(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const double zero)
 {
-    SveFpCompWithZero(VAL_1, 0, 0, pd, pg, zn, zero);
+    VCFpCompWithZero(VAL_1, 0, 0, pd, pg, zn, zero);
 }
 
 void CodeGenerator::Fadd(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
 {
-    SveFpArithmeticUnpred(0, zd, zn, zm);
+    VCFpArithmeticUnpred(0, zd, zn, zm);
 }
 
 void CodeGenerator::Fadd(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpArithmeticUnpred(0, zd, zn, zm);
+    VCFpArithmeticUnpred(0, zd, zn, zm);
 }
 
 void CodeGenerator::Fsub(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpArithmeticUnpred(VAL_1, zd, zn, zm);
+    VCFpArithmeticUnpred(VAL_1, zd, zn, zm);
+}
+
+void CodeGenerator::Fmul(const ZRegH &zd, const ZRegH &zn, const ZRegH &zm)
+{
+    VCFpArithmeticUnpred(VAL_2, zd, zn, zm);
 }
 
 void CodeGenerator::Fmul(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpArithmeticUnpred(VAL_2, zd, zn, zm);
+    VCFpArithmeticUnpred(VAL_2, zd, zn, zm);
 }
 
 void CodeGenerator::Frecps(const ZRegS &zd, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpArithmeticUnpred(VAL_6, zd, zn, zm);
+    VCFpArithmeticUnpred(VAL_6, zd, zn, zm);
 }
 
 void CodeGenerator::Fadd(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(0, zdn, pg, zm);
+    VCFpArithmeticPred(0, zdn, pg, zm);
+}
+
+void CodeGenerator::Faddv(const SReg &vd, const PRegBase &pg, const ZRegS &zn)
+{
+    VCFpRecurReduct(0, vd, pg, zn);
+}
+
+void CodeGenerator::Faddv(const DReg &vd, const PRegBase &pg, const ZRegD &zn)
+{
+    VCFpRecurReduct(0, vd, pg, zn);
 }
 
 void CodeGenerator::Fmul(const ZRegH &zdn, const PRegBase &pg, const ZRegH &zm)
 {
-    SveFpArithmeticPred(VAL_2, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_2, zdn, pg, zm);
 }
 
 void CodeGenerator::Fmul(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(VAL_2, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_2, zdn, pg, zm);
 }
 
 void CodeGenerator::Fmaxnm(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(VAL_4, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_4, zdn, pg, zm);
 }
 
 void CodeGenerator::Fminnm(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(VAL_5, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_5, zdn, pg, zm);
 }
 
 void CodeGenerator::Fmax(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(VAL_6, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_6, zdn, pg, zm);
 }
 
 void CodeGenerator::Fmin(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(VAL_7, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_7, zdn, pg, zm);
 }
 
 void CodeGenerator::Fscale(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(VAL_9, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_9, zdn, pg, zm);
 }
 
 void CodeGenerator::Fdiv(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm)
 {
-    SveFpArithmeticPred(VAL_13, zdn, pg, zm);
+    VCFpArithmeticPred(VAL_13, zdn, pg, zm);
 }
 
 void CodeGenerator::Fadd(const ZRegS &zdn, const PRegBase &pg, const float ct)
 {
-    SveFpArithmeticImmPred(0, zdn, pg, ct);
+    VCFpArithmeticImmPred(0, zdn, pg, ct);
 }
 
 void CodeGenerator::Fsub(const ZRegS &zdn, const PRegBase &pg, const float ct)
 {
-    SveFpArithmeticImmPred(VAL_1, zdn, pg, ct);
+    VCFpArithmeticImmPred(VAL_1, zdn, pg, ct);
 }
 
 void CodeGenerator::Fmul(const ZRegS &zdn, const PRegBase &pg, const float ct)
 {
-    SveFpArithmeticImmPred(VAL_2, zdn, pg, ct);
+    VCFpArithmeticImmPred(VAL_2, zdn, pg, ct);
 }
 
 void CodeGenerator::Fmaxnm(const ZRegS &zdn, const PRegBase &pg, const float ct)
 {
-    SveFpArithmeticImmPred(VAL_4, zdn, pg, ct);
+    VCFpArithmeticImmPred(VAL_4, zdn, pg, ct);
 }
 
 void CodeGenerator::Fminnm(const ZRegS &zdn, const PRegBase &pg, const float ct)
 {
-    SveFpArithmeticImmPred(VAL_5, zdn, pg, ct);
+    VCFpArithmeticImmPred(VAL_5, zdn, pg, ct);
 }
 
 void CodeGenerator::Fmax(const ZRegS &zdn, const PRegBase &pg, const float ct)
 {
-    SveFpArithmeticImmPred(VAL_6, zdn, pg, ct);
+    VCFpArithmeticImmPred(VAL_6, zdn, pg, ct);
 }
 
 void CodeGenerator::Fcvt(const ZRegH &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpCvtPrecision(VAL_2, 0, zd, pg, zn);
+    VCFpCvtPrecision(VAL_2, 0, zd, pg, zn);
 }
 
 void CodeGenerator::Fcvt(const ZRegS &zd, const PRegBase &pg, const ZRegH &zn)
 {
-    SveFpCvtPrecision(VAL_2, VAL_1, zd, pg, zn);
+    VCFpCvtPrecision(VAL_2, VAL_1, zd, pg, zn);
 }
 
 void CodeGenerator::Bfcvt(const ZRegH &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpCvtPrecision(VAL_2, VAL_2, zd, pg, zn);
+    VCFpCvtPrecision(VAL_2, VAL_2, zd, pg, zn);
 }
 
 void CodeGenerator::Fcvtzs(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpCvtToInt(VAL_2, VAL_2, 0, zd, pg, zn);
+    VCFpCvtToInt(VAL_2, VAL_2, 0, zd, pg, zn);
 }
 
 void CodeGenerator::Fcvtzu(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpCvtToInt(VAL_2, VAL_2, VAL_1, zd, pg, zn);
+    VCFpCvtToInt(VAL_2, VAL_2, VAL_1, zd, pg, zn);
 }
 
 void CodeGenerator::Frintn(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpRoundToIntegral(0, zd, pg, zn);
+    VCFpRoundToIntegral(0, zd, pg, zn);
 }
 
 void CodeGenerator::Frintm(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpRoundToIntegral(VAL_2, zd, pg, zn);
+    VCFpRoundToIntegral(VAL_2, zd, pg, zn);
 }
 
 void CodeGenerator::Frinti(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpRoundToIntegral(VAL_7, zd, pg, zn);
+    VCFpRoundToIntegral(VAL_7, zd, pg, zn);
 }
 
 void CodeGenerator::Fsqrt(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveFpUnaryOp(VAL_1, zd, pg, zn);
+    VCFpUnaryOp(VAL_1, zd, pg, zn);
 }
 
 void CodeGenerator::Scvtf(const ZRegS &zd, const PRegBase &pg, const ZRegS &zn)
 {
-    SveIntCvtToFp(VAL_2, VAL_2, 0, zd, pg, zn);
+    VCIntCvtToFp(VAL_2, VAL_2, 0, zd, pg, zn);
 }
 
 void CodeGenerator::Fcmge(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpCompVec(0, 0, 0, pd, pg, zn, zm);
+    VCFpCompVec(0, 0, 0, pd, pg, zn, zm);
 }
 
 void CodeGenerator::Fcmgt(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpCompVec(0, 0, VAL_1, pd, pg, zn, zm);
-}
-
-void CodeGenerator::Fcmle(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
-{
-    SveFpCompVec(0, 0, 0, pd, pg, zm, zn);
+    VCFpCompVec(0, 0, VAL_1, pd, pg, zn, zm);
 }
 
 void CodeGenerator::Fcmlt(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpCompVec(0, 0, VAL_1, pd, pg, zm, zn);
+    VCFpCompVec(0, 0, VAL_1, pd, pg, zm, zn);
 }
 
 void CodeGenerator::Fcmeq(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpCompVec(0, VAL_1, 0, pd, pg, zn, zm);
+    VCFpCompVec(0, VAL_1, 0, pd, pg, zn, zm);
 }
 
 void CodeGenerator::Fcmne(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpCompVec(0, VAL_1, VAL_1, pd, pg, zn, zm);
+    VCFpCompVec(0, VAL_1, VAL_1, pd, pg, zn, zm);
 }
 
 void CodeGenerator::Facge(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpCompVec(1, 0, VAL_1, pd, pg, zn, zm);
+    VCFpCompVec(1, 0, VAL_1, pd, pg, zn, zm);
 }
 
 void CodeGenerator::Fmla(const ZRegH &zda, const PRegBase &pg, const ZRegH &zn, const ZRegH &zm)
 {
-    SveFpMultAccumAddend(0, zda, pg, zn, zm);
+    VCFpMultAccumAddend(0, zda, pg, zn, zm);
 }
 
 void CodeGenerator::Fmla(const ZRegS &zda, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpMultAccumAddend(0, zda, pg, zn, zm);
+    VCFpMultAccumAddend(0, zda, pg, zn, zm);
 }
 
 void CodeGenerator::Fmls(const ZRegS &zda, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
 {
-    SveFpMultAccumAddend(VAL_1, zda, pg, zn, zm);
+    VCFpMultAccumAddend(VAL_1, zda, pg, zn, zm);
+}
+
+void CodeGenerator::Fmls(const ZRegS &zda, const ZRegS &zn, const ZRegSElem &zm)
+{
+    VCFpMultAddIndexed(VAL_1, zda, zn, zm);
 }
 
 void CodeGenerator::Fmad(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm, const ZRegS &za)
 {
-    SveFpMultAccumMulti(0, zdn, pg, zm, za);
+    VCFpMultAccumMulti(0, zdn, pg, zm, za);
 }
 
 void CodeGenerator::Fnmsb(const ZRegS &zdn, const PRegBase &pg, const ZRegS &zm, const ZRegS &za)
 {
-    SveFpMultAccumMulti(VAL_3, zdn, pg, zm, za);
+    VCFpMultAccumMulti(VAL_3, zdn, pg, zm, za);
 }
 
 void CodeGenerator::Ld1sb(const ZRegS &zt, const PRegBase &pg, const AdrSc32U &adr)
 {
-    Sve32GatherLdSc32U(0, 0, 0, zt, pg, adr);
+    VC32GatherLdSc32U(0, 0, 0, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1b(const ZRegS &zt, const PRegBase &pg, const AdrSc32U &adr)
 {
-    Sve32GatherLdSc32U(0, VAL_1, 0, zt, pg, adr);
+    VC32GatherLdSc32U(0, VAL_1, 0, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1h(const ZRegS &zt, const PRegBase &pg, const AdrSc32U &adr)
 {
-    Sve32GatherLdSc32U(VAL_1, VAL_1, 0, zt, pg, adr);
+    VC32GatherLdSc32U(VAL_1, VAL_1, 0, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1w(const ZRegS &zt, const PRegBase &pg, const AdrSc32U &adr)
 {
-    Sve32GatherLdSc32U(VAL_2, VAL_1, 0, zt, pg, adr);
+    VC32GatherLdSc32U(VAL_2, VAL_1, 0, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1w(const ZRegS &zt, const PRegBase &pg, const AdrSc32S &adr)
 {
-    Sve32GatherLdWSc32S(VAL_1, 0, zt, pg, adr);
+    VC32GatherLdWSc32S(VAL_1, 0, zt, pg, adr);
 }
 
-void CodeGenerator::Prfh(const PrfopSve prfopSve, const PRegBase &pg, const AdrNoOfs &adr)
+void CodeGenerator::Prfh(const PrfopVC prfopVC, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    Sve32ContiPfScImm(prfopSve, VAL_1, pg, adr);
+    VC32ContiPfScImm(prfopVC, VAL_1, pg, adr);
 }
 
-void CodeGenerator::Prfw(const PrfopSve prfopSve, const PRegBase &pg, const AdrScImm &adr)
+void CodeGenerator::Prfw(const PrfopVC prfopVC, const PRegBase &pg, const AdrScImm &adr)
 {
-    Sve32ContiPfScImm(prfopSve, VAL_2, pg, adr);
+    VC32ContiPfScImm(prfopVC, VAL_2, pg, adr);
 }
 
-void CodeGenerator::Prfw(const PrfopSve prfopSve, const PRegBase &pg, const AdrNoOfs &adr)
+void CodeGenerator::Prfw(const PrfopVC prfopVC, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    Sve32ContiPfScImm(prfopSve, VAL_2, pg, adr);
+    VC32ContiPfScImm(prfopVC, VAL_2, pg, adr);
 }
 
 void CodeGenerator::Ld1rb(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveLoadAndBcElem(0, VAL_2, zt, pg, adr);
+    VCLoadAndBcElem(0, VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1rh(const ZRegH &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveLoadAndBcElem(VAL_1, VAL_1, zt, pg, adr);
+    VCLoadAndBcElem(VAL_1, VAL_1, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1rh(const ZRegH &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveLoadAndBcElem(VAL_1, VAL_1, zt, pg, adr);
+    VCLoadAndBcElem(VAL_1, VAL_1, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1rh(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveLoadAndBcElem(VAL_1, VAL_2, zt, pg, adr);
+    VCLoadAndBcElem(VAL_1, VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1rh(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveLoadAndBcElem(VAL_1, VAL_2, zt, pg, adr);
+    VCLoadAndBcElem(VAL_1, VAL_2, zt, pg, adr);
+}
+
+void CodeGenerator::Ld1rh(const ZRegH &zt, const PRegBase &pg, const AdrUimm &adr)
+{
+    VCLoadAndBcElem(VAL_1, VAL_1, zt, pg, AdrScImm(adr.GetXn(), adr.GetImm()));
+}
+
+void CodeGenerator::Ld1rw(const ZRegS &zt, const PRegBase &pg, const AdrImm &adr)
+{
+    VCLoadAndBcElem(VAL_2, VAL_2, zt, pg, AdrScImm(adr));
 }
 
 void CodeGenerator::Ld1rw(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveLoadAndBcElem(VAL_2, VAL_2, zt, pg, adr);
+    VCLoadAndBcElem(VAL_2, VAL_2, zt, pg, adr);
+}
+
+void CodeGenerator::Ld1rw(const ZRegS &zt, const PRegBase &pg, const AdrUimm &adr)
+{
+    VCLoadAndBcElem(VAL_2, VAL_2, zt, pg, AdrScImm(adr.GetXn(), adr.GetImm()));
 }
 
 void CodeGenerator::Ld1rw(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveLoadAndBcElem(VAL_2, VAL_2, zt, pg, adr);
+    VCLoadAndBcElem(VAL_2, VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1rsb(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveLoadAndBcElem(VAL_3, VAL_1, zt, pg, adr);
+    VCLoadAndBcElem(VAL_3, VAL_1, zt, pg, adr);
 }
 
 void CodeGenerator::Ldr(const PRegBase &pt, const AdrScImm &adr)
 {
-    SveLoadPredReg(pt, adr);
+    VCLoadPredReg(pt, adr);
 }
 
 void CodeGenerator::Ldr(const PRegBase &pt, const AdrNoOfs &adr)
 {
-    SveLoadPredReg(pt, adr);
+    VCLoadPredReg(pt, adr);
 }
 
 void CodeGenerator::Ldr(const ZRegBase &zt, const AdrScImm &adr)
 {
-    SveLoadPredVec(zt, adr);
+    VCLoadPredVec(zt, adr);
 }
 
 void CodeGenerator::Ldr(const ZRegBase &zt, const AdrNoOfs &adr)
 {
-    SveLoadPredVec(zt, adr);
+    VCLoadPredVec(zt, adr);
 }
 
 void CodeGenerator::Ld1b(const ZRegB &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(0, zt, pg, adr);
+    VCContiLdScImm(0, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1b(const ZRegB &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiLdScImm(0, zt, pg, adr);
+    VCContiLdScImm(0, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1b(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiLdScImm(VAL_2, zt, pg, adr);
+    VCContiLdScImm(VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1b(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(VAL_2, zt, pg, adr);
+    VCContiLdScImm(VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1h(const ZRegH &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(VAL_5, zt, pg, adr);
+    VCContiLdScImm(VAL_5, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1h(const ZRegH &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiLdScImm(VAL_5, zt, pg, adr);
+    VCContiLdScImm(VAL_5, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1h(const ZRegH &zt, const PRegBase &pg, const AdrScSc &adr)
 {
-    SveContiLdScSc(VAL_5, zt, pg, adr);
+    VCContiLdScSc(VAL_5, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1h(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(VAL_6, zt, pg, adr);
+    VCContiLdScImm(VAL_6, zt, pg, adr);
+}
+
+void CodeGenerator::Ld1w(const ZRegS &zt, const PRegBase &pg, const AdrImm &adr)
+{
+    VCContiLdScImm(VAL_10, zt, pg, AdrScImm(adr));
 }
 
 void CodeGenerator::Ld1w(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiLdScImm(VAL_10, zt, pg, adr);
+    VCContiLdScImm(VAL_10, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1w(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(VAL_10, zt, pg, adr);
+    VCContiLdScImm(VAL_10, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1w(const ZRegD &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(VAL_11, zt, pg, adr);
+    VCContiLdScImm(VAL_11, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1sb(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiLdScImm(VAL_13, zt, pg, adr);
+    VCContiLdScImm(VAL_13, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1sb(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(VAL_13, zt, pg, adr);
+    VCContiLdScImm(VAL_13, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1d(const ZRegD &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiLdScImm(VAL_15, zt, pg, adr);
+    VCContiLdScImm(VAL_15, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1w(const ZRegS &zt, const PRegBase &pg, const AdrScSc &adr)
 {
-    SveContiLdScSc(VAL_10, zt, pg, adr);
+    VCContiLdScSc(VAL_10, zt, pg, adr);
 }
 
-void CodeGenerator::Ld1rqw(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
+void CodeGenerator::Ld1rqb(const ZRegB &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveLdBcQuadScImm(VAL_2, 0, zt, pg, adr);
+    VCLdBcQuadScImm(VAL_0, 0, zt, pg, adr);
 }
 
 void CodeGenerator::Ld1rqh(const ZRegH &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveLdBcQuadScImm(VAL_1, 0, zt, pg, adr);
+    VCLdBcQuadScImm(VAL_1, 0, zt, pg, adr);
+}
+
+void CodeGenerator::Ld1rqw(const ZRegS &zt, const PRegBase &pg, const AdrImm &adr)
+{
+    VCLdBcQuadScImm(VAL_2, 0, zt, pg, AdrScImm(adr));
+}
+
+void CodeGenerator::Ld1rqw(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
+{
+    VCLdBcQuadScImm(VAL_2, 0, zt, pg, adr);
+}
+
+void CodeGenerator::Ld1rqw(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
+{
+    VCLdBcQuadScImm(VAL_2, 0, zt, pg, adr);
+}
+
+void CodeGenerator::Ld1rqd(const ZRegD &zt, const PRegBase &pg, const AdrNoOfs &adr)
+{
+    VCLdBcQuadScImm(VAL_3, 0, zt, pg, adr);
 }
 
 void CodeGenerator::Stnt1w(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiNTStScImm(VAL_2, zt, pg, adr);
+    VCContiNTStScImm(VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::Stnt1d(const ZRegD &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiNTStScImm(VAL_3, zt, pg, adr);
+    VCContiNTStScImm(VAL_3, zt, pg, adr);
 }
 
 void CodeGenerator::St1b(const ZRegB &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiStScImm(0, zt, pg, adr);
+    VCContiStScImm(0, zt, pg, adr);
 }
 
 void CodeGenerator::St1b(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiStScImm(0, zt, pg, adr);
+    VCContiStScImm(0, zt, pg, adr);
 }
 
 void CodeGenerator::St1b(const ZRegB &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiStScImm(0, zt, pg, adr);
+    VCContiStScImm(0, zt, pg, adr);
 }
 
 void CodeGenerator::St1b(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiStScImm(0, zt, pg, adr);
+    VCContiStScImm(0, zt, pg, adr);
+}
+
+void CodeGenerator::St1h(const ZRegH &zt, const PRegBase &pg, const AdrScImm &adr)
+{
+    VCContiStScImm(VAL_1, zt, pg, adr);
 }
 
 void CodeGenerator::St1h(const ZRegH &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiStScImm(VAL_1, zt, pg, adr);
+    VCContiStScImm(VAL_1, zt, pg, adr);
 }
 
 void CodeGenerator::St1h(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiStScImm(VAL_1, zt, pg, adr);
+    VCContiStScImm(VAL_1, zt, pg, adr);
 }
 
 void CodeGenerator::St1w(const ZRegS &zt, const PRegBase &pg, const AdrScImm &adr)
 {
-    SveContiStScImm(VAL_2, zt, pg, adr);
+    VCContiStScImm(VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::St1w(const ZRegS &zt, const PRegBase &pg, const AdrNoOfs &adr)
 {
-    SveContiStScImm(VAL_2, zt, pg, adr);
+    VCContiStScImm(VAL_2, zt, pg, adr);
 }
 
 void CodeGenerator::St1w(const ZRegS &zt, const PRegBase &pg, const AdrScSc &adr)
 {
-    SveContiStScSc(VAL_2, zt, pg, adr);
+    VCContiStScSc(VAL_2, zt, pg, adr);
+}
+
+void CodeGenerator::St1d(const ZRegD &zt, const PRegBase &pg, const AdrNoOfs &adr)
+{
+    VCContiStScImm(VAL_3, zt, pg, adr);
 }
 
 void CodeGenerator::Str(const PRegBase &pt, const AdrScImm &adr)
 {
-    SveStorePredReg(pt, adr);
+    VCStorePredReg(pt, adr);
 }
 
 void CodeGenerator::Str(const PRegBase &pt, const AdrNoOfs &adr)
 {
-    SveStorePredReg(pt, adr);
+    VCStorePredReg(pt, adr);
 }
 
 void CodeGenerator::Str(const ZRegBase &zt, const AdrScImm &adr)
 {
-    SveStorePredVec(zt, adr);
+    VCStorePredVec(zt, adr);
 }
 
 void CodeGenerator::Str(const ZRegBase &zt, const AdrNoOfs &adr)
 {
-    SveStorePredVec(zt, adr);
+    VCStorePredVec(zt, adr);
 }
 
 void CodeGenerator::Fcvtns(const VReg4S &vd, const VReg4S &vn)
@@ -2140,6 +2339,16 @@ void CodeGenerator::Tbz(const XReg &rt, const uint32_t imm, const Label &label)
     TestBr(0, rt, imm, label);
 }
 
+void CodeGenerator::Tbnz(const WReg &rt, const uint32_t imm, const Label &label)
+{
+    TestBr(1, rt, imm, label);
+}
+
+void CodeGenerator::Tbnz(const XReg &rt, const uint32_t imm, const Label &label)
+{
+    TestBr(1, rt, imm, label);
+}
+
 void CodeGenerator::Fmov(const SReg &d, const WReg &n)
 {
     ConversionFpInt(0, 0, 0, 0, VAL_7, d, n);
@@ -2150,6 +2359,11 @@ void CodeGenerator::Fmov(const WReg &d, const SReg &n)
     ConversionFpInt(0, 0, 0, 0, VAL_6, d, n);
 }
 
+void CodeGenerator::Fmov(const DReg &d, const XReg &n)
+{
+    ConversionFpInt(VAL_1, 0, VAL_1, 0, VAL_7, d, n);
+}
+
 void CodeGenerator::Fmov(const XReg &d, const DReg &n)
 {
     ConversionFpInt(VAL_1, 0, VAL_1, 0, VAL_6, d, n);
@@ -2157,12 +2371,84 @@ void CodeGenerator::Fmov(const XReg &d, const DReg &n)
 
 void CodeGenerator::Bfmlalb(const ZRegS &zda, const ZRegH &zn, const ZRegH &zm)
 {
-    SveFpWideMultAddGroup(0x3820, zda, zn, zm);
+    VCFpWideMultAddGroup(0x3820, zda, zn, zm);
 }
 
 void CodeGenerator::Bfmlalb(const ZRegS &zda, const ZRegH &zn, const ZRegHElem &zm)
 {
-    SveFpWideMultAddIndexedGroup(0x3810, zda, zn, zm);
+    VCFpWideMultAddIndexedGroup(0x3810, zda, zn, zm);
+}
+
+void CodeGenerator::Bfdot(const ZRegS &zda, const ZRegH &zn, const ZRegH &zm)
+{
+    VCFpWideMultAddGroup(0x1820, zda, zn, zm);
+}
+
+void CodeGenerator::Bfcvtnt(const ZRegH &zd, const PRegBase &pg, const ZRegS &zn)
+{
+    VCFpConvPrecOddElem(0x0455, zd, pg, zn);
+}
+
+void CodeGenerator::Uunpklo(const ZRegS &zd, const ZRegH &zn)
+{
+    VCUnpackVecElem(VAL_1, VAL_0, zd, zn);
+}
+
+void CodeGenerator::Cmple(const PRegB &pd, const PRegBase &pg, const ZRegB &zn, const int32_t imm)
+{
+    VCIntCompSImm(0, 1, 1, pd, pg, zn, imm);
+}
+void CodeGenerator::Cmple(const PRegH &pd, const PRegBase &pg, const ZRegH &zn, const int32_t imm)
+{
+    VCIntCompSImm(0, 1, 1, pd, pg, zn, imm);
+}
+void CodeGenerator::Cmple(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const int32_t imm)
+{
+    VCIntCompSImm(0, 1, 1, pd, pg, zn, imm);
+}
+void CodeGenerator::Cmple(const PRegB &pd, const PRegBase &pg, const ZRegB &zn, const ZRegB &zm)
+{
+    VCIntCompVec(1, 0, 0, pd, pg, zm, zn);
+}
+void CodeGenerator::Cmple(const PRegH &pd, const PRegBase &pg, const ZRegH &zn, const ZRegH &zm)
+{
+    VCIntCompVec(1, 0, 0, pd, pg, zm, zn);
+}
+void CodeGenerator::Cmple(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
+{
+    VCIntCompVec(1, 0, 0, pd, pg, zm, zn);
+}
+
+void CodeGenerator::Fcmle(const PRegH &pd, const PRegBase &pg, const ZRegH &zn, const double zero)
+{
+    VCFpCompWithZero(0, 1, 1, pd, pg, zn, zero);
+}
+void CodeGenerator::Fcmle(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const double zero)
+{
+    VCFpCompWithZero(0, 1, 1, pd, pg, zn, zero);
+}
+void CodeGenerator::Fcmle(const PRegH &pd, const PRegBase &pg, const ZRegH &zn, const ZRegH &zm)
+{
+    VCFpCompVec(0, 0, 0, pd, pg, zm, zn);
+}
+void CodeGenerator::Fcmle(const PRegS &pd, const PRegBase &pg, const ZRegS &zn, const ZRegS &zm)
+{
+    VCFpCompVec(0, 0, 0, pd, pg, zm, zn);
+}
+
+void CodeGenerator::Smmla(const ZRegS &zda, const ZRegB &zn, const ZRegB &zm)
+{
+    VCMiscGroup(0x26, ZReg(0), zda, zn, zm, 0);
+}
+
+void CodeGenerator::Ummla(const ZRegS &zda, const ZRegB &zn, const ZRegB &zm)
+{
+    VCMiscGroup(0x3026, ZReg(0), zda, zn, zm, 0);
+}
+
+void CodeGenerator::Usmmla(const ZRegS &zda, const ZRegB &zn, const ZRegB &zm)
+{
+    VCMiscGroup(0x2026, ZReg(0), zda, zn, zm, 0);
 }
 
 } // ARMCG

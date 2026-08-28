@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -14,10 +14,7 @@
 #define CG_INNER_HPP
 
 #include <cstdint>
-
-#ifdef __GNUC__
 #include <unistd.h>
-#endif
 
 #include "cg_error.hpp"
 
@@ -29,11 +26,7 @@ namespace Inner {
 
 inline size_t GetPageSize()
 {
-#ifdef __GNUC__
     static const size_t PAGE_SIZE = static_cast<size_t>(sysconf(_SC_PAGESIZE));
-#else
-    static const size_t PAGE_SIZE = 4096;
-#endif
     return PAGE_SIZE;
 }
 

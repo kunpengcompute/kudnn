@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -11,109 +11,62 @@
  */
 
 #include "kernels/vml/vml_sve_base.h"
-#define VML_VectorComputation_UNFOLD_N 3
+#define VML_VC_UNFOLD_N 5
 #include "kernels/vml/common_macro.h"
 
-static void ClipV2MainKernelFwdBF16(float alpha, float beta, const __bf16 *src, __bf16 *dst, int step)
+void ClipV2VCFWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst)
 {
-    svbool_t pgB16 = svptrue_b16();
-    svbool_t pgB32 = svptrue_b32();
-
-    VML_VectorComputation_DECLARE(svfloat32_t, xBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, xTop);
-
-    LOAD_CONVERT_BF16_TO_FP32_1(src, pgB16, xBot, xTop, step);
-
-    // clip_v2 compute
-    VML_VectorComputation_DECLARE(svfloat32_t, resBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, resTop);
-    VML_VectorComputation_DECLARE(svbool_t, pgRetAlpha);
-    VML_VectorComputation_DECLARE(svbool_t, pgRetBeta);
-
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetBeta, svcmpge_n_f32, pgB32, xBot, beta);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resBot, svdup_n_f32_m, xBot, pgRetBeta, beta);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetAlpha, svcmple_n_f32, pgB32, xBot, alpha);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resBot, svdup_n_f32_m, resBot, pgRetAlpha, alpha);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetBeta, svcmpge_n_f32, pgB32, xTop, beta);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resTop, svdup_n_f32_m, xTop, pgRetBeta, beta);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetAlpha, svcmple_n_f32, pgB32, xTop, alpha);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resTop, svdup_n_f32_m, resTop, pgRetAlpha, alpha);
-
-    VML_VectorComputation_FUNC_PG_1PARA(resBot, SvF32CvtBf16InfSpecial, pgB32, resBot);
-    VML_VectorComputation_FUNC_PG_1PARA(resTop, SvF32CvtBf16InfSpecial, pgB32, resTop);
-
-    CONVERT_STORE_FP32_TO_BF16(dst, pgB16, resBot, resTop, step);
-}
-
-void ClipV2SveFWDBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst)
-{
-    int64_t i;
-    int64_t loopClipV2h = svcnth();
-
-    for (i = 0; i <= len - loopClipV2h * VML_VectorComputation_UNFOLD_N; i += loopClipV2h * VML_VectorComputation_UNFOLD_N) {
-        ClipV2MainKernelFwdBF16(alpha, beta, src + i, dst + i, loopClipV2h);
-    }
-    for (; i < len; i += loopClipV2h) {
-        svbool_t pgB16 = svwhilelt_b16_s64(i, len);
-        svbool_t pgB32 = svwhilelt_b32_s64(i, len);
-
-        svbfloat16_t x = svld1_bf16(pgB16, src + i);
-
-        // convert to fp32
-        svfloat32_t resBot = SvCvtF32BF16BottomX(x);
-        svfloat32_t resTop = SvCvtF32BF16TopX(x);
-
-        resBot = svdup_f32_m(resBot, svcmpge_n_f32(pgB32, resBot, beta), beta);
-        resBot = svdup_f32_m(resBot, svcmple_n_f32(pgB32, resBot, alpha), alpha);
-        resTop = svdup_f32_m(resTop, svcmpge_n_f32(pgB32, resTop, beta), beta);
-        resTop = svdup_f32_m(resTop, svcmple_n_f32(pgB32, resTop, alpha), alpha);
-
-        resBot = SvF32CvtBf16InfSpecial(pgB32, resBot);
-        resTop = SvF32CvtBf16InfSpecial(pgB32, resTop);
-
-        // convert back to bf16
-        svbfloat16_t res = SvCvtBF16F32FullX(resBot, resTop);
-        svst1_bf16(pgB16, dst + i, res);
+    uint16_t uA = FloatToBf16(alpha);
+    uint16_t uB = FloatToBf16(beta);
+    uint16_t uACvt = ConvertScalar(uA);
+    uint16_t uBCvt = ConvertScalar(uB);
+    int64_t i = 0;
+    int64_t loopCliph = svcnth();
+    for (; i < len; i += loopCliph) {
+        svbool_t pg = svwhilelt_b16_s64(i, len);
+        svuint16_t uX = svld1_u16(pg, (uint16_t *)(src + i));
+        svuint16_t xCvt = Convert(pg, uX);
+        svuint16_t uMax = svmax_n_u16_x(pg, xCvt, uACvt);
+        svuint16_t uMin = svmin_n_u16_x(pg, uMax, uBCvt);
+        svuint16_t uRes = Restore(pg, uMin);
+        svst1_u16(pg, (uint16_t *)(dst + i), uRes);
     }
 }
-
-#undef VML_VectorComputation_UNFOLD_N
-#define VML_VectorComputation_UNFOLD_N 5
 
 static void ClipV2MainKernelBwdBF16(float alpha, float beta, const __bf16 *src, const __bf16 *dd, __bf16 *ds, int step)
 {
     svbool_t pgB16 = svptrue_b16();
     svbool_t pgB32 = svptrue_b32();
-    VML_VectorComputation_DECLARE(svfloat32_t, xBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, xTop);
-    VML_VectorComputation_DECLARE(svfloat32_t, ddBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, ddTop);
+    VML_VC_DECLARE(svfloat32_t, xBot);
+    VML_VC_DECLARE(svfloat32_t, xTop);
+    VML_VC_DECLARE(svfloat32_t, ddBot);
+    VML_VC_DECLARE(svfloat32_t, ddTop);
     // relu compute
-    VML_VectorComputation_DECLARE(svfloat32_t, resBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, resTop);
-    VML_VectorComputation_DECLARE(svbool_t, pgRetZeroUp);
-    VML_VectorComputation_DECLARE(svbool_t, pgRetZeroDown);
+    VML_VC_DECLARE(svfloat32_t, resBot);
+    VML_VC_DECLARE(svfloat32_t, resTop);
+    VML_VC_DECLARE(svbool_t, pgRetZeroUp);
+    VML_VC_DECLARE(svbool_t, pgRetZeroDown);
     LOAD_CONVERT_BF16_TO_FP32_2(src, dd, pgB16, xBot, xTop, ddBot, ddTop, step);
 
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroUp, svcmpge_n_f32, pgB32, xBot, beta);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resBot, svdup_f32_m, ddBot, pgRetZeroUp, FLOAT_ZERO);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroDown, svcmple_n_f32, pgB32, xBot, alpha);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resBot, svdup_f32_m, resBot, pgRetZeroDown, FLOAT_ZERO);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroUp, svcmpge_n_f32, pgB32, xTop, beta);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resTop, svdup_f32_m, ddTop, pgRetZeroUp, FLOAT_ZERO);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroDown, svcmple_n_f32, pgB32, xTop, alpha);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resTop, svdup_f32_m, resTop, pgRetZeroDown, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroUp, svcmpge_n_f32, pgB32, xBot, beta);
+    VML_VC_FUNC_NOPG_N3_3PARA(resBot, svdup_f32_m, ddBot, pgRetZeroUp, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroDown, svcmple_n_f32, pgB32, xBot, alpha);
+    VML_VC_FUNC_NOPG_N3_3PARA(resBot, svdup_f32_m, resBot, pgRetZeroDown, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroUp, svcmpge_n_f32, pgB32, xTop, beta);
+    VML_VC_FUNC_NOPG_N3_3PARA(resTop, svdup_f32_m, ddTop, pgRetZeroUp, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroDown, svcmple_n_f32, pgB32, xTop, alpha);
+    VML_VC_FUNC_NOPG_N3_3PARA(resTop, svdup_f32_m, resTop, pgRetZeroDown, FLOAT_ZERO);
 
-    CONVERT_STORE_FP32_TO_BF16(ds, pgB16, resBot, resTop, step);
+    CONVERT_STORE_FP32_TO_BF16(ds, pgB32, pgB16, resBot, resTop, step);
 }
 
-void ClipV2SveBWDBF16(const int64_t len, const float alpha, const float beta,
+void ClipV2VCBWDBF16(const int64_t len, const float alpha, const float beta,
                       const __bf16 *src, const __bf16 *dd, __bf16 *ds)
 {
     int64_t i = 0;
     int64_t loopClipV2h = svcnth();
 
-    for (; i <= len - loopClipV2h * VML_VectorComputation_UNFOLD_N; i += loopClipV2h * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopClipV2h * VML_VC_UNFOLD_N; i += loopClipV2h * VML_VC_UNFOLD_N) {
         ClipV2MainKernelBwdBF16(alpha, beta, src + i, dd + i, ds + i, loopClipV2h);
     }
     for (; i < len; i += loopClipV2h) {

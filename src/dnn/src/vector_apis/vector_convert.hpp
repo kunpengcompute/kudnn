@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -94,7 +94,8 @@ struct ConvertN<float, std::int32_t, 1> final { // 4 means that converts four in
         typename Vec<std::int32_t>::Type &out0, typename Vec<std::int32_t>::Type &out1,
         typename Vec<std::int32_t>::Type &out2, typename Vec<std::int32_t>::Type &out3) noexcept
     {
-        out0 = svcvt_s32_f32_x(pg0, in0);
+        svfloat32_t vec0 = svrinti_f32_x(pg0, in0);
+        out0 = svcvt_s32_f32_x(pg0, vec0);
         Service::Unused(pg0, pg1, pg2, pg3, in1, in2, in3, out1, out2, out3);
     }
 };

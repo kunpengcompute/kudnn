@@ -1,0 +1,57 @@
+# 1D
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=a:a 8:8
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=a:a 8:8
+--dir=FWD_D,FWD_I,BWD_D --sdt=bf16:bf16 --stag=a:a 8:8
+
+# 2D
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=ab:ab 8x8:8x8
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=ab:ab 4x4:4x4
+--dir=FWD_D,FWD_I,BWD_D --sdt=bf16:bf16 --stag=ab:ab 4x4:4x4
+
+# 3D
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 1x1x1:1x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 8x8x8:8x8x8
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 24x24x24:24x24x24
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 1x1x1:1x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 4x4x4:4x4x4
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 24x24x24:24x24x1
+
+# 4D
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 8x8x8x8:8x8x8x8
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 8x8x8x8:1x8x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 8x8x8x8:1x1x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 8x8x8x8:8x8x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 4x4x4x4:4x4x4x4
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 4x4x4x4:1x4x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 4x4x4x4:4x4x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 4x4x4x4:1x1x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=bf16:bf16 --stag=abx:abx 4x4x4x4:4x4x4x4
+--dir=FWD_D,FWD_I,BWD_D --sdt=bf16:bf16 --stag=abx:abx 4x4x4x4:1x4x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=bf16:bf16 --stag=abx:abx 4x4x4x4:4x4x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=bf16:bf16 --stag=abx:abx 4x4x4x4:1x1x1x1
+
+# 5D
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 8x8x8x8x8:8x8x1x8x8
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 8x8x8x8x8:1x8x8x8x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f32:f32 --stag=abx:abx 1x1x1x1x1:1x1x1x1x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 8x8x8x8x8:8x1x1x1x8
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 4x4x4x4x4:1x4x4x4x1
+--dir=FWD_D,FWD_I,BWD_D --sdt=f16:f16 --stag=abx:abx 1x1x1x1x1:1x1x1x1x1
+
+--dir=FWD_D -v5 --sdt=f32:f32 --stag=a:a 300000:300000
+--dir=FWD_D -v5 --sdt=f32:f32 --stag=a:a 3000000:3000000
+--dir=FWD_D -v5 --sdt=f32:f32 --stag=a:a 100000000:100000000
+--dir=FWD_D,BWD_D -v5 --sdt=s32:f32 --stag=abx:abx 1x2x3x4:1x2x3x4
+--dir=FWD_D,FWD_I,BWD_D -v5 --sdt=f32:f16 --stag=abx:abx 1x2x3x4:1x2x3x4
+--dir=FWD_D,FWD_I,BWD_D -v5 --sdt=f32:f32,bf16:bf16,f16:f16,s32:s32,u8:u8,s8:s8 --stag=abx:abx 1x1x1x2x2:1x1x1x2
+--dir=FWD_D,FWD_I,BWD_D -v5 --sdt=f32:f32,bf16:bf16,f16:f16,s32:s32,u8:u8,s8:s8 --stag=abx:abx 1x1x1x2:1x1x1x2x2
+--dir=FWD_D,FWD_I,BWD_D -v5 --sdt=f32:f32,bf16:bf16,f16:f16,s32:s32,u8:u8,s8:s8 --stag=abx:abx 1x1x1x1x1:1x1x1x1
+--dir=FWD_D,FWD_I,BWD_D -v5 --sdt=f32:f32,bf16:bf16,f16:f16,s32:s32,u8:u8,s8:s8 --stag=abx:abx 1x1x1x1:1x1x1x1x1
+--dir=FWD_D,FWD_I,BWD_D -v5 --sdt=f32:f32,bf16:bf16,f16:f16,s32:s32,u8:u8,s8:s8 --stag=abx:abx 1x1x1x1x2:1x1x1x1
+
+# different layout
+--dir=FWD_D,FWD_I --sdt=f32:f32 --stag=abx:bxa 32x32x32x32:32x1x32x32
+--dir=FWD_D,FWD_I --sdt=f32:f16 --stag=abx:axb 32x32x32x32:32x32x1x32
+
+# DTS2025020818186
+--dir=BWD_D --sdt=s32:s32 --stag=abcde:abcde 41x46x49x32x47:1x1x1x1x1

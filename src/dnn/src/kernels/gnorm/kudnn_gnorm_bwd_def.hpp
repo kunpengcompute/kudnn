@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,6 +30,7 @@ struct GnormAbxBWD final {
         return Vector::UnrollLength<InType, CompType, OutType, ScaleShiftType, float>();
     }
 
+    // Caculate diffGamma and diffBeta
     static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
         const OutType *diffDst,
         typename Vector::Vec<CompType>::Type &mean0, typename Vector::Vec<CompType>::Type &mean1,
@@ -71,15 +72,15 @@ struct GnormAbxBWD final {
         typename Vector::Vec<CompType>::Type src2;
         typename Vector::Vec<CompType>::Type src3;
         {
-            svbool_t ldsrcPG0;
-            svbool_t ldsrcPG1;
-            svbool_t ldsrcPG2;
-            svbool_t ldsrcPG3;
+            svbool_t ldSrcPG0;
+            svbool_t ldSrcPG1;
+            svbool_t ldSrcPG2;
+            svbool_t ldSrcPG3;
             Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                ldsrcPG0, ldsrcPG1, ldsrcPG2, ldsrcPG3, loopIdx, loopRange);
+                ldSrcPG0, ldSrcPG1, ldSrcPG2, ldSrcPG3, loopIdx, loopRange);
             Vector::LoadN<InType,
                 CompType, Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
-                src + loopIdx, ldsrcPG0, ldsrcPG1, ldsrcPG2, ldsrcPG3, src0, src1, src2, src3); // load s
+                src + loopIdx, ldSrcPG0, ldSrcPG1, ldSrcPG2, ldSrcPG3, src0, src1, src2, src3); // load s
         }
         typename Vector::Vec<CompType>::Type tmp0;
         typename Vector::Vec<CompType>::Type tmp1;
@@ -191,14 +192,15 @@ struct GnormAbxBWD final {
         Vector::LoadN<OutType, CompType, Vector::GetUsedRegsN<OutType, InType, CompType, ScaleShiftType, float>()>::Do(
             diffDst + loopIdx, lddstPG0, lddstPG1, lddstPG2, lddstPG3, diffDst0, diffDst1, diffDst2, diffDst3);
 
-        typename Vector::Vec<CompType>::Type dSrcVec0;
-        typename Vector::Vec<CompType>::Type dSrcVec1;
-        typename Vector::Vec<CompType>::Type dSrcVec2;
-        typename Vector::Vec<CompType>::Type dSrcVec3;
         svbool_t opPG0;
         svbool_t opPG1;
         svbool_t opPG2;
         svbool_t opPG3;
+        typename Vector::Vec<CompType>::Type dSrcVec0;
+        typename Vector::Vec<CompType>::Type dSrcVec1;
+        typename Vector::Vec<CompType>::Type dSrcVec2;
+        typename Vector::Vec<CompType>::Type dSrcVec3;
+
         Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
             opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
         // dSrcVec0 = dd * gammaVec0
@@ -214,15 +216,16 @@ struct GnormAbxBWD final {
         Vector::MulMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(opPG0,
             opPG1, opPG2, opPG3, dSrcVec0, dSrcVec1, dSrcVec2, dSrcVec3, invSqrtVariance0, invSqrtVariance1,
             invSqrtVariance2, invSqrtVariance3, dSrcVec0, dSrcVec1, dSrcVec2, dSrcVec3); // dSrcVec0 *= invSqrtVariance0
-        svbool_t stPG0;
-        svbool_t stPG1;
-        svbool_t stPG2;
-        svbool_t stPG3;
+        svbool_t storePG0;
+        svbool_t storePG1;
+        svbool_t storePG2;
+        svbool_t storePG3;
         Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-            stPG0, stPG1, stPG2, stPG3, loopIdx, loopRange);
+            storePG0, storePG1, storePG2, storePG3, loopIdx, loopRange);
         Vector::StoreN<InType, CompType,
             Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-            stPG0, stPG1, stPG2, stPG3, dSrcVec0, dSrcVec1, dSrcVec2, dSrcVec3, diffSrc + loopIdx); // store dSrcVec0
+            storePG0, storePG1, storePG2, storePG3, dSrcVec0, dSrcVec1, dSrcVec2, dSrcVec3,
+            diffSrc + loopIdx); // store dSrcVec0
     }
 };
 
@@ -237,48 +240,48 @@ void EvaluteAbx(SizeType batchNum, SizeType outerSize, const InType *src, const 
     bool useShift = static_cast<bool>(flags & NormalizationFlags::USE_SHIFT);
     svbool_t pgTrue = svptrue_b32();
     SizeType groupNum = channelSize / groupSize;
+    SizeType dhw = outerSize / groupSize;
     for (SizeType g = 0; g < groupNum; g++) {
-        SizeType dhw = outerSize / groupSize;
         for (SizeType c = 0; c < groupSize; c++) {
-            CompType diffBeta = 0.0f;
             typename Vector::Vec<CompType>::Type diffBetaVec0;
             typename Vector::Vec<CompType>::Type diffBetaVec1;
             typename Vector::Vec<CompType>::Type diffBetaVec2;
             typename Vector::Vec<CompType>::Type diffBetaVec3;
+            CompType diffBeta = 0.0f;
             Vector::DupFloatN<InType, CompType,
                 Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
                 0.0f, diffBetaVec0, diffBetaVec1, diffBetaVec2, diffBetaVec3);
-            CompType diffGamma = 0.0f;
             typename Vector::Vec<CompType>::Type diffGammaVec0;
             typename Vector::Vec<CompType>::Type diffGammaVec1;
             typename Vector::Vec<CompType>::Type diffGammaVec2;
             typename Vector::Vec<CompType>::Type diffGammaVec3;
+            CompType diffGamma = 0.0f;
             Vector::DupFloatN<InType, CompType,
                 Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
                 0.0f, diffGammaVec0, diffGammaVec1, diffGammaVec2, diffGammaVec3);
 
             if (calculateStats || useScale || useShift) {
                 for (SizeType b = 0; b < batchNum; b++) {
-                    CompType invSqrtVariance = 1.0f / std::sqrt(variance[b * groupNum + g] + eps);
-                    typename Vector::Vec<CompType>::Type invSqrtVariance0;
-                    typename Vector::Vec<CompType>::Type invSqrtVariance1;
-                    typename Vector::Vec<CompType>::Type invSqrtVariance2;
-                    typename Vector::Vec<CompType>::Type invSqrtVariance3;
-                    typename Vector::Vec<CompType>::Type mean0;
-                    typename Vector::Vec<CompType>::Type mean1;
-                    typename Vector::Vec<CompType>::Type mean2;
-                    typename Vector::Vec<CompType>::Type mean3;
+                    CompType invSqrtVariance0 = 1.0f / std::sqrt(variance[b * groupNum + g] + eps);
+                    typename Vector::Vec<CompType>::Type invSqrtVariance00;
+                    typename Vector::Vec<CompType>::Type invSqrtVariance01;
+                    typename Vector::Vec<CompType>::Type invSqrtVariance02;
+                    typename Vector::Vec<CompType>::Type invSqrtVariance03;
+                    typename Vector::Vec<CompType>::Type mean00;
+                    typename Vector::Vec<CompType>::Type mean01;
+                    typename Vector::Vec<CompType>::Type mean02;
+                    typename Vector::Vec<CompType>::Type mean03;
                     Vector::DupFloatN<InType, CompType,
                         Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
-                        mean[b * groupNum + g], mean0, mean1, mean2, mean3);
+                        invSqrtVariance0, invSqrtVariance00, invSqrtVariance01, invSqrtVariance02, invSqrtVariance03);
                     Vector::DupFloatN<InType, CompType,
                         Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
-                        invSqrtVariance, invSqrtVariance0, invSqrtVariance1, invSqrtVariance2, invSqrtVariance3);
+                        mean[b * groupNum + g], mean00, mean01, mean02, mean03);
                     Service::UnrollFor::Do<1>(dhw, GnormAbxBWD<CompType, InType, OutType, ScaleShiftType>{},
                         src + (b * channelSize + g * groupSize + c) * dhw,
                         diffDst + (b * channelSize + g * groupSize + c) * dhw,
-                        mean0, mean1, mean2, mean3,
-                        invSqrtVariance0, invSqrtVariance1, invSqrtVariance2, invSqrtVariance3,
+                        mean00, mean01, mean02, mean03,
+                        invSqrtVariance00, invSqrtVariance01, invSqrtVariance02, invSqrtVariance03,
                         diffBetaVec0, diffBetaVec1, diffBetaVec2, diffBetaVec3,
                         diffGammaVec0, diffGammaVec1, diffGammaVec2, diffGammaVec3);
                     diffBeta = Vector::AddvN<CompType,
@@ -307,14 +310,14 @@ void EvaluteAbx(SizeType batchNum, SizeType outerSize, const InType *src, const 
 
             for (SizeType b = 0; b < batchNum; b++) {
                 CompType invSqrtVariance = 1.0f / std::sqrt(variance[b * groupNum + g] + eps);
-                typename Vector::Vec<CompType>::Type invSqrtVariance0;
-                typename Vector::Vec<CompType>::Type invSqrtVariance1;
-                typename Vector::Vec<CompType>::Type invSqrtVariance2;
-                typename Vector::Vec<CompType>::Type invSqrtVariance3;
                 typename Vector::Vec<CompType>::Type mean0;
                 typename Vector::Vec<CompType>::Type mean1;
                 typename Vector::Vec<CompType>::Type mean2;
                 typename Vector::Vec<CompType>::Type mean3;
+                typename Vector::Vec<CompType>::Type invSqrtVariance0;
+                typename Vector::Vec<CompType>::Type invSqrtVariance1;
+                typename Vector::Vec<CompType>::Type invSqrtVariance2;
+                typename Vector::Vec<CompType>::Type invSqrtVariance3;
                 Vector::DupFloatN<InType, CompType,
                     Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
                     mean[b * groupNum + g], mean0, mean1, mean2, mean3);
@@ -342,77 +345,6 @@ struct GnormAxbBWD final {
         return Vector::UnrollLength<InType, CompType, OutType, ScaleShiftType, float>();
     }
 
-    static void Do(SizeType loopIdx, SizeType loopRange, const InType *src,
-        const OutType *diffDst,
-        typename Vector::Vec<CompType>::Type &mean0, typename Vector::Vec<CompType>::Type &mean1,
-        typename Vector::Vec<CompType>::Type &mean2, typename Vector::Vec<CompType>::Type &mean3,
-        typename Vector::Vec<CompType>::Type &invSqrtVar0, typename Vector::Vec<CompType>::Type &invSqrtVar1,
-        typename Vector::Vec<CompType>::Type &invSqrtVar2, typename Vector::Vec<CompType>::Type &invSqrtVar3,
-        typename Vector::Vec<CompType>::Type &diffBetaVec0, typename Vector::Vec<CompType>::Type &diffBetaVec1,
-        typename Vector::Vec<CompType>::Type &diffBetaVec2, typename Vector::Vec<CompType>::Type &diffBetaVec3,
-        typename Vector::Vec<CompType>::Type &diffGammaVec0, typename Vector::Vec<CompType>::Type &diffGammaVec1,
-        typename Vector::Vec<CompType>::Type &diffGammaVec2, typename Vector::Vec<CompType>::Type &diffGammaVec3)
-    {
-        typename Vector::Vec<CompType>::Type diffDst0;
-        typename Vector::Vec<CompType>::Type diffDst1;
-        typename Vector::Vec<CompType>::Type diffDst2;
-        typename Vector::Vec<CompType>::Type diffDst3;
-        {
-            svbool_t lddstPG0;
-            svbool_t lddstPG1;
-            svbool_t lddstPG2;
-            svbool_t lddstPG3;
-            Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType, ScaleShiftType, float>()>::Do(
-                lddstPG0, lddstPG1, lddstPG2, lddstPG3, loopIdx, loopRange);
-            Vector::LoadN<OutType, CompType,
-                Vector::GetUsedRegsN<OutType, InType, CompType, ScaleShiftType, float>()>::Do(
-                diffDst + loopIdx, lddstPG0, lddstPG1, lddstPG2, lddstPG3, diffDst0, diffDst1, diffDst2, diffDst3);
-        }
-        svbool_t opPG0;
-        svbool_t opPG1;
-        svbool_t opPG2;
-        svbool_t opPG3;
-        Vector::InitPGN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, loopIdx, loopRange);
-        Vector::AddMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, diffBetaVec0, diffBetaVec1, diffBetaVec2, diffBetaVec3,
-            diffDst0, diffDst1, diffDst2, diffDst3,
-            diffBetaVec0, diffBetaVec1, diffBetaVec2, diffBetaVec3); // diffBetaVec0 += dd
-        typename Vector::Vec<CompType>::Type src0;
-        typename Vector::Vec<CompType>::Type src1;
-        typename Vector::Vec<CompType>::Type src2;
-        typename Vector::Vec<CompType>::Type src3;
-        {
-            svbool_t ldsrcPG0;
-            svbool_t ldsrcPG1;
-            svbool_t ldsrcPG2;
-            svbool_t ldsrcPG3;
-            Vector::InitPGN<InType, Vector::GetUsedRegsN<InType, OutType, CompType, ScaleShiftType, float>()>::Do(
-                ldsrcPG0, ldsrcPG1, ldsrcPG2, ldsrcPG3, loopIdx, loopRange);
-            Vector::LoadN<InType,
-                CompType, Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
-                src + loopIdx, ldsrcPG0, ldsrcPG1, ldsrcPG2, ldsrcPG3, src0, src1, src2, src3); // load s
-        }
-        typename Vector::Vec<CompType>::Type tmp0;
-        typename Vector::Vec<CompType>::Type tmp1;
-        typename Vector::Vec<CompType>::Type tmp2;
-        typename Vector::Vec<CompType>::Type tmp3;
-        Vector::SubXN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, src0, src1, src2, src3,
-            mean0, mean1, mean2, mean3, tmp0, tmp1, tmp2, tmp3); // tmp0 = s - mean
-        Vector::MulMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, tmp0, tmp1, tmp2, tmp3, diffDst0, diffDst1, diffDst2, diffDst3,
-            tmp0, tmp1, tmp2, tmp3); // tmp0 *= dd
-        Vector::MulMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, tmp0, tmp1, tmp2, tmp3,
-            invSqrtVar0, invSqrtVar1, invSqrtVar2, invSqrtVar3,
-            tmp0, tmp1, tmp2, tmp3); // tmp0 *= sqrt_variance
-        // diffGammaVec0 += tmp0 (dd * (s - mean))
-        Vector::AddMN<CompType, Vector::GetUsedRegsN<CompType, InType, OutType, ScaleShiftType, float>()>::Do(
-            opPG0, opPG1, opPG2, opPG3, diffGammaVec0, diffGammaVec1, diffGammaVec2, diffGammaVec3,
-            tmp0, tmp1, tmp2, tmp3, diffGammaVec0, diffGammaVec1, diffGammaVec2, diffGammaVec3);
-    }
-
     static void Do(SizeType loopIdx, SizeType loopRange, const OutType *diffDst,
         typename Vector::Vec<CompType>::Type &invSqrtVariance0, typename Vector::Vec<CompType>::Type &invSqrtVariance1,
         typename Vector::Vec<CompType>::Type &invSqrtVariance2, typename Vector::Vec<CompType>::Type &invSqrtVariance3,
@@ -432,15 +364,16 @@ struct GnormAxbBWD final {
         typename Vector::Vec<CompType>::Type diffDst2;
         typename Vector::Vec<CompType>::Type diffDst3;
         {
-            svbool_t lddstPG0;
-            svbool_t lddstPG1;
-            svbool_t lddstPG2;
-            svbool_t lddstPG3;
+            svbool_t ldDiffDstPG0;
+            svbool_t ldDiffDstPG1;
+            svbool_t ldDiffDstPG2;
+            svbool_t ldDiffDstPG3;
             Vector::InitPGN<OutType, Vector::GetUsedRegsN<OutType, InType, CompType, ScaleShiftType, float>()>::Do(
-                lddstPG0, lddstPG1, lddstPG2, lddstPG3, loopIdx, loopRange);
+                ldDiffDstPG0, ldDiffDstPG1, ldDiffDstPG2, ldDiffDstPG3, loopIdx, loopRange);
             Vector::LoadN<OutType, CompType,
                 Vector::GetUsedRegsN<OutType, InType, CompType, ScaleShiftType, float>()>::Do(
-                diffDst + loopIdx, lddstPG0, lddstPG1, lddstPG2, lddstPG3, diffDst0, diffDst1, diffDst2, diffDst3);
+                diffDst + loopIdx, ldDiffDstPG0, ldDiffDstPG1, ldDiffDstPG2, ldDiffDstPG3,
+                diffDst0, diffDst1, diffDst2, diffDst3);
         }
         typename Vector::Vec<CompType>::Type dSrcVec0;
         typename Vector::Vec<CompType>::Type dSrcVec1;
@@ -561,25 +494,25 @@ void EvaluteAxb(SizeType batchNum, SizeType outerSize, const InType *src, const 
                 diffGamma, diffGammaVec0, diffGammaVec1, diffGammaVec2, diffGammaVec3);
 
             for (SizeType b = 0; b < batchNum; b++) {
-                CompType invSqrtVariance = 1.0f / std::sqrt(variance[b * groupNum + g] + eps);
-                typename Vector::Vec<CompType>::Type invSqrtVariance0;
-                typename Vector::Vec<CompType>::Type invSqrtVariance1;
-                typename Vector::Vec<CompType>::Type invSqrtVariance2;
-                typename Vector::Vec<CompType>::Type invSqrtVariance3;
-                typename Vector::Vec<CompType>::Type mean0;
-                typename Vector::Vec<CompType>::Type mean1;
-                typename Vector::Vec<CompType>::Type mean2;
-                typename Vector::Vec<CompType>::Type mean3;
+                CompType invSqrtVariance1 = 1.0f / std::sqrt(variance[b * groupNum + g] + eps);
+                typename Vector::Vec<CompType>::Type invSqrtVariance10;
+                typename Vector::Vec<CompType>::Type invSqrtVariance11;
+                typename Vector::Vec<CompType>::Type invSqrtVariance12;
+                typename Vector::Vec<CompType>::Type invSqrtVariance13;
+                typename Vector::Vec<CompType>::Type mean10;
+                typename Vector::Vec<CompType>::Type mean11;
+                typename Vector::Vec<CompType>::Type mean12;
+                typename Vector::Vec<CompType>::Type mean13;
                 Vector::DupFloatN<InType, CompType,
                     Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
-                    mean[b * groupNum + g], mean0, mean1, mean2, mean3);
+                    mean[b * groupNum + g], mean10, mean11, mean12, mean13);
                 Vector::DupFloatN<InType, CompType,
                     Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
-                    invSqrtVariance, invSqrtVariance0, invSqrtVariance1, invSqrtVariance2, invSqrtVariance3);
+                    invSqrtVariance1, invSqrtVariance10, invSqrtVariance11, invSqrtVariance12, invSqrtVariance13);
                 for (SizeType i = 0; i < dhw; i++) {
                     Service::UnrollFor::Do<1>(groupSize, GnormAxbBWD<CompType, InType, OutType, ScaleShiftType>{},
                     diffDst + b * channelSize * dhw + g * groupSize + i * channelSize,
-                    invSqrtVariance0, invSqrtVariance1, invSqrtVariance2, invSqrtVariance3,
+                    invSqrtVariance10, invSqrtVariance11, invSqrtVariance12, invSqrtVariance13,
                     diffSrc + b * channelSize * dhw + g * groupSize + i * channelSize);
                 }
             }

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #include "cg_codegen.hpp"
 
@@ -44,7 +43,9 @@ void CodeGenerator::ClearCache(void *begin, void *end)
 // armv8/sve psuedo code function
 bool CodeGenerator::CheckPtn(uint64_t v, uint32_t esize, uint32_t size)
 {
-    assert(esize != 0);
+    if (esize == 0) {
+        return false;
+    }
     uint32_t maxNum = size / esize;
     std::vector<uint64_t> ptns;
     for (uint32_t i = 0; i < maxNum; ++i) {
@@ -66,7 +67,6 @@ uint32_t CodeGenerator::GetPtnSize(uint64_t v, uint32_t size)
 
 uint32_t CodeGenerator::GetPtnRotateNum(uint64_t ptn, uint32_t ptnSize)
 {
-    assert(ptn != 0 && (ptn & Ones(ptnSize)) != Ones(ptnSize));
     uint32_t num;
     for (num = 0; Msb(ptn, ptnSize) || !Lsb(ptn); ++num) {
         ptn = LRotate(ptn, ptnSize, VAL_1);

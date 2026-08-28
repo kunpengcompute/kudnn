@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -18,7 +18,6 @@ void AddImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this AddImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     uint64_t bitPtn = static_cast<uint64_t>(imm);
     // Add(immediate) supports unsigned imm12
     const uint64_t imM12Mask = ~uint64_t(0xfff);
@@ -37,7 +36,6 @@ void AddImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this AddImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     // sign bit must be extended
     int64_t bitPtn = static_cast<int64_t>(imm);
     // Add(immediate) supports unsigned imm12
@@ -59,7 +57,6 @@ void SubImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this SubImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     uint64_t bitPtn = static_cast<uint64_t>(imm);
     // Add(immediate) supports unsigned imm12
     const uint64_t imM12Mask = ~uint64_t(0xfff);
@@ -78,7 +75,6 @@ void SubImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this SubImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     // sign bit must be extended
     int64_t bitPtn = static_cast<int64_t>(imm);
     // Add(immediate) supports unsigned imm12
@@ -100,7 +96,6 @@ void AddsImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this AddImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     uint64_t bitPtn = static_cast<uint64_t>(imm);
     // Add(immediate) supports unsigned imm12
     const uint64_t imM12Mask = ~uint64_t(0xfff);
@@ -119,7 +114,6 @@ void AddsImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this AddImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     // sign bit must be extended
     int64_t bitPtn = static_cast<int64_t>(imm);
     // Add(immediate) supports unsigned imm12
@@ -141,7 +135,6 @@ void SubsImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this SubImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     uint64_t bitPtn = static_cast<uint64_t>(imm);
     // Add(immediate) supports unsigned imm12
     const uint64_t imM12Mask = ~uint64_t(0xfff);
@@ -160,7 +153,6 @@ void SubsImm(const XReg &dst, const XReg &src, T imm, const XReg &tmp)
 {
     // this SubImm function allows dst == src
     // but tmp must be different from src
-    assert(src.GetIdx() != tmp.GetIdx());
     // sign bit must be extended
     int64_t bitPtn = static_cast<int64_t>(imm);
     // Add(immediate) supports unsigned imm12
@@ -240,17 +232,7 @@ void MovImm(const WReg &dst, T imm)
         Mov(dst, imm);
         return;
     }
-    for (int i = 0; i < STEP_2; i++) {
-        if (bitPtn & (0xFFFF << (BITFIELD_16 * i))) {
-            if (!flag) {
-                Movz(dst, (bitPtn >> (BITFIELD_16 * i)) & 0xFFFF, BITFIELD_16 * i);
-                flag = true;
-            } else {
-                Movk(dst, (bitPtn >> (BITFIELD_16 * i)) & 0xFFFF, BITFIELD_16 * i);
-            }
-        }
-    }
-    return;
+    MovImmBySeg(dst, bitPtn, flag);
 }
 
 template <typename T, typename std::enable_if<std::is_signed<T>::value, std::nullptr_t>::type = nullptr>
@@ -270,17 +252,7 @@ void MovImm(const WReg &dst, T imm)
         Mov(dst, bitPtn);
         return;
     }
-    for (int i = 0; i < STEP_2; i++) {
-        if (bitPtn & (0xFFFF << (BITFIELD_16 * i))) {
-            if (!flag) {
-                Movz(dst, (bitPtn >> (BITFIELD_16 * i)) & 0xFFFF, BITFIELD_16 * i);
-                flag = true;
-            } else {
-                Movk(dst, (bitPtn >> (BITFIELD_16 * i)) & 0xFFFF, BITFIELD_16 * i);
-            }
-        }
-    }
-    return;
+    MovImmBySeg(dst, bitPtn, flag);
 }
 
 template <typename T>

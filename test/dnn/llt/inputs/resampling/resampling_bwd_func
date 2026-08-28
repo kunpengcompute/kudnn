@@ -1,0 +1,74 @@
+# backward resampling
+--dir=BWD_D
+--sdt=f32,f16,bf16,s32,s8,u8
+--ddt=f32,f16,bf16,s32,s8,u8
+--alg=nearest,linear
+--tag=abx,axb
+--mode=C
+
+# Functional test cases
+mb16ic8_iw64ow256
+mb16ic8_ow64iw256
+mb2ic16_ih16oh32_iw16ow128
+mb2ic16_oh16ih32_ow16iw128
+mb2ic8_id16od32_ih16oh32_iw16ow8
+mb2ic8_od16id32_oh16ih32_ow16iw8
+# Regression test cases.
+mb3ic13ih49iw2oh50ow50
+mb3ic13id50ih49iw2od50oh50ow50
+
+# Corner cases that d/h/w=1.
+# 1D
+mb2ic5_iw1_ow1
+mb2ic5_iw1_ow3
+mb2ic5_iw3_ow1
+# 2D
+mb2ic5_ih1iw1_oh1ow1
+mb2ic5_ih3iw1_oh1ow1
+mb2ic5_ih1iw3_oh1ow1
+mb2ic5_ih3iw1_oh3ow1
+mb2ic5_ih1iw3_oh1ow3
+mb2ic5_ih1iw1_oh3ow1
+mb2ic5_ih1iw1_oh1ow3
+mb2ic5_ih3iw1_oh3ow1
+mb2ic5_ih1iw3_oh1ow3
+# 3D
+mb2ic5_id1ih1iw1_od1oh1ow1
+mb2ic5_id3ih1iw1_od1oh1ow1
+mb2ic5_id1ih3iw1_od1oh1ow1
+mb2ic5_id1ih1iw3_od1oh1ow1
+mb2ic5_id3ih1iw1_od3oh1ow1
+mb2ic5_id1ih3iw1_od1oh3ow1
+mb2ic5_id1ih1iw3_od1oh1ow3
+mb2ic5_id1ih1iw1_od3oh1ow1
+mb2ic5_id1ih1iw1_od1oh3ow1
+mb2ic5_id1ih1iw1_od1oh1ow3
+mb2ic5_id3ih1iw1_od3oh1ow1
+mb2ic5_id1ih3iw1_od1oh3ow1
+mb2ic5_id1ih1iw3_od1oh1ow3
+
+# Fix weights calculation algorithm that cause x.5 issue.
+--reset
+--dir=BWD_D
+--sdt=f32,f16,bf16,s32,s8,u8
+--ddt=f32,f16,bf16,s32,s8,u8
+--alg=linear
+--tag=abx,axb
+--mode=C
+
+# These cases take too much time, test them locally.
+# mb29ic43_id7ih40iw11_od29oh29ow29
+# mb13ic33_id50ih49iw2_od50oh50ow50
+# mb37ic7_id3ih36iw29_od17oh36ow36
+# mb40ic31_id39ih38iw6_od31oh40ow38
+# mb156ic146_iw4_ow144
+
+mb4ic2id2od5
+mb16ic28ih5iw1oh16ow28
+mb1ic4ih5iw1oh16ow28
+mb1ic1ih1iw4oh9ow8
+mb27ic39_id48ih1iw8_od18oh27ow39
+
+# F16:F16 precision case.
+--reset
+--dir=BWD_D --sdt=f16 --ddt=f16 --tag=abcde,acdeb --alg=nearest mb15ic31_id1ih1iw31_od15oh31ow31

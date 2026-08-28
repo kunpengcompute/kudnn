@@ -1,0 +1,6 @@
+--sdt=f32,f16,bf16,s8,u8,s32
+--ddt=f32,f16,bf16,s8,u8,s32
+--stag=abx,axb
+--dtag=any,abx,axb
+--inplace=true,false
+--batch=dir

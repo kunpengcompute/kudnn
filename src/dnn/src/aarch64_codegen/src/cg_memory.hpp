@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -14,20 +14,16 @@
 #define CG_MEMORY_HPP
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <list>
+#include <iostream>
 
 #include <sys/mman.h>
 
-#ifdef CG_USE_MMAP_ALLOCATOR
-#include <unordered_map>
-#endif
-
 #include "cg_inner.hpp"
-#include "../../../include/service/kudnn_service.hpp"
+#include "service/kudnn_service.hpp"
 
 namespace ARMCG {
 
@@ -51,29 +47,9 @@ inline const To CastTo(From p)
     return static_cast<const To>(static_cast<size_t>(p));
 }
 
-struct Allocator {
+class MmapAllocator {
 public:
-    virtual ~Allocator() {}
-
-    virtual uint32_t *Alloc(size_t size)
-    {
-        return static_cast<uint32_t *>(AlignedMalloc(size, Inner::GetPageSize()));
-    }
-    virtual void Free(uint32_t *p)
-    {
-        AlignedFree(p);
-    }
-    // override to return false if you call protect() manually
-    virtual bool UseProtect() const
-    {
-        return true;
-    }
-};
-
-#ifdef CG_USE_MMAP_ALLOCATOR
-class MmapAllocator : public Allocator {
-public:
-    uint32_t *Alloc(size_t size) override
+    uint32_t *Alloc(size_t size)
     {
         const size_t alignedSizeM1 = Inner::GetPageSize() - 1;
         size = (size + alignedSizeM1) & ~alignedSizeM1;
@@ -84,11 +60,10 @@ public:
         if (p == MAP_FAILED) {
             throw Error(Err::CANT_ALLOC);
         }
-        assert(p);
         sizeList_[p] = size;
         return static_cast<uint32_t *>(p);
     }
-    void Free(uint32_t *p) override
+    void Free(uint32_t *p)
     {
         if (p == nullptr) {
             return;
@@ -102,12 +77,15 @@ public:
         }
         sizeList_.erase(i);
     }
+    bool UseProtect() const
+    {
+        return true;
+    }
 
 private:
     using SizeList = std::unordered_map<void *, size_t>;
     SizeList sizeList_;
 };
-#endif
 
 // 2nd parameter for constructor of CodeArray(maxSize, userPtr, alloc)
 void *const AUTO_GROW = reinterpret_cast<void*>(AUTO_GROW_VAL);
@@ -143,10 +121,10 @@ public:
     };
 
     CodeArray(const CodeArray &rhs);
-    explicit CodeArray(size_t maxSize, void *userPtr = nullptr, Allocator *allocator = nullptr)
+    explicit CodeArray(size_t maxSize, void *userPtr = nullptr, MmapAllocator *allocator = nullptr)
         : type_(userPtr == AUTO_GROW ? Type::MEM_AUTO_GROW :
              (userPtr == nullptr || userPtr == DONT_SET_PROTECT_RWE) ? Type::BUF_ALLOC : Type::BUF_USER),
-          alloc_(allocator ? allocator : static_cast<Allocator *>(&defaultAllocator_)),
+          alloc_(allocator ? allocator : &defaultAllocator_),
           maxSize_(maxSize / CSIZE),
           top_(type_ == Type::BUF_USER ? static_cast<uint32_t *>(userPtr) :
               alloc_->Alloc((std::max<size_t>)(maxSize, CSIZE))),
@@ -171,8 +149,7 @@ public:
                 try {
                     SetProtectModeRW(false);
                 } catch (ARMCG::Error& err) {
-                    printf("%s err:%s\n",
-                        __FUNCTION__, err.What());
+                    std::cout << __FUNCTION__ << " err:" << err.What() << std::endl;
                     isNeedFree = false;
                 }
             }
@@ -275,7 +252,6 @@ public:
     // @param disp [in] offset from the next of jmp
     void Rewrite(size_t offset, uint32_t disp)
     {
-        assert(offset < maxSize_);
         uint32_t *const data = top_ + offset;
         *data = disp;
     }
@@ -315,15 +291,11 @@ public:
             default:
                 return false;
         }
-#ifdef __GNUC__
         size_t pageSize = Inner::GetPageSize();
-        uintptr_t addrVal = reinterpret_cast<uintptr_t>(addr);
+        uintptr_t addrVal = (uintptr_t)addr;
         size_t iaddr = static_cast<size_t>(addrVal);
         size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
         return mprotect(reinterpret_cast<void *>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
-#else
-        return true;
-#endif
     }
     // get aligned memory pointer
     // @param addr [in] address
@@ -331,7 +303,7 @@ public:
     // @return aligned addr by alingedSize
     static inline uint32_t *GetAlignedAddress(uint32_t *addr, size_t alignedSize = 16)
     {
-        uintptr_t addrVal = reinterpret_cast<uintptr_t>(addr);
+        uintptr_t addrVal = (uintptr_t)addr;
         return reinterpret_cast<uint32_t *>((static_cast<size_t>(addrVal) + alignedSize - 1) &
             ~(alignedSize - static_cast<size_t>(1)));
     }
@@ -375,12 +347,8 @@ protected:
 
     AddrInfoList addrInfoList_;
     const Type type_;
-#ifdef CG_USE_MMAP_ALLOCATOR
+    MmapAllocator *alloc_;
     MmapAllocator defaultAllocator_;
-#else
-    Allocator defaultAllocator_;
-#endif
-    Allocator *alloc_;
     size_t maxSize_; // max size of code size (per uint32_t)
     uint32_t *top_;
     size_t size_; // code size

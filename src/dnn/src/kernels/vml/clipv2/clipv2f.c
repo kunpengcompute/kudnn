@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,58 +10,80 @@
  * See the Mulan PSL v2 for more details.
  */
 
+#include "arm_neon.h"
 #include "kernels/vml/vml_sve_base.h"
 #include "kernels/vml/common_macro.h"
+#define LOOP_N 4
 
-static inline void ClipV2MainKernelFWDF32(
-    svbool_t pg, const float alpha, const float beta, const float *src, float *dst)
-{
-    svfloat32_t res = svld1_f32(pg, src);
-    svbool_t pgRetAlpha = svcmple_n_f32(pg, res, alpha);
-    svbool_t pgRetBeta = svcmpge_n_f32(pg, res, beta);
-    res = svdup_f32_m(res, pgRetBeta, beta);
-    res = svdup_f32_m(res, pgRetAlpha, alpha);
-    svst1_f32(pg, dst, res);
-}
-
-void ClipV2SveFWDF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst)
+void ClipV2VCFWDF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst)
 {
     int64_t i = 0;
+#ifndef KUDNNL_920G
     int64_t loopClipV2f = svcntw();
-    svbool_t pgAll = svptrue_b32();
-    for (; i <= len - loopClipV2f; i += loopClipV2f) {
-        ClipV2MainKernelFWDF32(pgAll, alpha, beta, src + i, dst + i);
-    }
     for (; i < len; i += loopClipV2f) {
         svbool_t pg = svwhilelt_b32_s64(i, len);
-        ClipV2MainKernelFWDF32(pg, alpha, beta, src + i, dst + i);
+
+        svfloat32_t x = svld1_f32(pg, src + i);
+        svfloat32_t maxV = svmaxnm_n_f32_x(pg, x, alpha);
+        svfloat32_t res = svminnm_n_f32_x(pg, maxV, beta);
+
+        svst1_f32(pg, dst + i, res);
     }
+#else
+    for (; i <= len - 0x4 * LOOP_N; i += 0x4 * LOOP_N) {
+        float32x4_t x0 = vld1q_f32(src + i + 0x00);
+        float32x4_t x1 = vld1q_f32(src + i + 0x04);
+        float32x4_t x2 = vld1q_f32(src + i + 0x08);
+        float32x4_t x3 = vld1q_f32(src + i + 0x0C);
+
+        float32x4_t maxV0 = vmaxnmq_f32(x0, vdupq_n_f32(alpha));
+        float32x4_t maxV1 = vmaxnmq_f32(x1, vdupq_n_f32(alpha));
+        float32x4_t maxV2 = vmaxnmq_f32(x2, vdupq_n_f32(alpha));
+        float32x4_t maxV3 = vmaxnmq_f32(x3, vdupq_n_f32(alpha));
+
+        float32x4_t res0 = vminnmq_f32(maxV0, vdupq_n_f32(beta));
+        float32x4_t res1 = vminnmq_f32(maxV1, vdupq_n_f32(beta));
+        float32x4_t res2 = vminnmq_f32(maxV2, vdupq_n_f32(beta));
+        float32x4_t res3 = vminnmq_f32(maxV3, vdupq_n_f32(beta));
+
+        vst1q_f32(dst + i + 0x00, res0);
+        vst1q_f32(dst + i + 0x04, res1);
+        vst1q_f32(dst + i + 0x08, res2);
+        vst1q_f32(dst + i + 0x0C, res3);
+    }
+    for (; i < len; i++) {
+        float res;
+        __asm__ volatile("fmaxnm %s0, %s1, %s2 \n\t" : "=w"(res) : "w"(src[i]), "w"(alpha));
+        __asm__ volatile("fminnm %s0, %s1, %s2 \n\t" : "=w"(res) : "w"(res), "w"(beta));
+        dst[i] = res;
+    }
+#endif
 }
 
 static void ClipV2MainKernelBwdF32(float alpha, float beta, const float *src, const float *dd, float *ds, int step)
 {
     svbool_t pg = svptrue_b32();
-    VML_VectorComputation_DECLARE(svfloat32_t, srcX);
-    VML_VectorComputation_LD_STEP(srcX, svld1_f32, pg, src, step);
-    VML_VectorComputation_DECLARE(svfloat32_t, res);
-    VML_VectorComputation_LD_STEP(res, svld1_f32, pg, dd, step);
+    VML_VC_DECLARE(svfloat32_t, srcX);
+    VML_VC_LD_STEP(srcX, svld1_f32, pg, src, step);
+    VML_VC_DECLARE(svfloat32_t, res);
+    VML_VC_LD_STEP(res, svld1_f32, pg, dd, step);
 
-    VML_VectorComputation_DECLARE(svbool_t, pgRetZero);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZero, svcmple_n_f32, pg, srcX, alpha);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(res, svdup_f32_m, res, pgRetZero, FLOAT_ZERO);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZero, svcmpge_n_f32, pg, srcX, beta);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(res, svdup_f32_m, res, pgRetZero, FLOAT_ZERO);
+    VML_VC_DECLARE(svbool_t, pgRetZero);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZero, svcmple_n_f32, pg, srcX, alpha);
+    VML_VC_FUNC_NOPG_N3_3PARA(res, svdup_f32_m, res, pgRetZero, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZero, svcmpge_n_f32, pg, srcX, beta);
+    VML_VC_FUNC_NOPG_N3_3PARA(res, svdup_f32_m, res, pgRetZero, FLOAT_ZERO);
 
-    VML_VectorComputation_ST_STEP(svst1_f32, pg, ds, step, res);
+    VML_VC_ST_STEP(svst1_f32, pg, ds, step, res);
 }
 
-void ClipV2SveBWDF32(const int64_t len, const float alpha, const float beta,
+void ClipV2VCBWDF32(const int64_t len, const float alpha, const float beta,
                      const float *src, const float *dd, float *ds)
 {
     int64_t i;
     int64_t loopClipV2f = svcntw();
 
-    for (i = 0; i <= len - loopClipV2f * VML_VectorComputation_UNFOLD_N; i += loopClipV2f * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopClipV2f * VML_VC_UNFOLD_N; i += loopClipV2f * VML_VC_UNFOLD_N) {
         ClipV2MainKernelBwdF32(alpha, beta, src + i, dd + i, ds + i, loopClipV2f);
     }
     for (; i < len; i += loopClipV2f) {

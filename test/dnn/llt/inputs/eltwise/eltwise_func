@@ -1,0 +1,221 @@
+# FWD_D and BWD_D
+# without alpha or beta
+--dir=FWD_D,BWD_D
+--dt=f32,bf16,f16
+--alg=abs,exp,gelu_erf,gelu_tanh,log,logistic,mish,sqrt,square,tanh
+1023
+
+# with only alpha
+--dir=FWD_D,BWD_D
+--dt=f32,bf16,f16
+--alpha=1
+--alg=elu,relu,soft_relu,swish
+1023
+
+# with alpha and beta
+--dir=FWD_D,BWD_D
+--dt=f32,bf16,f16
+--alpha=-1
+--beta=1
+--alg=clip,clip_v2,hardsigmoid,hardswish,linear,pow
+1023
+
+# dst BWD_D
+# without alpha or beta
+--dir=BWD_D
+--dt=f32,bf16
+--alg=sqrt_dst,tanh_dst,exp_dst
+1023
+
+# with only alpha
+--dir=BWD_D
+--dt=f32,bf16,f16
+--alpha=1
+--alg=relu_dst
+1023
+
+# with alpha and beta
+--dir=BWD_D
+--dt=f32,bf16,f16
+--alpha=-1
+--beta=1
+--alg=clip_v2_dst,logistic_dst
+1023
+
+
+# others
+# only fwd
+--dir=FWD_D
+--dt=f32,bf16,f16
+--alg=round
+1023
+
+# integer
+--dir=FWD_D
+--dt=s32,s8,u8
+--alg=linear,relu
+--alpha=-1
+--beta=1
+1023
+
+# corner cases
+--dir=FWD_D
+--dt=f16
+--alpha=0,0x1.ff8p-15
+--alg=log
+1023
+
+--dir=FWD_D
+--dt=bf16
+--alpha=0x1.ffp127
+--beta=1
+--alg=pow
+1023
+
+--dir=FWD_D,BWD_D
+--dt=f32,bf16,f16
+--alpha=1
+--beta=0,0.5,1,2,3,4,5,6,7,8,9,10
+--alg=pow
+1023
+
+--dir=BWD_D
+--dt=f32,bf16,f16
+--alpha=1
+--beta=1.5
+--alg=pow
+1023
+
+--dir=BWD_D
+--dt=f32,bf16
+--alpha=2
+--alg=elu_dst
+1023
+
+
+# # large cases for fuzz/ut coverage of function GetOptNumThreads
+# --dir=FWD_D,BWD_D
+# --dt=f32
+# --alg=abs,exp,gelu_erf,gelu_tanh,log,logistic,mish,sqrt,square,tanh,elu,relu,soft_relu,swish,clip,clip_v2,hardsigmoid,hardswish,linear,pow
+# --alpha=2
+# --beta=3
+# 1
+# 20000
+# 50000
+# 200000
+# 2000000
+# 3000000
+# 5000000
+# 10000000
+# 12000000
+# 18000000
+# 20000000
+
+# --dir=BWD_D
+# --dt=f32
+# --alg=sqrt_dst,tanh_dst,exp_dst,elu_dst,relu_dst,clip_v2_dst,logistic_dst
+# --alpha=2
+# --beta=3
+# 1
+# 800000
+# 5000000
+# 12000000
+# 16000000
+
+# --dir=FWD_D
+# --dt=f32
+# --alg=round
+# 1
+# 8000000
+# 20000000
+
+
+# post-ops
+--dir=FWD_D
+--dt=f32,bf16,f16,s32,u8,s8
+--alg=relu
+--inplace=true,false
+--attr-post-ops=add:f32,mul:f32,div:f32
+--tag=abcde
+11x9x13x17x23
+
+# DTS2025010316661 Reorder Layer: one of input matrices is nullptr
+--dir=FWD_D --dt=s8 --tag=cba --alg=linear --alpha=1.04 --beta=2.923 --inplace=true 45x114x198
+--dir=FWD_D --dt=u8 --tag=adbc --alg=relu --alpha=1.933 --beta=2.641 --inplace=false 25x35x24x7
+--dir=FWD_D --dt=s32 --tag=cdeab --alg=linear --alpha=-0.356 --beta=0.139 --inplace=true 31x1x32x16x32
+
+# DTS2025021023190 soft_relu: Operator soft_relu fails in some corner cases
+# DTS2025022817678 using open source xx_fwd as input may cause xx_dst_bwd's failure
+--dir=FWD_D,BWD_D --dt=f32,bf16 --alg=tanh_dst --tag=a --alpha=-1.937 --inplace=false --attr-post-ops= 1023
+--dir=FWD_D --dt=f32 --alg=soft_relu --alpha=-0.001 --beta=0x1p60 --inplace=false 1023
+--dir=FWD_D --dt=f32 --alg=soft_relu --alpha=0.000001 --beta=0x1p60 --inplace=false 1023
+
+# FWD_D and BWD_D
+# without alpha or beta (mish and gelu_tanh BWD are removed as they also fail on the AMD9654 machine.)
+--dir=FWD_D,BWD_D
+--dt=f32
+--alg=abs,exp,gelu_erf,log,logistic,sqrt,square,tanh
+--alpha=0.001,-0.001,0x1p60,-0x1p60
+--beta=0
+1023
+
+# with only alpha
+--dir=FWD_D,BWD_D
+--dt=f32
+--alpha=0.001,-0.001,0x1p60,-0x1p60 --beta=0.001,-0.001,0x1p60,-0x1p60
+--beta=0
+--alg=elu,relu,soft_relu,swish
+1023
+
+# with alpha and beta
+--dir=FWD_D,BWD_D
+--dt=f32
+--alpha=0.001,-0.001,0x1p60,-0x1p60 --beta=0.001,-0.001,0x1p60,-0x1p60
+--beta=0
+--alg=clip,clip_v2,hardsigmoid,hardswish,linear,pow
+1023
+
+# others
+# only fwd
+--dir=FWD_D
+--dt=f32
+--alpha=0.001,-0.001,0x1p60,-0x1p60
+--beta=0
+--alg=round,gelu_tanh,mish
+1023
+
+# with 1 degree of freedom
+--dir=BWD_D
+--dt=f32,bf16
+--alg=sqrt_dst,tanh_dst,exp_dst,logistic_dst
+--alpha=0.001,-0.001,0x1p-60,-0x1p-60,0x1p-10,-0x1p-10,0x1p60,-0x1p60
+--beta=0
+1023
+
+# with 2 or more degrees of freedom
+--dir=BWD_D
+--dt=f32,bf16
+--alg=clip_v2_dst,relu_dst
+--alpha=0.001,-0.001,0x1p-60,-0x1p-60,0x1p-10,-0x1p-10,0x1p60,-0x1p60
+--beta=0.001,-0.001,0x1p-60,-0x1p-60,0x1p-10,-0x1p-10,0x1p60,-0x1p60
+1023
+
+# with 1 degree of freedom
+--dir=BWD_D
+--dt=f16
+--alg=sqrt_dst,exp_dst,logistic_dst
+--alpha=0.001,-0.001,0x1p-10,-0x1p-10,0x1p10,-0x1p10
+--beta=0
+1023
+
+# with 2 or more degrees of freedom
+--dir=BWD_D
+--dt=f16
+--alg=clip_v2_dst,relu_dst,elu_dst,tanh_dst
+--alpha=0.001,-0.001,0x1p-10,-0x1p-10,0x1p10,-0x1p10
+--beta=0.001,-0.001,0x1p-10,-0x1p-10,0x1p10,-0x1p10
+1023
+
+# DTS2025042408015 cases in integer
+--dir=FWD_D --dt=s32,u8,s8 --alpha=-128,-0.5,-0.25,0,0.25,0.5,127,155 --beta=0 --alg=relu,linear
+1023

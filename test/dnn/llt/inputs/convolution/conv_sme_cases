@@ -1,0 +1,15 @@
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any ic16oc16_ih2kh1ph1sh1 #noImg2Col
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any ic16oc32_ih2kh1ph3sh1 #noImg2Col
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any ic16oc16_ih2kh2ph9sh1 #Img2colS
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any ic16oc16_ih4kh1ph1sh2 #img2col
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any ic16oc16_ih4kh1ph0sh2 #img2col
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic256ih65oc256oh32kh3sh2ph0 #Accelerate2dGemm
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any ic16ih24iw24oc16oh24ow24kh1kw1sh1sw1 #CanUseDirectSME
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic256ih129oc256oh64kh3sh2ph0
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic256ih131oc256oh65kh3sh2ph0
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic32id25ih25iw25oc32od25oh25ow25kd1kh1kw1 #for 3d direct sme no pad 
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic32id25ih25iw25oc32od25oh25ow25kd3kh3kw3 #for 3d direct sme with pad 
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic32id23ih23iw23oc32od23oh23ow23kd3kh3kw3 #for 3d sme gemm
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic32id129ih129iw129oc32od64oh64ow64kd3kh3kw3sd2sh2sw2ph0 #for 3d DirectSMEWithStrideFor3D
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any mb1ic16id65ih65iw65oc16od32oh32ow32kd3kh3kw3sd2sh2sw2pd0ph0pw0 #for 3d Accelerate2dGemm
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any ic64id15ih10iw20oc64od15oh10ow20kd3kh3kw3pd1ph1pw1

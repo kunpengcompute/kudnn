@@ -1,0 +1,6 @@
+--dt=f32:f32:f32,f16:f16:f16,bf16:bf16:bf16,s8:s8:s32,u8:s8:s32,u8:s8:bf16
+--stag=abx,axb
+--wtag=abx,abx,any
+--dtag=abx,abx,any
+--mb=0,1,64
+--batch=dir

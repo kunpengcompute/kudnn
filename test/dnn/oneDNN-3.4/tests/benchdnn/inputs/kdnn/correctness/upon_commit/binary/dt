@@ -1,0 +1,5 @@
+--sdt=f32:f32,f32:f16,f32:bf16,f32:s8,f32:u8,f32:s32,f16:f32,f16:f16,f16:bf16,f16:s8,f16:u8,f16:s32,bf16:f32,bf16:f16,bf16:bf16,bf16:s8,bf16:u8,bf16:s32,s8:f32,s8:f16,s8:bf16,s8:s8,s8:u8,s8:s32,u8:f32,u8:f16,u8:bf16,u8:s8,u8:u8,u8:s32,s32:f32,s32:f16,s32:bf16,s32:s8,s32:u8,s32:s32
+--ddt=f32,f16,bf16,s8,u8,s32
+--stag=abx:abx,axb:axb,abx:axb,axb:abx
+--inplace=true,false
+--batch=dir

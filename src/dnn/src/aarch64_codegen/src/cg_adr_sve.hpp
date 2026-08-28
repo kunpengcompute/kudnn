@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,17 +10,17 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef CG_ADR_VectorComputation_HPP
-#define CG_ADR_VectorComputation_HPP
+#ifndef CG_ADR_VC_HPP
+#define CG_ADR_VC_HPP
 
 #include "cg_adr.hpp"
 
 namespace ARMCG {
 
-// scalar plus vector (unscaled 64-bit offset)
-class AdrSc64U : public Adr {
+// many addressing modes take the form [Xn, Zm] so we define an intermediate class to avoid code repetition
+class AdrScalarPlusVectorD : public Adr {
 public:
-    explicit AdrSc64U(const XReg &xn, const ZRegD &zm) : Adr(AdrKind::SC_64VEC), xn_(xn), zm_(zm) {}
+    explicit AdrScalarPlusVectorD(AdrKind kind, const XReg &xn, const ZRegD &zm) : Adr(kind), xn_(xn), zm_(zm) {}
 
     const XReg &GetXn() const
     {
@@ -31,41 +31,74 @@ public:
         return zm_;
     }
 
-private:
+protected:
     XReg xn_;
     ZRegD zm_;
 };
 
-// scalar plus vector (scalar 64-bit offset)
-class AdrSc64S : public Adr {
+class AdrScalarPlusVectorS : public Adr {
 public:
-    explicit AdrSc64S(const XReg &xn, const ZRegD &zm, ShMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_64VEC), xn_(xn), zm_(zm), mod_(mod), sh_(sh) {}
-    explicit AdrSc64S(const AdrSc64U &a)
-        : Adr(AdrKind::SC_64VEC), xn_(a.GetXn()), zm_(a.GetZm()), mod_(ShMod::LSL), sh_(0) {}
+    explicit AdrScalarPlusVectorS(AdrKind kind, const XReg &xn, const ZRegS &zm) : Adr(kind), xn_(xn), zm_(zm) {}
 
     const XReg &GetXn() const
     {
         return xn_;
     }
-    const ZRegD &GetZm() const
+    const ZRegS &GetZm() const
     {
         return zm_;
     }
+
+protected:
+    XReg xn_;
+    ZRegS zm_;
+};
+
+class AdrVectorPlusVector : public Adr {
+public:
+    explicit AdrVectorPlusVector(AdrKind kind, const ZRegBase &zn, const ZRegBase &zm)
+        : Adr(kind), zn_(zn), zm_(zm) {}
+
+    const ZRegBase &GetZn() const
+    {
+        return zn_;
+    }
+    const ZRegBase &GetZm() const
+    {
+        return zm_;
+    }
+
+protected:
+    ZRegBase zn_;
+    ZRegBase zm_;
+};
+
+// scalar plus vector (unscaled 64-bit offset)
+class AdrSc64U : public AdrScalarPlusVectorD {
+public:
+    explicit AdrSc64U(const XReg &xn, const ZRegD &zm) : AdrScalarPlusVectorD(AdrKind::SC_64VEC, xn, zm) {}
+};
+
+// scalar plus vector (scalar 64-bit offset)
+class AdrSc64S : public AdrScalarPlusVectorD {
+public:
+    explicit AdrSc64S(const XReg &xn, const ZRegD &zm, ShMod mod, uint32_t sh)
+        : AdrScalarPlusVectorD(AdrKind::SC_64VEC, xn, zm), modSc64_(mod), shSc64_(sh) {}
+    explicit AdrSc64S(const AdrSc64U &a)
+        : AdrScalarPlusVectorD(AdrKind::SC_64VEC, a.GetXn(), a.GetZm()), modSc64_(ShMod::LSL), shSc64_(0) {}
+
     ShMod GetMod() const
     {
-        return mod_;
+        return modSc64_;
     }
     uint32_t GetSh() const
     {
-        return sh_;
+        return shSc64_;
     }
 
 private:
-    XReg xn_;
-    ZRegD zm_;
-    ShMod mod_;
-    uint32_t sh_;
+    ShMod modSc64_;
+    uint32_t shSc64_;
 };
 
 // vector plus scalar (64-bit unscaled sclar register offset, 64-bit element)
@@ -88,60 +121,40 @@ private:
 };
 
 // scalar plus vector (unscaled 32-bit offset)
-class AdrSc32U : public Adr {
+class AdrSc32U : public AdrScalarPlusVectorS {
 public:
     explicit AdrSc32U(const XReg &xn, const ZRegS &zm, ExtMod mod)
-        : Adr(AdrKind::SC_32VEC32E), xn_(xn), zm_(zm), mod_(Trans(mod)) {}
+        : AdrScalarPlusVectorS(AdrKind::SC_32VEC32E, xn, zm), modSc32U_(Trans(mod)) {}
 
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    const ZRegS &GetZm() const
-    {
-        return zm_;
-    }
     ExtMod GetMod() const
     {
-        return mod_;
+        return modSc32U_;
     }
 
 private:
-    XReg xn_;
-    ZRegS zm_;
-    ExtMod mod_;
+    ExtMod modSc32U_;
 };
 
 // scalar plus vector (scaled 32-bit offset)
-class AdrSc32S : public Adr {
+class AdrSc32S : public AdrScalarPlusVectorS {
 public:
     explicit AdrSc32S(const XReg &xn, const ZRegS &zm, ExtMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_32VEC32E), xn_(xn), zm_(zm), mod_(Trans(mod)), sh_(sh) {}
+        : AdrScalarPlusVectorS(AdrKind::SC_32VEC32E, xn, zm), modSc32S_(Trans(mod)), shSc32S_(sh) {}
     explicit AdrSc32S(const AdrSc32U &a)
-        : Adr(AdrKind::SC_32VEC32E), xn_(a.GetXn()), zm_(a.GetZm()), mod_(a.GetMod()), sh_(0) {}
+        : AdrScalarPlusVectorS(AdrKind::SC_32VEC32E, a.GetXn(), a.GetZm()), modSc32S_(a.GetMod()), shSc32S_(0) {}
 
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    const ZRegS &GetZm() const
-    {
-        return zm_;
-    }
     ExtMod GetMod() const
     {
-        return mod_;
+        return modSc32S_;
     }
     uint32_t GetSh() const
     {
-        return sh_;
+        return shSc32S_;
     }
 
 private:
-    XReg xn_;
-    ZRegS zm_;
-    ExtMod mod_;
-    uint32_t sh_;
+    ExtMod modSc32S_;
+    uint32_t shSc32S_;
 };
 
 // vector plus scalar (64-bit unscaled sclar register offset, 32-bit element)
@@ -164,60 +177,40 @@ private:
 };
 
 // scalar plus vector (unpacked unscaled 32-bit offset)
-class AdrSc32UU : public Adr {
+class AdrSc32UU : public AdrScalarPlusVectorD {
 public:
     explicit AdrSc32UU(const XReg &xn, const ZRegD &zm, ExtMod mod)
-        : Adr(AdrKind::SC_32VEC64E), xn_(xn), zm_(zm), mod_(Trans(mod)) {}
+        : AdrScalarPlusVectorD(AdrKind::SC_32VEC64E, xn, zm), modSc32UU_(Trans(mod)) {}
 
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    const ZRegD &GetZm() const
-    {
-        return zm_;
-    }
     ExtMod GetMod() const
     {
-        return mod_;
+        return modSc32UU_;
     }
 
 private:
-    XReg xn_;
-    ZRegD zm_;
-    ExtMod mod_;
+    ExtMod modSc32UU_;
 };
 
 // scalar plus vector (unpacked scaled 32-bit offset)
-class AdrSc32US : public Adr {
+class AdrSc32US : public AdrScalarPlusVectorD {
 public:
     explicit AdrSc32US(const XReg &xn, const ZRegD &zm, ExtMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_32VEC64E), xn_(xn), zm_(zm), mod_(Trans(mod)), sh_(sh) {}
+        : AdrScalarPlusVectorD(AdrKind::SC_32VEC64E, xn, zm), modSc32US_(Trans(mod)), shSc32US_(sh) {}
     explicit AdrSc32US(const AdrSc32UU &a)
-        : Adr(AdrKind::SC_32VEC64E), xn_(a.GetXn()), zm_(a.GetZm()), mod_(a.GetMod()), sh_(0) {}
+        : AdrScalarPlusVectorD(AdrKind::SC_32VEC64E, a.GetXn(), a.GetZm()), modSc32US_(a.GetMod()), shSc32US_(0) {}
 
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    const ZRegD &GetZm() const
-    {
-        return zm_;
-    }
     ExtMod GetMod() const
     {
-        return mod_;
+        return modSc32US_;
     }
     uint32_t GetSh() const
     {
-        return sh_;
+        return shSc32US_;
     }
 
 private:
-    XReg xn_;
-    ZRegD zm_;
-    ExtMod mod_;
-    uint32_t sh_;
+    ExtMod modSc32US_;
+    uint32_t shSc32US_;
 };
 
 // vector plus immediate 64-bit element
@@ -259,63 +252,43 @@ private:
 };
 
 // vector Address (packed offset)
-class AdrVec : public Adr {
+class AdrVec : public AdrVectorPlusVector {
 public:
     explicit AdrVec(const ZRegBase &zn, const ZRegBase &zm, ShMod mod = ShMod::NONE, uint32_t sh = 0)
-        : Adr(AdrKind::VEC_PACK), zn_(zn), zm_(zm), mod_(mod), sh_(sh) {}
+        : AdrVectorPlusVector(AdrKind::VEC_PACK, zn, zm), modVec_(mod), shVec_(sh) {}
 
-    const ZRegBase &GetZn() const
-    {
-        return zn_;
-    }
-    const ZRegBase &GetZm() const
-    {
-        return zm_;
-    }
     ShMod GetMod() const
     {
-        return mod_;
+        return modVec_;
     }
     uint32_t GetSh() const
     {
-        return sh_;
+        return shVec_;
     }
 
 private:
-    ZRegBase zn_;
-    ZRegBase zm_;
-    ShMod mod_;
-    uint32_t sh_;
+    ShMod modVec_;
+    uint32_t shVec_;
 };
 
 // vector Address (unpacked offset)
-class AdrVecU : public Adr {
+class AdrVecU : public AdrVectorPlusVector {
 public:
     explicit AdrVecU(const ZRegBase &zn, const ZRegBase &zm, ExtMod mod, uint32_t sh = 0)
-        : Adr(AdrKind::VEC_UNPACK), zn_(zn), zm_(zm), mod_(Trans(mod)), sh_(sh) {}
+        : AdrVectorPlusVector(AdrKind::VEC_UNPACK, zn, zm), modVecU_(Trans(mod)), shVecU_(sh) {}
 
-    const ZRegBase &GetZn() const
-    {
-        return zn_;
-    }
-    const ZRegBase &GetZm() const
-    {
-        return zm_;
-    }
     ExtMod GetMod() const
     {
-        return mod_;
+        return modVecU_;
     }
     uint32_t GetSh() const
     {
-        return sh_;
+        return shVecU_;
     }
 
 private:
-    ZRegBase zn_;
-    ZRegBase zm_;
-    ExtMod mod_;
-    uint32_t sh_;
+    ExtMod modVecU_;
+    uint32_t shVecU_;
 };
 
 inline AdrSc64U Ptr(const XReg &xn, const ZRegD &zm)
@@ -373,4 +346,4 @@ inline AdrVecU Ptr(const ZRegD &zn, const ZRegD &zm, ExtMod mod, uint32_t sh)
 
 } // ARMCG
 
-#endif  // CG_ADR_VectorComputation_HPP
+#endif  // CG_ADR_VC_HPP

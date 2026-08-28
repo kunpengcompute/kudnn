@@ -1,0 +1,10 @@
+--alg=min
+--batch=sizes
+--alg=max
+--batch=sizes
+--alg=mean
+--batch=sizes
+--alg=sum
+--batch=sizes
+--alg=mul
+--batch=sizes

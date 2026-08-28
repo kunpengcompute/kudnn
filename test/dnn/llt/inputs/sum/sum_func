@@ -1,0 +1,78 @@
+# src number 1 to 9
+--sdt=u8 --ddt=u8 --stag=abx --dtag=abx 2x10000x10000
+--sdt=f32:f32 --ddt=f32 --stag=abx --dtag=abx 2x10000x1000
+--sdt=s32:s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 4x1000x1000
+--sdt=f16:f16:f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 3x1000x100
+--sdt=f32:f16:bf16:s32:s8:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f16:bf16:s32:s8:f32:f16 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f16:bf16:s32:s8:f32:f16:bf16 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f16:bf16:s32:s8:f32:f16:bf16:s32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+
+# kernel function coverage
+--sdt=f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32:f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32:f32:f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32:f32:f32:f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32:f32:f32:f32:f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32:f32:f32:f32:f32:f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+--sdt=f32:f32:f32:f32:f32:f32:f32:f32:f32 --ddt=f32 --stag=abx --dtag=abx 16x2x6
+
+--sdt=f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16:f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16:f16:f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16:f16:f16:f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16:f16:f16:f16:f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+--sdt=f16:f16:f16:f16:f16:f16:f16:f16:f16 --ddt=f16 --stag=abx --dtag=abx 16x2x6
+
+--sdt=bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16:bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16:bf16:bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16:bf16:bf16:bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16:bf16:bf16:bf16:bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16:bf16:bf16:bf16:bf16:bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+--sdt=bf16:bf16:bf16:bf16:bf16:bf16:bf16:bf16:bf16 --ddt=bf16 --stag=abx --dtag=abx 16x2x6
+
+--sdt=s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32:s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32:s32:s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32:s32:s32:s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32:s32:s32:s32:s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+--sdt=s32:s32:s32:s32:s32:s32:s32:s32:s32 --ddt=s32 --stag=abx --dtag=abx 16x2x6
+
+--sdt=s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8:s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8:s8:s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8:s8:s8:s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8:s8:s8:s8:s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8:s8:s8:s8:s8:s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+--sdt=s8:s8:s8:s8:s8:s8:s8:s8:s8 --ddt=s8 --stag=abx --dtag=abx 16x2x6
+
+--sdt=u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8:u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8:u8:u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8:u8:u8:u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8:u8:u8:u8:u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8:u8:u8:u8:u8:u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+--sdt=u8:u8:u8:u8:u8:u8:u8:u8:u8 --ddt=u8 --stag=abx --dtag=abx 16x2x6
+
+# DTS2024053021194
+--sdt=bf16:bf16:bf16 --ddt=bf16 --stag=acdb:acdb:acdb --dtag=acdb --scales=0.6008455594050961:0.6008455594050961:0.6008455594050961 15x15x15x1
+--sdt=bf16:bf16:bf16 --ddt=bf16 --stag=acdb:acdb:acdb --dtag=acdb --scales=0.6008455594050961:0.6008455594050961:0.6008455594050961 3x31x31x1
+--sdt=f32:f32:f32 --ddt=f32 --stag=acdb:acdb:acdb --dtag=acdb --scales=3.524492337622556:3.524492337622556:3.524492337622556 15x3x3x1
+
+# DTS2024092310567
+--sdt=s8:f32:s32 --ddt=s8 --stag=ba --dtag=ba --scales=1.39:0x1p-14:1.594 164x36

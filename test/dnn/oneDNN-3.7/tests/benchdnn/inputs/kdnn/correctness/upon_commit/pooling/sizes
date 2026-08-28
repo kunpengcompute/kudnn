@@ -1,0 +1,3 @@
+mb16ic64_iw32ow16kw3sw2_n"pool_ci_1d:regular"
+mb4ic17_ih30oh16kh3sh2ph1_n"pool_ci_2d:ic_tail"
+ic8_id20ih40iw60_od11oh21ow31_kd2kh3kw4_sd2sh2sw2_pd1ph1pw1_dd2dh2dw2

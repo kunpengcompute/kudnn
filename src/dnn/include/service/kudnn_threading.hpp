@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,9 +10,11 @@
  * See the Mulan PSL v2 for more details.
  */
 
-
 #ifndef KUDNN_THREADING_HPP
 #define KUDNN_THREADING_HPP
+
+#include <cstdint>
+#include <functional>
 
 namespace KuDNN {
 namespace Threading {
@@ -27,13 +29,25 @@ enum class ThreadingControl {
     KUDNN_MANUAL
 };
 
-KUDNN_API_PUBLIC bool ShouldCalculateOptThreads() noexcept;
-KUDNN_API_PUBLIC int SetMaxNumThreads(int nThreads) noexcept;
-KUDNN_API_PUBLIC int SetFixedNumThreads(int nThreads) noexcept;
-KUDNN_API_PUBLIC int GetMaxNumThreads() noexcept;
-KUDNN_API_PUBLIC int SetNumThreadsLocal(int nThreads) noexcept;
-KUDNN_API_PUBLIC EnvMode SetEnvMode(EnvMode mode) noexcept;
-KUDNN_API_PUBLIC ThreadingControl GetThreadingControlStatus() noexcept;
+bool ShouldCalculateOptThreads() noexcept;
+int SetMaxNumThreads(int nThreads) noexcept;
+int SetFixedNumThreads(int nThreads) noexcept;
+int GetMaxNumThreads() noexcept;
+int SetNumThreadsLocal(int nThreads) noexcept;
+EnvMode SetEnvMode(EnvMode mode) noexcept;
+ThreadingControl GetThreadingControlStatus() noexcept;
+
+struct ThreadpoolIface {
+    virtual int GetNumThreads() const = 0;
+    virtual bool IsInParallel() const = 0;
+    virtual void ParallelFor(int n, const std::function<void(int, int)> &fn) = 0;
+    virtual uint64_t GetFlags() const = 0;
+    static constexpr uint64_t KUDNN_ASYNCHRONOUS = 1;
+    virtual ~ThreadpoolIface() {};
+};
+
+void ActivateThreadpool(ThreadpoolIface *tp);
+void DeactivateThreadpool();
 
 } // Threading
 } // KuDNN

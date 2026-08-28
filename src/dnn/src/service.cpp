@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,13 +20,40 @@
 #include <arm_neon.h> // Needed to build with clang
 #endif
 
+#ifdef USE_HBM
+    #include <memkind.h>
+    #include <hbwmalloc.h>
+#endif
+
 #include "kudnn.hpp"
 
 #include "internal_funcs.hpp"
 #include "kernels/kernel_funcs.h"
 
+#include "kernels/matmul_jit/kudnn_gemm_helpers.hpp"
+#include "kernels/matmul_jit/kudnn_memory_buffer.hpp"
+#include "kernels/reorder/kudnn_reorder_helpers.hpp"
+
 namespace KuDNN {
 
+namespace Detail {
+
+template <typename Task>
+void ClearImpls() noexcept(false);
+
+// Function is for internal use only. Thread safety is not guaranteed.
+// that's why it's decalred only in internal headers.
+// To use it, it is required to declare it user code space.
+void ClearImpls();
+
+// clean JIT impls of reorder and matmul
+void ClearImpls()
+{
+    ClearImpls<ReorderInfo>();
+    ClearImpls<GemmInfo>();
+}
+
+} // Detail
 
 namespace Service {
 
@@ -44,76 +71,6 @@ void ThrowOnStatus(Status s, const std::string& funcName) noexcept(false)
         default: {}
     }
 }
-
-void ConvertFp32ToBf16(const float *src, __bf16 *dst, SizeType size)
-{
-    SizeType vl = svcntw();
-    SizeType vl2 = IDX_2 * vl;
-    SizeType nResid = size % (vl2);
-    for (SizeType i = 0; i < nResid; ++i) {
-        dst[i] = vcvth_bf16_f32(src[i]);
-    }
-    svuint32_t idx = svindex_u32(IDX_0, IDX_2);
-    for (SizeType i = nResid; i < size; i += vl2) {
-        svbool_t pg = svptrue_b32();
-
-        svfloat32_t vecFloat1 = svld1_gather_u32index_f32(pg, src + i, idx);
-        svfloat32_t vecFloat2 = svld1_gather_u32index_f32(pg, src + IDX_1 + i, idx);
-
-        svbfloat16_t vecBfloat = svcvt_bf16_f32_x(pg, vecFloat1);
-        vecBfloat = svcvtnt_bf16_f32_x(vecBfloat, pg, vecFloat2);
-
-        svst1(svptrue_b16(), static_cast<__bf16 *>(dst) + i, vecBfloat);
-    }
-}
-
-void ConvertFp32ToFp16(const float *src, __fp16 *dst, SizeType size)
-{
-    for (SizeType i = 0; i < size; ++i) {
-        dst[i] = src[i];
-    }
-}
-
-
-void ConvertFp32ToS32(const float *src, int32_t *dst, SizeType size)
-{
-    for (SizeType i = 0; i < size; ++i) {
-        if (src[i] < static_cast<float>(std::numeric_limits<int32_t>::min())) {
-            dst[i] = std::numeric_limits<int32_t>::min();
-        } else if (src[i] > static_cast<float>(std::numeric_limits<int32_t>::max())) {
-            dst[i] = std::numeric_limits<int32_t>::max();
-        } else {
-            dst[i] = static_cast<int32_t>(std::nearbyintf(src[i]));
-        }
-    }
-}
-
-void ConvertFp32ToS8(const float *src, int8_t *dst, SizeType size)
-{
-    for (SizeType i = 0; i < size; ++i) {
-        if (src[i] < std::numeric_limits<int8_t>::min()) {
-            dst[i] = std::numeric_limits<int8_t>::min();
-        } else if (src[i] > std::numeric_limits<int8_t>::max()) {
-            dst[i] = std::numeric_limits<int8_t>::max();
-        } else {
-            dst[i] = static_cast<int8_t>(std::nearbyintf(src[i]));
-        }
-    }
-}
-
-void ConvertFp32ToU8(const float *src, uint8_t *dst, SizeType size)
-{
-    for (SizeType i = 0; i < size; ++i) {
-        if (src[i] < 0.0f) {
-            dst[i] = 0U;
-        } else if (src[i] > std::numeric_limits<uint8_t>::max()) {
-            dst[i] = std::numeric_limits<uint8_t>::max();
-        } else {
-            dst[i] = static_cast<uint8_t>(std::nearbyintf(src[i]));
-        }
-    }
-}
-
 
 SizeType ArrayProduct(const Shape &arr, SizeType end, SizeType start) noexcept
 {
@@ -353,7 +310,7 @@ SizeType GetIdxForUserLayout(Layout l, SizeType idx) noexcept(false)
     return sh[idx];
 }
 
-Shape GetShapeAccordingToLayout(const Shape &sh, Layout parLayout) noexcept
+Shape GetShapeAccordingToLayout(const Shape &sh, Layout parLayout) noexcept(false)
 {
     Shape result;
     std::array<SizeType, MAX_DIMS> arr;
@@ -417,6 +374,31 @@ Shape BroadcastTo5D(const Shape &sh, bool isDims) noexcept(false)
     }
 }
 
+Shape BroadcastToNCDHW(const Shape &sh, bool isDims) noexcept(false)
+{
+    /*  We cast everything to the `NCDHW` format */
+    SizeType fill = isDims ? 1 : 0;
+    switch (sh.GetNumDims()) {
+        case DIM_1: {
+            return Shape{fill, sh[IDX_0], fill, fill, fill}; // C to nCdhw
+        }
+        case DIM_2: {
+            return Shape{sh[IDX_0], sh[IDX_1], fill, fill, fill}; // NC to NCdhw
+        }
+        case DIM_3: {
+            return Shape{sh[IDX_0], sh[IDX_1], fill, fill, sh[IDX_2]}; // NCW to NCdhW
+        }
+        case DIM_4: {
+            return Shape{sh[IDX_0], sh[IDX_1], fill, sh[IDX_2], sh[IDX_3]}; // NCHW to NCdHW
+        }
+        case DIM_5: {
+            return Shape{sh[IDX_0], sh[IDX_1], sh[IDX_2], sh[IDX_3], sh[IDX_4]}; // full NCDHW
+        }
+        default: {
+            throw Service::LogicError {"BroadcastToNCDHW: nothing to broadcast"};
+        }
+    }
+}
 
 void *AlignedAlloc(SizeType n, SizeType alignment) noexcept(false)
 {
@@ -437,6 +419,102 @@ void Deallocate(void *p, SizeType n) noexcept
 {
     Service::Unused(n);
     free(p);
+}
+
+void Deallocate(const void *p, SizeType n) noexcept
+{
+    Service::Unused(n);
+    free(const_cast<void *>(p));
+}
+
+MemoryBuffer::MemoryBuffer()
+    : ptr(nullptr),
+    type(MemoryType::DEFAULT),
+    owner(false)
+{}
+
+MemoryBuffer::MemoryBuffer(MemoryBuffer&& other)
+    : ptr(other.ptr),
+    type(other.type),
+    owner(other.owner)
+{
+    other.ptr = nullptr;
+    other.owner = false;
+}
+
+MemoryBuffer& MemoryBuffer::operator=(MemoryBuffer&& other)
+{
+    Free();
+    ptr = other.ptr;
+    type = other.type;
+    owner = other.owner;
+    other.ptr = nullptr;
+    other.owner = false;
+
+    return *this;
+}
+
+MemoryBuffer::MemoryBuffer(const MemoryBuffer& other)
+    : ptr(other.ptr),
+    type(other.type),
+    owner(false)
+{
+}
+
+MemoryBuffer& MemoryBuffer::operator=(const MemoryBuffer& other)
+{
+    Free();
+    ptr = other.ptr;
+    type = other.type;
+    owner = false;
+    return *this;
+}
+
+MemoryBuffer::MemoryBuffer(SizeType size, MemoryType requestedType, SizeType alignment)
+{
+    owner = true;
+#ifdef USE_HBM
+    bool sizeIsOkForHBM = true;
+#ifdef __clang__
+    sizeIsOkForHBM = size > 14336; // 14336 is actually a magic number
+    // for some reason when compiled with clang HBM alloc work inproperly
+    // it causes segfaults after all the work is done (when application end the work)
+    // even if there's no operations with allocated memory
+#endif // __clang__
+    if (sizeIsOkForHBM && (requestedType == MemoryType::FAST) &&
+        (memkind_check_available(MEMKIND_HBW) == 0) &&
+        (MEMKIND_SUCCESS == memkind_posix_memalign(MEMKIND_HBW, &ptr, alignment, size))) {
+        type = MemoryType::FAST;
+        return;
+    }
+#else
+    Unused(requestedType);
+#endif
+    ptr = AlignedAlloc(size, alignment);
+    type = MemoryType::DEFAULT;
+}
+
+void MemoryBuffer::Free()
+{
+    if (!owner || ptr == nullptr) {
+        ptr = nullptr;
+        owner = false;
+        return;
+    }
+#ifdef USE_HBM
+    if (type == MemoryType::FAST) {
+        memkind_free(MEMKIND_HBW, ptr);
+    } else
+#endif
+    Deallocate(ptr, 0);
+    
+    ptr = nullptr;
+    owner = false;
+}
+
+MemoryBuffer::~MemoryBuffer()
+{
+    Free();
 }
 
 } // Service

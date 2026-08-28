@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -12,7 +12,7 @@
 
 #include "vml_sve_la_exp.h"
 
-const struct SveExpfData G_VectorComputation_VSEXP_DATA = {
+const struct VCExpfData G_VC_VSEXP_DATA = {
     .invLn2Hi = 0x1.715476p+0f,
     .invLn2Lo = 0x1.4ae0cp-26f,
     .splThR = 87.0f, // ~ln(0x1p126)
@@ -20,7 +20,7 @@ const struct SveExpfData G_VectorComputation_VSEXP_DATA = {
     .lowBound = -0x1.5d58ap6f, // ~ln(FLT_MIN)
 };
 
-const struct SveExp2fData G_VectorComputation_VSEXP2_DATA = {
+const struct VCExp2fData G_VC_VSEXP2_DATA = {
     .exp2fShift = 0x1.803f8p17f, // shift/0x1p6 add exp bias
     .splTh = 126.0f,
     /*
@@ -33,7 +33,7 @@ const struct SveExp2fData G_VectorComputation_VSEXP2_DATA = {
     },
 };
 
-__attribute__((aligned(0x20))) const struct VectorComputation_EXPM1F_DATA G_VectorComputation_EXPM1F_DATA = {
+__attribute__((aligned(0x20))) const struct VC_EXPM1F_DATA G_VC_EXPM1F_DATA = {
     /* coefficients of expm1(r) r \in [-ln2/2, ln2/2]
      * f = expm1(x) / x
      * p = fpminimax(f, [|0,1,2,3,4,5|], [|23...|], [-log(2)/2,log(2)/2], relative)

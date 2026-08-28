@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,7 +13,6 @@
 #ifndef CG_REG_HPP
 #define CG_REG_HPP
 
-#include <cassert>
 #include "cg_arm_const.hpp"
 
 namespace ARMCG {
@@ -36,7 +35,7 @@ public:
         X1,  X2,  X3,  X4,  X5,  X6,  X7,  X8,  X9,  X10,
         X11, X12, X13, X14, X15, X16, X17, X18, X19, X20,
         X21, X22, X23, X24, X25, X26, X27, X28, X29, X30,
-        X31 = 31,
+        SP_XZR = 31,
     };
 
 public:
@@ -142,13 +141,13 @@ public:
     explicit QReg(uint32_t index) noexcept : VRegSc(index, BIT_128) {}
 };
 
-// VectorComputation SIMD Vector Register Base
+// VC SIMD Vector Register Base
 class ZRegBase : public Reg {
 public:
     explicit ZRegBase(uint32_t index, uint32_t bits = VAL_128 * vl) noexcept : Reg(index, Kind::ZREG, bits) {}
 };
 
-// VectorComputation SIMD Vector Register Element
+// VC SIMD Vector Register Element
 class ZRegElem : public ZRegBase {
 public:
     explicit ZRegElem(uint32_t index, uint32_t eidx, uint32_t bit) noexcept
@@ -163,7 +162,7 @@ private:
     uint32_t elemIdx_;
 };
 
-// base for VectorComputation SIMD Vector Register List
+// base for VC SIMD Vector Register List
 class ZRegList : public ZRegBase {
 public:
     explicit ZRegList(const ZRegBase &s) noexcept
@@ -178,12 +177,6 @@ public:
 private:
     uint32_t len_;
 };
-
-class ZRegB;
-class ZRegH;
-class ZRegS;
-class ZRegD;
-class ZRegQ;
 
 class ZRegBElem : public ZRegElem {
 public:
@@ -206,6 +199,7 @@ public:
     explicit ZRegQElem(uint32_t index, uint32_t eidx) noexcept : ZRegElem(index, eidx, VAL_128) {}
 };
 
+class ZRegB;
 class ZRegBList : public ZRegList {
 public:
     explicit ZRegBList(const ZRegB &s);
@@ -215,6 +209,7 @@ public:
         return ZRegBElem(GetIdx(), i);
     }
 };
+class ZRegH;
 class ZRegHList : public ZRegList {
 public:
     explicit ZRegHList(const ZRegH &s) noexcept;
@@ -224,6 +219,7 @@ public:
         return ZRegHElem(GetIdx(), i);
     }
 };
+class ZRegS;
 class ZRegSList : public ZRegList {
 public:
     explicit ZRegSList(const ZRegS &s) noexcept;
@@ -233,6 +229,7 @@ public:
         return ZRegSElem(GetIdx(), i);
     }
 };
+class ZRegD;
 class ZRegDList : public ZRegList {
 public:
     explicit ZRegDList(const ZRegD &s) noexcept;
@@ -242,6 +239,7 @@ public:
         return ZRegDElem(GetIdx(), i);
     }
 };
+class ZRegQ;
 class ZRegQList : public ZRegList {
 public:
     explicit ZRegQList(const ZRegQ &s) noexcept;
@@ -313,7 +311,7 @@ public:
     }
 };
 
-// SIMD Vector Register for VectorComputation
+// SIMD Vector Register for VC
 class ZReg : public ZRegBase {
 public:
     explicit ZReg(uint32_t index) noexcept : ZRegBase(index), b(index), h(index), s(index), d(index), q(index) {}
@@ -381,9 +379,9 @@ public:
     PRegD d;
 };
 
-// MatrixComputation Storage
+// MC Storage
 class ZARegBase : public Reg {
-protected:
+public:
     explicit ZARegBase(uint32_t index, uint32_t bits = VAL_128 * svl) noexcept : Reg(index, Kind::ZAREG, bits) {}
 };
 
@@ -391,14 +389,19 @@ class ZARegB : public ZARegBase {
 public:
     explicit ZARegB(uint32_t index) noexcept : ZARegBase(index) {}
 };
+class ZARegH : public ZARegBase {
+public:
+    explicit ZARegH(uint32_t index) noexcept : ZARegBase(index) {}
+};
 class ZARegS : public ZARegBase {
 public:
     explicit ZARegS(uint32_t index) noexcept : ZARegBase(index) {}
 };
 class ZAReg : public ZARegBase {
 public:
-    explicit ZAReg(uint32_t index) noexcept : ZARegBase(index), b(index), s(index) {}
+    explicit ZAReg(uint32_t index) noexcept : ZARegBase(index), b(index), h(index), s(index) {}
     ZARegB b;
+    ZARegH h;
     ZARegS s;
 };
 
@@ -406,33 +409,40 @@ class ZARegHB : public ZARegBase {
 public:
     explicit ZARegHB(uint32_t index) noexcept : ZARegBase(index) {}
 };
-
+class ZARegHH : public ZARegBase {
+public:
+    explicit ZARegHH(uint32_t index) noexcept : ZARegBase(index) {}
+};
 class ZARegHS : public ZARegBase {
 public:
     explicit ZARegHS(uint32_t index) noexcept : ZARegBase(index) {}
 };
-
-class ZARegH : public ZARegBase {
+class ZARegHX : public ZARegBase {
 public:
-    explicit ZARegH(uint32_t index) noexcept : ZARegBase(index), s(index), b(index) {}
-    ZARegHS s;
+    explicit ZARegHX(uint32_t index) noexcept : ZARegBase(index), b(index), h(index), s(index) {}
     ZARegHB b;
+    ZARegHH h;
+    ZARegHS s;
 };
 
 class ZARegVB : public ZARegBase {
 public:
     explicit ZARegVB(uint32_t index) noexcept : ZARegBase(index) {}
 };
-
+class ZARegVH : public ZARegBase {
+public:
+    explicit ZARegVH(uint32_t index) noexcept : ZARegBase(index) {}
+};
 class ZARegVS : public ZARegBase {
 public:
     explicit ZARegVS(uint32_t index) noexcept : ZARegBase(index) {}
 };
-class ZARegV : public ZARegBase {
+class ZARegVX : public ZARegBase {
 public:
-    explicit ZARegV(uint32_t index) noexcept : ZARegBase(index), s(index), b(index) {}
-    ZARegVS s;
+    explicit ZARegVX(uint32_t index) noexcept : ZARegBase(index), b(index), h(index), s(index) {}
     ZARegVB b;
+    ZARegVH h;
+    ZARegVS s;
 };
 
 } // ARMCG

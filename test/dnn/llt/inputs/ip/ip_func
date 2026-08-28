@@ -1,0 +1,85 @@
+--dir=FWD_B,FWD_D,FWD_I,BWD_D,BWD_W,BWD_WB
+--dt=f32:f32:f32
+--batch=ip_configs_func
+
+--dir=FWD_B,FWD_D,FWD_I,BWD_D,BWD_W,BWD_WB
+--dt=f16:f16:f16
+--batch=ip_configs_func
+
+--dir=FWD_B,FWD_D,FWD_I,BWD_D,BWD_W,BWD_WB
+--dt=bf16:bf16:bf16
+--batch=ip_configs_func
+
+--dir=FWD_B,FWD_D,FWD_I
+--dt=f16:f16:f32
+--batch=ip_configs_func
+
+--dir=FWD_B,FWD_D,FWD_I
+--dt=bf16:bf16:f32
+--batch=ip_configs_func
+
+--dir=BWD_D
+--dt=f32:f16:f16
+--batch=ip_configs_func
+
+--dir=BWD_D
+--dt=f32:bf16:bf16
+--batch=ip_configs_func
+
+--dir=BWD_W,BWD_WB
+--dt=bf16:f32:bf16
+--batch=ip_configs_func
+
+--dir=BWD_W,BWD_WB
+--dt=f16:f32:f16
+--batch=ip_configs_func
+
+# 1D
+# mb128ic128iw4oc1024n"googlenet_v1_1d:ip1"
+# mb64ic512iw7oc4096n"VGG16_1d:ip1"
+# mb32ic64iw3oc1000n"1d:ip1"
+# mb32ic512iw5oc1000n"1d:ip2"
+# mb256ic128iw5oc128n"1d:ip3"
+
+# 3D
+# ic64id2ih3iw3oc1000n"3d:ip1"
+# ic512id5ih5iw5oc1000n"3d:ip2"
+# ic128id5ih5iw5oc128n"3d:ip3"
+
+# DLRM
+
+# DTS2024091803232
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=ab mb3ic127oc127
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=abc mb15ic7iw127oc7
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=ab mb1ic31oc63
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=ab mb7ic127oc127
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=ab mb15ic63oc15
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=ab mb3ic127oc15
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=abcd mb1ic7ih15iw7oc7
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=abcd mb3ic7ih15iw7oc15
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=abcd mb3ic7ih31iw15oc15
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=abcd mb3ic3ih15iw31oc31
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=abcd mb1ic3ih31iw3oc31
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=abcd mb1ic1ih15iw3oc31
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=abcd mb15ic15ih15iw1oc1
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=abcd mb7ic31ih15iw3oc3
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=abcde mb4ic31id2ih3iw5oc13
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=abcde mb15ic31id3ih1iw15oc7
+--dir=BWD_D --dt=bf16:bf16:bf16 --stag=abcde mb15ic15id15ih15iw1oc3
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=abcde mb7ic3id31ih7iw3oc15
+--dir=BWD_D --dt=f32:bf16:bf16 --stag=abcde mb7ic3id31ih7iw15oc1
+
+#DTS2024102204877
+--dir=BWD_WB --dt=bf16:f32:bf16 --stag=ab mb141ic84oc171
+
+--dir=FWD_D,FWD_B,FWD_I --dt=bf16:bf16:bf16 --stag=acb mb15ic7iw127oc7
+--dir=FWD_D,FWD_B,FWD_I --dt=bf16:bf16:bf16 --stag=ba mb1ic31oc63
+--dir=BWD_WB --dt=bf16:f32:bf16,f16:f16:f16,f32:f32:f32 --dtag=ba mb141ic84oc171
+
+# DTS2026012850449
+--fast-ref=false --dir=FWD_I --dt=s8:s8:bf16 --stag=abcd --wtag=abx --dtag=axb --attr-scales=wei:common:1.678 --attr-post-ops=log mb44ic27ih2iw22oc25
+--fast-ref=false --dir=FWD_I --dt=s8:s8:f32 --stag=acb --wtag=axb --dtag=abx --attr-scales=wei:common:0.044 --attr-post-ops=sqrt_dst mb127ic15iw63oc63
+--fast-ref=false --dir=FWD_I --dt=u8:s8:bf16 --stag=acdb --wtag=axb --dtag=axb --attr-scales=src:common:0.706 --attr-post-ops=sqrt_dst mb26ic27ih46iw30oc42
+--fast-ref=false --dir=FWD_D --dt=s8:s8:s8 --stag=acb --wtag=axb --dtag=axb --attr-scales=src:common:1.738 --attr-post-ops=log mb56ic71iw109oc127
+--fast-ref=false --dir=FWD_I --dt=u8:s8:bf16 --stag=abcde --wtag=axb --dtag=abx --attr-scales=src:common:1.22 --attr-post-ops=log mb22ic11id22ih31iw7oc3
+--fast-ref=false --dir=FWD_D --dt=s8:s8:bf16 --stag=ab --wtag=abx --dtag=axb --attr-scales=src:common:0.309 --attr-post-ops=sqrt_dst mb75ic44oc104

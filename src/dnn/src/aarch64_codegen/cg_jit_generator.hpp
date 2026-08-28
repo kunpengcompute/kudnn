@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -18,7 +18,7 @@
 #include "tools/cg_cpu_isa_traits.hpp"
 #include "cg_codegen.hpp"
 #include "src/cg_reg.hpp"
-#include "../../include/service/kudnn_service.hpp"
+#include "service/kudnn_service.hpp"
 
 #define MAX_CODENAME_LEN \
     (MAX_FNAME_LEN - sizeof(DUMP_BASE_FNAME) - sizeof(DUMP_EXT_FNAME))
@@ -78,7 +78,7 @@ public:
     using CCompatible::operator delete;
     using CCompatible::operator delete[];
 
-    const uint64_t cpuSveLen = static_cast<uint64_t>(GetSveLength());
+    const uint64_t cpuVCLen = static_cast<uint64_t>(GetVCLength());
 
     const WReg W_TMP_0 = w23;
     const WReg W_TMP_1 = w24;
@@ -114,7 +114,7 @@ public:
     void Preamble()
     {
         using namespace Util;
-        SveLen sveLen = GetSveLength();
+        VCLen sveLen = GetVCLength();
 
         Stp(x29, x30, PrePtr(sp, SIZE_NEG_16));
         /* x29 is a frame pointer. */
@@ -134,15 +134,15 @@ public:
                 PostPtr(x9, xregLen * VAL_2));
         }
 
-        if (sveLen != SveLen::VectorComputation_NONE) { /* VectorComputation is available. */
+        if (sveLen != VCLen::VC_NONE) { /* VC is available. */
             Ptrue(pAllOne.b);
             Pfalse(pAllZero.b);
         }
-        if (sveLen >= SveLen::VectorComputation_256) {
+        if (sveLen >= VCLen::VC_256) {
             Ptrue(P_NOT_128.b, Pattern::VL16);
             Not(P_NOT_128.b, pAllOne / PredType::T_Z, P_NOT_128.b);
         }
-        if (sveLen >= SveLen::VectorComputation_512) {
+        if (sveLen >= VCLen::VC_512) {
             Ptrue(P_NOT_256.b, Pattern::VL32);
             Not(P_NOT_256.b, pAllOne / PredType::T_Z, P_NOT_256.b);
         }
@@ -203,10 +203,8 @@ public:
             const XReg xTmp0 = XReg(DUMMY_IDX),
             const XReg xTmp1 = XReg(DUMMY_IDX))
     {
-        assert(tailSize <= VAL_64); // Implemented only for "VectorComputation size <=  512"
-
         switch (tailSize) {
-            case VAL_0: Pfalse(PRegB(p.getIdx())); return;
+            case VAL_0: Pfalse(PRegB(p.GetIdx())); return;
             case VAL_1: Ptrue(p, Pattern::VL1); return;
             case VAL_2: Ptrue(p, Pattern::VL2); return;
             case VAL_3: Ptrue(p, Pattern::VL3); return;
@@ -218,9 +216,9 @@ public:
             case VAL_16: Ptrue(p, Pattern::VL16); return;
             case VAL_32: Ptrue(p, Pattern::VL32); return;
             case VAL_64: Ptrue(p, Pattern::VL64); return;
+            default: break;
         }
 
-        assert(xTmp0.GetIdx() != DUMMY_IDX && xTmp1.GetIdx() != DUMMY_IDX);
         MovImm(xTmp0, 0);
         MovImm(xTmp1, tailSize);
         Whilelt(p, xTmp0, xTmp1);
@@ -245,7 +243,6 @@ public:
         constexpr int simdWYmm = BIT_8;
         constexpr int f32Bits = sizeof(float) * BIT_8;
         const auto simdW = CpuIsaTraits<isa>::vlen * BIT_8 / f32Bits;
-        assert(simdW != CpuIsaTraits<isa>::vlen * BIT_8 / f32Bits);
 
         Label labelTbl;
         Label labelTblEnd;
@@ -355,6 +352,20 @@ private:
         const uint8_t *code = CodeGenerator::GetCode();
         RegisterJitCode(code, GetSize() * sizeof(uint32_t), Name(), SourceFile());
         return code;
+    }
+
+    void MovImmBySeg(const WReg &dst, uint32_t bitPtn, bool flag)
+    {
+        for (int i = 0; i < STEP_2; i++) {
+            if (bitPtn & (0xFFFF << (BITFIELD_16 * i))) {
+                if (!flag) {
+                    Movz(dst, (bitPtn >> (BITFIELD_16 * i)) & 0xFFFF, BITFIELD_16 * i);
+                    flag = true;
+                } else {
+                    Movk(dst, (bitPtn >> (BITFIELD_16 * i)) & 0xFFFF, BITFIELD_16 * i);
+                }
+            }
+        }
     }
 
     static inline bool IsInitialized()

@@ -1,0 +1,10 @@
+--alg=AUTO --dt=f32:f32:f32 --dir=FWD_D --stag=abcd --dtag=abcd --wtag=abcd --attr-post-ops=mish,add:f32,sum:1.5 --batch=conv2d_shapes_func
+--alg=AUTO --dt=f16:f16:f32 --dir=FWD_D --stag=abcd --wtag=abcd --attr-post-ops=exp_dst,tanh_dst,elu_dst --dtag=abcd mb9ic5ih5iw29oc1oh1ow4kh7kw7sh6sw9ph7pw41dh6dw6
+--dt=s8:s8:u8 --dir=FWD_I --stag=acdeb --wtag=acdeb --dtag=acdeb --attr-post-ops=prelu mb50ic43id23ih59iw7oc12od6oh15ow1kd9kh10kw7sd2sh1sw2pd13ph1pw40dd2dh4dw9
+--dt=s8:s8:s32 --dir=FWD_I --stag=acdeb --wtag=acdeb --dtag=acdeb --attr-post-ops=prelu mb1ic1id1ih1iw1oc1od1oh1ow1kd1kh1kw1sd1sh1sw1pd0ph0pw0dd0dh0dw0
+--dt=bf16:bf16:bf16 --dir=FWD_B --stag=abc --wtag=abcd --dtag=abc --attr-post-ops=SUB:bf16 g1mb4ic1iw108oc4ow4kw69sw9pw63dw1
+--dt=f32:f32:f32 --dir=FWD_B --stag=acdb --wtag=acdeb --dtag=acdb --attr-post-ops=SUB:bf16 g1mb5ic1ih62iw176oc2oh1ow18kh80kw13sh7sw10ph146pw92dh3dw7
+--dt=f32:f32:f32 --dir=FWD_I --stag=abcde --wtag=abcde --dtag=abcde --attr-post-ops=sum:-0.543 mb6ic25id20ih1iw22oc30od1oh1ow3kd8kh10kw1sd3sh6sw9pd16ph41pw0dd6dh6dw6
+--dt=f16:f16:f16 --dir=FWD_B --stag=abcd --wtag=abcd --dtag=abcd --attr-post-ops=relu_dst:0.619:0.452-14:0x1p-14 mb39ic34ih1iw48oc30oh1ow1kh61kw71sh7sw3ph160pw546dh5dw10
+--dt=u8:s8:s32 --dir=FWD_D --stag=abcd --wtag=abcde --dtag=abcd --attr-post-ops=soft_relu:1.373:0.959 g1mb9ic2ih148iw179oc5oh15ow135kh15kw31sh8sw1ph11pw226dh2dw8
+--dt=f32:f32:f32 --dir=FWD_I --stag=any --wtag=any --dtag=any --attr-post-ops=sum mb25ic16iw141oc26ow4kw99sw9pw871dw9

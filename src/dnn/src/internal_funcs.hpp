@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,10 +16,17 @@
 #include <string>
 #include <ostream>
 #include <algorithm>
+#include <algorithm>
+#include <functional>
+#include <omp.h>
 
+#include "service/kudnn_err_codes.hpp"
+#include "service/kudnn_exception.hpp"
+#include "service/kudnn_threading.hpp"
+#include "tools/cg_cpu_isa_traits.hpp"
+#include "types/kudnn_data_type.hpp"
+#include "kernels/convolution/kudnn_conv_const.hpp"
 #include "kudnn.hpp"
-
-#define KUDNN_MODULO_4(n) ((n) & 0x3)
 
 #define CONSTRUCTOR __attribute__((constructor))
 #define DESTRUCTOR __attribute__((destructor))
@@ -32,6 +39,16 @@
 #endif
 
 namespace KuDNN {
+
+#ifdef KUDNNL_920F
+    inline constexpr SizeType L1_CACHE_SIZE_BYTES = 32768;      // L1 Max size 920F
+    inline constexpr SizeType L2_CACHE_SIZE_BYTES = 786432;     // L2 Max size 920F
+    inline constexpr SizeType L3_CACHE_SIZE_BYTES = 113025455;  // HBM per core = 4294967296 / core_cluster;
+#else
+    inline constexpr SizeType L1_CACHE_SIZE_BYTES = 65536;      // L1 Max size 920B
+    inline constexpr SizeType L2_CACHE_SIZE_BYTES = 1310720;    // L2 Max size 920B
+    inline constexpr SizeType L3_CACHE_SIZE_BYTES = 73400320;   // L3 Max size 920B
+#endif
 
 namespace Math {
 
@@ -62,16 +79,9 @@ constexpr T Log2(T in) noexcept(false)
 enum class ARCH {
     GENERIC = 0,
     NEON,
-    VectorComputation,
-    MatrixComputation
+    VC,
+    MC
 };
-
-constexpr SizeType DEFAULT_MAX_NUM_THREADS = 128;
-::std::ostream& operator << (::std::ostream &os, const Shape &shape);
-::std::ostream& operator << (::std::ostream &os, const TensorInfo &info);
-::std::ostream& operator << (::std::ostream &os, const Element::TypeT &type);
-::std::ostream& operator << (::std::ostream &os, const Element::Type &type);
-::std::ostream& operator << (::std::ostream &os, const Layout &layout);
 
 struct Parallelizable {
     Parallelizable() : isInitialized(false)
@@ -115,23 +125,23 @@ namespace Service {
 
 template <typename T>
 struct Bridge {};
- 
+
 template <typename T>
 struct Bridge<T *> {
     using VoidType = void *;
     using ByteType = std::byte *;
 };
- 
+
 template <typename T>
 struct Bridge<const T *> {
     using VoidType = const void *;
     using ByteType = const std::byte *;
 };
- 
+
 // offset in bytes
 template <typename TargetType, typename InitialType>
 constexpr std::enable_if_t<std::is_pointer_v<InitialType> && std::is_pointer_v<TargetType>, TargetType> AddOffset(
-    InitialType ptr, int offset) noexcept
+    InitialType ptr, IntType offset) noexcept
 {
     return static_cast<TargetType>(
         static_cast<typename Bridge<InitialType>::VoidType>(
@@ -159,25 +169,6 @@ Shape BroadcastTo5D(const Shape &sh, bool isDims = true) noexcept(false);
 Shape BroadcastToNCDHW(const Shape &sh, bool isDims = true) noexcept(false);
 void ThrowOnStatus(Status s, const std::string& funcName) noexcept(false);
 SizeType ArrayProduct(const Shape &arr, SizeType end, SizeType start) noexcept;
-void ConvertFp16ToFp32(const __fp16 *src, float *dst, SizeType size);
-void ConvertBf16ToFp32(const __bf16 *src, float *dst, SizeType size);
-void ConvertS32ToFp32(const int32_t *src, float *dst, SizeType size);
-void ConvertS8ToFp32(const int8_t *src, float *dst, SizeType size);
-void ConvertU8ToFp32(const uint8_t *src, float *dst, SizeType size);
-void ConvertFp32ToFp16(const float *src, __fp16 *dst, SizeType size);
-void ConvertFp32ToBf16(const float *src, __bf16 *dst, SizeType size);
-void ConvertFp32ToS32(const float *src, int32_t *dst, SizeType size);
-void ConvertFp32ToS8(const float *src, int8_t *dst, SizeType size);
-void ConvertFp32ToU8(const float *src, uint8_t *dst, SizeType size);
-
-void ConvertFp16ToS32(const __fp16 *src, std::int32_t *dst, SizeType size);
-void ConvertBf16ToS32(const __bf16 *src, std::int32_t *dst, SizeType size);
-void ConvertS8ToS32(const int8_t *src, std::int32_t *dst, SizeType size);
-void ConvertU8ToS32(const uint8_t *src, std::int32_t *dst, SizeType size);
-void ConvertS32ToFp16(const std::int32_t *src, __fp16 *dst, SizeType size);
-void ConvertS32ToBf16(const std::int32_t *src, __bf16 *dst, SizeType size);
-void ConvertS32ToS8(const std::int32_t *src, int8_t *dst, SizeType size);
-void ConvertS32ToU8(const std::int32_t *src, uint8_t *dst, SizeType size);
 
 inline constexpr SizeType UNROLL_1 = 1;
 inline constexpr SizeType UNROLL_2 = 2;
@@ -394,14 +385,90 @@ constexpr bool OneOf(const T& val, const P& item)
 {
     return val == item;
 }
+
 template <typename T, typename P, typename... Args>
 constexpr bool OneOf(const T& val, const P& item, const Args& ... itemOthers)
 {
     return val == item || OneOf(val, itemOthers...);
 }
 
+template <typename T, typename P>
+constexpr bool EveryoneIs(const T& val, const P& item)
+{
+    return val == item;
+}
+
+template <typename T, typename P, typename... Args>
+constexpr bool EveryoneIs(const T& val, const P& item, const Args& ... itemOthers)
+{
+    return val == item && EveryoneIs(val, itemOthers...);
+}
 } // Service
 
+inline IntType CalculateEndPadding(IntType startPadding, IntType dstSize, IntType srcSize, IntType spatialStride,
+    IntType dilatedFilterSize)
+{
+    return (dstSize - 1) * spatialStride + dilatedFilterSize - (srcSize + startPadding);
+}
+
+inline IntType CalculateExtendedFilterSize(IntType filterSize, IntType dilation)
+{
+    return (filterSize - 1) * (dilation + 1) + 1;
+}
+
+inline void CHECK(Status s)
+{
+    if (s != Status::SUCCESS) {
+        throw Service::LogicError("");
+    }
+}
+
+template <typename T, typename U>
+inline T RndUp(const T a, const U b)
+{
+    return static_cast<T>(Math::CeilDiv(a, b) * b);
+}
+
+template <typename T>
+inline T NdIteratorInit(T start)
+{
+    return start;
+}
+
+template <typename T, typename U, typename W, typename... Args>
+inline T NdIteratorInit(T start, U &x1, const W &x2, Args &&...tuple)
+{
+    start = NdIteratorInit(start, std::forward<Args>(tuple)...);
+    x1 = start % x2;
+    return start / x2;
+}
+
+template <typename T, typename U>
+inline void Balance211(T n, U team, U tid, T &nStart, T &nEnd)
+{
+    T nMin = 1;
+    T &nMy = nEnd;
+    if (team <= 1 || n == 0) {
+        nStart = 0;
+        nMy = n;
+    } else if (nMin == 1) {
+        if (!static_cast<T>(team)) {
+            throw Service::LogicError("");
+        }
+        T n1 = (n + static_cast<T>(team) - 1) / static_cast<T>(team);
+        T n2 = n1 - 1;
+        T T1 = n - n2 * static_cast<T>(team);
+        nMy = static_cast<T>(tid) < T1 ? n1 : n2;
+        nStart = static_cast<T>(tid) <= T1 ? static_cast<T>(tid) * n1 : T1 * n1 + (static_cast<T>(tid - T1)) * n2;
+    }
+    nEnd += nStart;
+}
+
+template<typename T, typename U>
+T SafeCast(const U* ptr)
+{
+    return static_cast<T>(const_cast<void*>(static_cast<const void*>(ptr)));
+}
 } // KuDNN
 
 #endif // KUDNN_INTERNAL_FUNCS

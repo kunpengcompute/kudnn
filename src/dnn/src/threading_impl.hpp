@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,14 +13,12 @@
 #ifndef KUDNN_THREADING_IMPL_HPP
 #define KUDNN_THREADING_IMPL_HPP
 
-#include <kupl.h>
 #include <omp.h>
 #include <vector>
 #include <type_traits>
 #include <utility>
 
 #include "kudnn.hpp"
-
 #include "internal_funcs.hpp"
 
 namespace KuDNN {
@@ -35,9 +33,8 @@ struct HasExtraParamsImpl : public  std::false_type {
 };
 
 template<typename FuncImpl, typename ... Args>
-struct HasExtraParamsImpl<std::void_t<decltype(std::declval<FuncImpl>().RunSequential(
-    Shape{0}, Shape{0}, SizeType{}, SizeType{}, std::declval<Args>()...))>,
-    FuncImpl, Args ...> : public std::true_type {
+struct HasExtraParamsImpl<std::void_t<decltype(std::declval<FuncImpl>().RunSequential(Shape{0}, Shape{0},
+    SizeType{}, SizeType{}, std::declval<Args>()...))>, FuncImpl, Args ...> : public std::true_type {
 };
 
 struct Additive final {
@@ -82,15 +79,6 @@ private:
 
 } // Helpers
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern kupl_egroup_h *g_egroups;
-
-#ifdef __cplusplus
-}
-#endif
-
 std::vector<std::pair<Shape, Shape>> SplitDims(const Shape &batchedDims, SizeType& optNumThreads) noexcept;
 
 struct SplitDimInfo final {
@@ -117,52 +105,88 @@ void BatchThreader(FuncImpl&& funcObj, Args&& ... args) noexcept
             funcObj.RunSequential(batchedDims, args...);
         } else {
             auto &&splitDimsAndStrides = SplitDims(batchedDims, optNumThreads);
-            
-            if (g_egroups == NULL) {
-                auto &&activeLevel = omp_get_active_level();
-#pragma omp parallel for num_threads(splitDimsAndStrides.size()) schedule(static) \
+            auto &&activeLevel = omp_get_active_level();
+
+#pragma omp parallel for num_threads(splitDimsAndStrides.size()) \
                 if ((activeLevel < 1) || (GetThreadingControlStatus() == ThreadingControl::KUDNN_MANUAL))
-                for (SizeType i = 0; i < splitDimsAndStrides.size(); ++i) {
-                    if constexpr (HAS_EXTRA_PARAMS<FuncImpl, Args...>) {
-                        funcObj.RunSequential(splitDimsAndStrides[i].first, splitDimsAndStrides[i].second, i,
-                            splitDimsAndStrides.size(), args...);
-                    } else {
-                        funcObj.RunSequential(splitDimsAndStrides[i].first, splitDimsAndStrides[i].second, args...);
-                    }
+            for (SizeType i = 0; i < splitDimsAndStrides.size(); ++i) {
+                if constexpr (HAS_EXTRA_PARAMS<FuncImpl, Args...>) {
+                    funcObj.RunSequential(splitDimsAndStrides[i].first, splitDimsAndStrides[i].second, i,
+                        splitDimsAndStrides.size(), args...);
+                } else {
+                    funcObj.RunSequential(splitDimsAndStrides[i].first, splitDimsAndStrides[i].second, args...);
                 }
-            } else {
-                int num = splitDimsAndStrides.size();
-                kupl_nd_range_t range;
-                KUPL_1D_RANGE_INIT(range, 0, num);
-
-                kupl_parallel_for_desc_t desc = {.field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
-                    .range = &range,
-                    .egroup = nullptr,
-                    .concurrency = (int)optNumThreads,
-                    .policy = KUPL_LOOP_POLICY_STATIC};
-
-                int ret = kupl::parallel_for(&desc, [&](const kupl_nd_range_t *nd_range, int tid, int tnum) {
-                    Service::Unused(nd_range);
-                    Service::Unused(tnum);
-                    if constexpr (HAS_EXTRA_PARAMS<FuncImpl, Args...>) {
-                        funcObj.RunSequential(splitDimsAndStrides[tid].first,
-                            splitDimsAndStrides[tid].second,
-                            tid,
-                            splitDimsAndStrides.size(),
-                            args...);
-                    } else {
-                        funcObj.RunSequential(splitDimsAndStrides[tid].first, splitDimsAndStrides[tid].second, args...);
-                    }
-                });
-                Service::Unused(ret);
             }
         }
     } else {
         funcObj.RunSequential(batchedDims, args...);
     }
 }
-
 } // Threading
 } // KuDNN
+
+#if defined(KUDNN_CPU_THREADING_RUNTIME) && (KUDNN_CPU_THREADING_RUNTIME == KUDNN_RUNTIME_THREADPOOL)
+#include <atomic>
+#include <cassert>
+#include <chrono>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
+
+namespace KuDNN {
+namespace Threading {
+// internal threadpool impl
+ThreadpoolIface *GetActiveThreadpool();
+int GetThreadpoolNumThreads();
+bool IsInParallel();
+void Parallel(int nthr, const std::function<void(int)> &f);
+
+struct CountingBarrier {
+    CountingBarrier(unsigned size = 0)
+    {
+        Init(size);
+    }
+
+    void Init(unsigned size)
+    {
+        assert(size < KUDNNWaiterMask);
+        notified = false;
+        state = size;
+    }
+
+    void Notify()
+    {
+        auto s = state.fetch_sub(1) - 1;
+        if (s != KUDNNWaiterMask) {
+            assert(((s + 1) & ~KUDNNWaiterMask) != 0);
+            return;
+        }
+        std::unique_lock<std::mutex> l(mutex);
+        notified = true;
+        cv.notify_all();
+    }
+
+    void Wait()
+    {
+        auto s = state.fetch_or(KUDNNWaiterMask);
+        if (s == 0) {
+            return;
+        }
+        std::unique_lock<std::mutex> l(mutex);
+        cv.wait(l, [this]() { return notified; });
+    }
+
+private:
+    static constexpr unsigned KUDNNWaiterMask = 1u << (sizeof(unsigned) * 8 - 1);
+
+    std::atomic<unsigned> state;
+    bool notified;
+
+    std::condition_variable cv;
+    std::mutex mutex;
+};
+} // Threading
+} // KuDNN
+#endif
 
 #endif // KUDNN_THREADING_IMPL_HPP

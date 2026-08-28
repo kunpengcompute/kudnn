@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -87,7 +87,7 @@ static void QueryKeyNull(int max_position = 10000, int dim = 4,
         free(positionIds);
         throw;
     }
-    
+
     free(positionIds);
     return;
 }
@@ -116,7 +116,7 @@ static void NegativeArgs(int max_position = 10000, int dim = 4,
     try {
         layer.Run(query, key, qStride, kStride, batchSize, seqLen, qHeads, kHeads, positionIds);
     } catch(...) {
-        free(query); 
+        free(query);
         free(key);
         free(positionIds);
         throw;
@@ -154,7 +154,7 @@ static void NegativePids(int max_position = 10000, int dim = 4,
     try {
         layer.Run(query, key, qStride, kStride, batchSize, seqLen, qHeads, kHeads, positionIds);
     } catch(...) {
-        free(query); 
+        free(query);
         free(key);
         free(positionIds);
         throw;

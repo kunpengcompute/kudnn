@@ -1,0 +1,5 @@
+--dir=FWD_D,BWD_D
+--dt=f32,f16,bf16
+--tag=abx,axb
+--alg=ACROSS,WITHIN
+--batch=shapes_numa

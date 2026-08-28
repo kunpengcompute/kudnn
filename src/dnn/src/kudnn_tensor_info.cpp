@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -30,14 +30,14 @@ SizeType TensorInfo::GetAxisNumAccordingToLayout(SizeType axisNum) const noexcep
 }
 
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::ValidateElementType(
-    Element::Type parType) noexcept(areExcetionsDeclined)
+ReturnType<areExcetionsDeclined> TensorInfo::ValidateElementType(Element::Type
+    parType) noexcept(areExcetionsDeclined)
 {
     if (parType == Element::TypeT::UNDEFINED) {
         if constexpr (areExcetionsDeclined) {
             return Status::BAD_ARGUMENTS;
         } else {
-            throw Service::LogicError{"Tensor Info: Undefined data type of tensor"};
+            throw Service::LogicError {"Tensor Info: Undefined data type of tensor"};
         }
     }
 
@@ -47,16 +47,17 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
 }
 
 template
-typename std::conditional<false, Status, void>::type TensorInfo::ValidateElementType<false>(Element::Type
+ReturnType<false> TensorInfo::ValidateElementType<false>(Element::Type
     parType) noexcept(false);
 
 template
-typename std::conditional<true, Status, void>::type TensorInfo::ValidateElementType<true>(Element::Type
+ReturnType<true> TensorInfo::ValidateElementType<true>(Element::Type
     parType) noexcept(true);
 
+
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::ValidateLayout(
-    Shape parDims, Layout parLayout) noexcept(areExcetionsDeclined)
+ReturnType<areExcetionsDeclined> TensorInfo::ValidateLayout(const Shape& parDims,
+    Layout parLayout) noexcept(areExcetionsDeclined)
 {
     /*
         KuDNN supports tensors up to 5D, below we consider each dimensionality
@@ -133,16 +134,17 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
 }
 
 template
-typename std::conditional<false, Status, void>::type TensorInfo::ValidateLayout<false>(Shape parDims,
+ReturnType<false> TensorInfo::ValidateLayout<false>(const Shape& parDims,
     Layout parLayout) noexcept(false);
 
 template
-typename std::conditional<true, Status, void>::type TensorInfo::ValidateLayout<true>(Shape parDims,
+ReturnType<true> TensorInfo::ValidateLayout<true>(const Shape& parDims,
     Layout parLayout) noexcept(true);
 
+
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::SetMinimumRequiredStrides(
-    Shape parDims, Layout parLayout, Shape &parStrides) noexcept(areExcetionsDeclined)
+ReturnType<areExcetionsDeclined> TensorInfo::SetMinimumRequiredStrides(const Shape&  parDims,
+    Layout parLayout, Shape& parStrides) noexcept(areExcetionsDeclined)
 {
     /*
         KuDNN supports tensors up to 5D, below we consider each layout
@@ -321,16 +323,17 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
 }
 
 template
-typename std::conditional<false, Status, void>::type TensorInfo::SetMinimumRequiredStrides<false>(Shape parDims,
+ReturnType<false> TensorInfo::SetMinimumRequiredStrides<false>(const Shape& parDims,
     Layout parLayout, Shape& parStrides) noexcept(false);
 
 template
-typename std::conditional<true, Status, void>::type TensorInfo::SetMinimumRequiredStrides<true>(Shape parDims,
+ReturnType<true> TensorInfo::SetMinimumRequiredStrides<true>(const Shape& parDims,
     Layout parLayout, Shape& parStrides) noexcept(true);
 
+
 template <bool areExcetionsDeclined>
-typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::ValidateDimsAndStrides(
-    Shape parDims, Layout parLayout, Shape parStrides) noexcept(areExcetionsDeclined)
+ReturnType<areExcetionsDeclined> TensorInfo::ValidateDimsAndStrides(const Shape& parDims,
+    Layout parLayout, const Shape& parStrides) noexcept(areExcetionsDeclined)
 {
     if (parDims.GetNumDims() != parStrides.GetNumDims()) {
         if constexpr (areExcetionsDeclined) {
@@ -383,12 +386,12 @@ typename std::conditional<areExcetionsDeclined, Status, void>::type TensorInfo::
 }
 
 template
-typename std::conditional<false, Status, void>::type TensorInfo::ValidateDimsAndStrides<false>(Shape parDims,
-    Layout parLayout, Shape parStrides) noexcept(false);
+ReturnType<false> TensorInfo::ValidateDimsAndStrides<false>(const Shape&  parDims,
+    Layout parLayout, const Shape&  parStrides) noexcept(false);
 
 template
-typename std::conditional<true, Status, void>::type TensorInfo::ValidateDimsAndStrides<true>(Shape parDims,
-    Layout parLayout, Shape parStrides) noexcept(true);
+ReturnType<true> TensorInfo::ValidateDimsAndStrides<true>(const Shape&  parDims,
+    Layout parLayout, const Shape&  parStrides) noexcept(true);
 
 
 } // KuDNN

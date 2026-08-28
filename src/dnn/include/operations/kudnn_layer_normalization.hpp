@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_LAYER_NORMALIZATION_HPP
 #define KUDNN_LAYER_NORMALIZATION_HPP
@@ -28,12 +27,12 @@ class NormalizationLayerBWDImpl;
 
 } // Detail
 
-class KUDNN_API_PUBLIC NormalizationLayerFWD final {
+class NormalizationLayerFWD final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &srcInfo, const TensorInfo &statsInfo,
 	                            const TensorInfo &scaleshiftInfo, const TensorInfo &dstInfo,
-                                NormalizationFlags flags) noexcept(false);
+                                NormalizationFlags flags) noexcept;
     NormalizationLayerFWD(const TensorInfo &srcInfo, const TensorInfo &statsInfo, const TensorInfo &scaleshiftInfo,
                           const TensorInfo &dstInfo, NormalizationFlags flags) noexcept(false);
     NormalizationLayerFWD(const NormalizationLayerFWD &other) noexcept(false);
@@ -47,7 +46,7 @@ private:
     std::unique_ptr<Detail::NormalizationLayerFWDImpl> pImpl;
 };
 
-class KUDNN_API_PUBLIC NormalizationLayerBWD final {
+class NormalizationLayerBWD final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &srcInfo, const TensorInfo &statInfo,

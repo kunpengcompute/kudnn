@@ -1,0 +1,4 @@
+--dt=f32,f16,bf16,s32,s8,u8
+--axis=2
+--group=4
+--batch=dir

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 #include "cg_codegen.hpp"
 
 #include "src/cg_error.hpp"
@@ -325,11 +324,8 @@ void CodeGenerator::LdExclusive(uint32_t size, uint32_t o0, const RReg &rt, cons
     WriteData(code);
 }
 
-// Load/store pair (post-indexed)
-void CodeGenerator::LdStRegPairPostImm(
-    uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrPostImm &adr)
+uint32_t CodeGenerator::ExtractLdStRegPairImm7(int32_t imm, uint32_t opc)
 {
-    int32_t imm = adr.GetImm();
     int32_t times = (opc == 0x2) ? OFFSET_TWO : OFFSET_ONE;
 
     VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
@@ -337,6 +333,14 @@ void CodeGenerator::LdStRegPairPostImm(
     VerifyCond(imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
 
     uint32_t imm7 = (static_cast<uint32_t>(imm) >> (times + OFFSET_ONE)) & Ones(IMM7_BIT_LENGTH);
+    return imm7;
+}
+
+// Load/store pair (post-indexed)
+void CodeGenerator::LdStRegPairPostImm(
+    uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrPostImm &adr)
+{
+    uint32_t imm7 = ExtractLdStRegPairImm7(adr.GetImm(), opc);
     uint32_t v = 0x0;
 
     VerifyIncRange(rt1.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
@@ -352,14 +356,7 @@ void CodeGenerator::LdStRegPairPostImm(
 // Load/store pair (offset)
 void CodeGenerator::LdStRegPair(uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrImm &adr)
 {
-    int32_t imm = adr.GetImm();
-    int32_t times = (opc == 0x2) ? OFFSET_TWO : OFFSET_ONE;
-
-    VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
-    VerifyCond(imm, [=](uint64_t x) {return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
-
-    uint32_t imm7 = (static_cast<uint32_t>(imm) >> (times + OFFSET_ONE)) & Ones(IMM7_BIT_LENGTH);
+    uint32_t imm7 = ExtractLdStRegPairImm7(adr.GetImm(), opc);
     uint32_t v = 0x0;
 
     VerifyIncRange(rt1.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
@@ -375,14 +372,7 @@ void CodeGenerator::LdStRegPair(uint32_t opc, uint32_t l, const RReg &rt1, const
 // Load/store pair (pre-indexed)
 void CodeGenerator::LdStRegPairPre(uint32_t opc, uint32_t l, const RReg &rt1, const RReg &rt2, const AdrPreImm &adr)
 {
-    int32_t imm = adr.GetImm();
-    int32_t times = (opc == 0x2) ? OFFSET_TWO : OFFSET_ONE;
-
-    VerifyIncRange(imm, (SIMD_LDRSTR_IMM_RANGE_LOW * times), (SIMD_LDRSTR_IMM_RANGE_HIGH * times),
-        Err::ILLEGAL_IMM_RANGE, true);
-    VerifyCond(imm, [=](uint64_t x) { return ((x % (OFFSET_FOUR * times)) == 0); }, Err::ILLEGAL_IMM_COND);
-
-    uint32_t imm7 = (static_cast<uint32_t>(imm) >> (times + OFFSET_ONE)) & Ones(IMM7_BIT_LENGTH);
+    uint32_t imm7 = ExtractLdStRegPairImm7(adr.GetImm(), opc);
     uint32_t v = 0x0;
 
     VerifyIncRange(rt1.GetIdx(), 0, SP_IDX, Err::ILLEGAL_REG_IDX);
@@ -475,7 +465,7 @@ void CodeGenerator::LdStRegUnImm(uint32_t size, uint32_t opc, const RReg &rt, co
 void CodeGenerator::PfRegImm(Prfop prfop, const AdrUimm &adr)
 {
     uint32_t imm = adr.GetImm();
-    int32_t times = VectorComputation_ELT_BITLEN_B;
+    int32_t times = VC_ELT_BITLEN_B;
     uint32_t imm12 = (imm >> OFFSET_THREE) & Ones(IMM12_BIT_LENGTH);
 
     VerifyIncRange(imm, 0, IMM13_RANGE_HIGH * times, Err::ILLEGAL_IMM_RANGE);
@@ -512,7 +502,7 @@ void CodeGenerator::LogicalShiftReg(
     uint32_t sf = GenSf(rd);
     uint32_t imm6 = sh & Ones(IMM6_BIT_LENGTH);
 
-    VerifyIncRange(sh, 0, (VectorComputation_ELT_BITLEN_S << sf) - OFFSET_ONE, Err::ILLEGAL_CONST_RANGE);
+    VerifyIncRange(sh, 0, (VC_ELT_BITLEN_S << sf) - OFFSET_ONE, Err::ILLEGAL_CONST_RANGE);
     VerifyCond(SP_IDX, [=](uint64_t x) {return rd.GetIdx() < x || rn.GetIdx() < x || rm.GetIdx() < x;},
         Err::ILLEGAL_REG_IDX);
 
@@ -553,7 +543,7 @@ void CodeGenerator::AddSubShiftReg(
     uint32_t sf = GenSf(rd);
     uint32_t imm6 = sh & Ones(IMM6_BIT_LENGTH);
 
-    VerifyIncRange(sh, 0, (VectorComputation_ELT_BITLEN_S << sf) - OFFSET_ONE, Err::ILLEGAL_CONST_RANGE);
+    VerifyIncRange(sh, 0, (VC_ELT_BITLEN_S << sf) - OFFSET_ONE, Err::ILLEGAL_CONST_RANGE);
     if (!(alias && s == 0x1)) {
         VerifyIncRange(rd.GetIdx(), 0, SP_IDX - OFFSET_ONE, Err::ILLEGAL_REG_IDX);
     }
@@ -855,9 +845,29 @@ void CodeGenerator::Ldrh(const WReg &rt, const AdrUimm &adr)
     LdStRegUnImm(VAL_1, VAL_1, rt, adr);
 }
 
+void CodeGenerator::Str(const WReg &rt, const AdrImm &adr)
+{
+    LdStRegUnImm(VAL_2, 0, rt, AdrUimm(adr));
+}
+
+void CodeGenerator::Str(const WReg &rt, const AdrNoOfs &adr)
+{
+    LdStRegUnImm(VAL_2, 0, rt, AdrUimm(adr));
+}
+
 void CodeGenerator::Str(const WReg &rt, const AdrUimm &adr)
 {
     LdStRegUnImm(VAL_2, 0, rt, adr);
+}
+
+void CodeGenerator::Ldr(const WReg &rt, const AdrImm &adr)
+{
+    LdStRegUnImm(VAL_2, VAL_1, rt, AdrUimm(adr));
+}
+
+void CodeGenerator::Ldr(const WReg &rt, const AdrNoOfs &adr)
+{
+    LdStRegUnImm(VAL_2, VAL_1, rt, AdrUimm(adr));
 }
 
 void CodeGenerator::Ldr(const WReg &rt, const AdrUimm &adr)
@@ -870,14 +880,39 @@ void CodeGenerator::Ldrsw(const XReg &rt, const AdrUimm &adr)
     LdStRegUnImm(VAL_2, VAL_2, rt, adr);
 }
 
+void CodeGenerator::Str(const XReg &rt, const AdrImm &adr)
+{
+    LdStRegUnImm(VAL_3, 0, rt, AdrUimm(adr));
+}
+
+void CodeGenerator::Str(const XReg &rt, const AdrNoOfs &adr)
+{
+    LdStRegUnImm(VAL_3, 0, rt, AdrUimm(adr));
+}
+
 void CodeGenerator::Str(const XReg &rt, const AdrUimm &adr)
 {
     LdStRegUnImm(VAL_3, 0, rt, adr);
 }
 
+void CodeGenerator::Ldr(const XReg &rt, const AdrImm &adr)
+{
+    LdStRegUnImm(VAL_3, 1, rt, AdrUimm(adr));
+}
+
+void CodeGenerator::Ldr(const XReg &rt, const AdrNoOfs &adr)
+{
+    LdStRegUnImm(VAL_3, 1, rt, AdrUimm(adr));
+}
+
 void CodeGenerator::Ldr(const XReg &rt, const AdrUimm &adr)
 {
     LdStRegUnImm(VAL_3, 1, rt, adr);
+}
+
+void CodeGenerator::Stur(const WReg &rt, const AdrImm &adr)
+{
+    LdStRegUnsImm(VAL_2, 0, rt, adr);
 }
 
 void CodeGenerator::Prfm(const Prfop prfop, const AdrUimm &adr)
@@ -953,6 +988,11 @@ void CodeGenerator::Subs(const XReg &rd, const XReg &rn, const XReg &rm, const E
 void CodeGenerator::Subs(const XReg &rd, const XReg &rn, const WReg &rm, const ExtMod extmod, const uint32_t sh)
 {
     AddSubExtReg(VAL_1, VAL_1, rd, rn, rm, extmod, sh);
+}
+
+void CodeGenerator::Cmp(const WReg &rn, const WReg &rm, const ShMod shmod, const uint32_t sh)
+{
+    AddSubShiftReg(VAL_1, VAL_1, WReg(RINDEX31), rn, rm, shmod, sh, true);
 }
 
 void CodeGenerator::Cmp(const XReg &rn, const XReg &rm, const ShMod shmod, const uint32_t sh)

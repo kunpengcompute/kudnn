@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_TENSORINFO_HPP
 #define KUDNN_TENSORINFO_HPP
@@ -125,12 +124,19 @@ constexpr IntType NUM_86 = 86;
 constexpr IntType NUM_87 = 87;
 constexpr IntType NUM_88 = 88;
 constexpr IntType NUM_89 = 89;
+constexpr IntType NUM_96 = 96;
 constexpr IntType NUM_120 = 120;
+constexpr IntType NUM_128 = 128;
 constexpr IntType NUM_132 = 132;
+constexpr IntType NUM_256 = 256;
+constexpr IntType NUM_512 = 512;
 constexpr IntType NUM_1024 = 1024;
 
+template <bool areExceptionsDeclined>
+using ReturnType = typename std::conditional<areExceptionsDeclined, Status, void>::type;
+
 // This class is designed to describe multidimensional data: it's type, Layout, Shape and strides
-struct KUDNN_API_PUBLIC TensorInfo final {
+struct TensorInfo final {
     using SizeType = ::KuDNN::SizeType;
     TensorInfo(const Shape& shape, const Element::Type & t, const Layout& l) noexcept(false)
         : dims(shape), type(t), layout(l), stridesInfo()
@@ -267,20 +273,20 @@ struct KUDNN_API_PUBLIC TensorInfo final {
     SizeType GetAxisNumAccordingToLayout(SizeType axisNum) const noexcept(false);
 
     template <bool areExcetionsDeclined = false>
-    static typename std::conditional<areExcetionsDeclined, Status, void>::type
+    static ReturnType<areExcetionsDeclined>
         ValidateElementType(Element::Type parType) noexcept(areExcetionsDeclined);
 
     template <bool areExcetionsDeclined = false>
-    static typename std::conditional<areExcetionsDeclined, Status, void>::type
-        ValidateLayout(Shape parDims, Layout parLayout) noexcept(areExcetionsDeclined);
+    static ReturnType<areExcetionsDeclined>
+        ValidateLayout(const Shape& parDims, Layout parLayout) noexcept(areExcetionsDeclined);
 
     template <bool areExcetionsDeclined = false>
-    static typename std::conditional<areExcetionsDeclined, Status, void>::type
-        SetMinimumRequiredStrides(Shape parDims, Layout parLayout, Shape& parStrides) noexcept(areExcetionsDeclined);
+    static ReturnType<areExcetionsDeclined> SetMinimumRequiredStrides(const Shape& parDims, Layout parLayout,
+        Shape& parStrides) noexcept(areExcetionsDeclined);
 
     template <bool areExcetionsDeclined = false>
-    static typename std::conditional<areExcetionsDeclined, Status, void>::type
-        ValidateDimsAndStrides(Shape parDims, Layout parLayout, Shape parStrides) noexcept(areExcetionsDeclined);
+    static ReturnType<areExcetionsDeclined> ValidateDimsAndStrides(const Shape& parDims, Layout parLayout,
+        const Shape& parStrides) noexcept(areExcetionsDeclined);
 
 private:
     Shape dims;

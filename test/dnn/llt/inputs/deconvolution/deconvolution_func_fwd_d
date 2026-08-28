@@ -1,0 +1,15 @@
+# FWD_D
+--dt=f32:f32:f32 --dir=FWD_D --batch=shapes_1d
+--dt=f16:f16:f16 --dir=FWD_D --batch=shapes_1d
+--dt=bf16:bf16:bf16 --dir=FWD_D --batch=shapes_1d
+--dt=f16:f16:f32 --dir=FWD_D --batch=shapes_1d
+--dt=bf16:bf16:f32 --dir=FWD_D --batch=shapes_1d
+
+--dt=f32:f32:f32 --dir=FWD_D --batch=shapes_2d
+--dt=f16:f16:f16 --dir=FWD_D --batch=shapes_2d
+--dt=bf16:bf16:bf16 --dir=FWD_D --batch=shapes_2d
+--dt=f16:f16:f32 --dir=FWD_D --batch=shapes_2d
+--dt=bf16:bf16:f32 --dir=FWD_D --batch=shapes_2d
+
+# DTS2026012318168
+--dir=FWD_D --dt=u8:s8:f32 --stag=acdeb --wtag=acdeb --dtag=acdeb mb10ic3id1ih5iw2oc8od17oh150ow78kd49kh17kw87sd21sh21sw19pd168ph18pw731dd8dh4dw8

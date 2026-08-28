@@ -1,0 +1,12 @@
+--dir=FWD_D
+--alg=SOFTMAX
+--batch=sizes
+--dir=BWD_D
+--alg=SOFTMAX
+--batch=sizes
+--dir=FWD_D
+--alg=LOGSOFTMAX
+--batch=sizes
+--dir=BWD_D
+--alg=LOGSOFTMAX
+--batch=sizes

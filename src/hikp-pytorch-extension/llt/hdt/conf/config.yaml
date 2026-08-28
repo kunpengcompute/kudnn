@@ -1,0 +1,55 @@
+---
+version: 1.0.0
+ 
+project:
+  name: "hikpex"
+  desc: "hikpex hdt project"
+  prod: null
+  team: null
+ 
+pipeline:
+  build:
+    - task: "bigdipper_build_release"
+      exec: cd ../../../ && sh make.sh --target_platform=KP920B
+      args: false
+      default: true
+    - task: "bigdipper_build_gcov"
+      exec: cd ../../../ && sh make.sh --target_platform=KP920B --enable_gcov=on
+      args: false
+      default: false
+    - task: "bigdipper_build_asan"
+      exec: cd ../../../ && sh make.sh --target_platform=KP920B --enable_asan=on --enable_gcov=on
+      args: false
+      default: false
+    - task: "nezha_build_release"
+      exec: cd ../../../ && sh make.sh --target_platform=KP920F
+      args: false
+      default: false
+    - task: "nezha_build_gcov"
+      exec: cd ../../../ && sh make.sh --target_platform=KP920F  --enable_gcov=on
+      args: false
+      default: false
+    - task: "nezha_build_asan"
+      exec: cd ../../../ && sh make.sh --target_platform=KP920F  --enable_asan=on --enable_gcov=on
+      args: false
+      default: false
+  run:
+    - task: "ut"
+      exec: cd ../../../ && sh out/llt/scripts/test_hikpex.sh --type=ut --gen_report=off
+      args: null
+    - task: "st"
+      exec: cd ../../../ && sh out/llt/scripts/test_hikpex.sh --type=st --gen_report=off
+      args: null
+    - task: "fuzz"
+      exec: cd ../../../ && sh out/llt/scripts/test_hikpex.sh --type=fuzz --gen_report=off
+      args: null
+  report:
+    - task: "ut"
+      exec: cd ../../../ && sh out/llt/scripts/test_hikpex.sh --type=ut --gen_report=on
+      args: null
+    - task: "st"
+      exec: cd ../../../ && sh out/llt/scripts/test_hikpex.sh --type=st --gen_report=on
+      args: null
+    - task: "fuzz"
+      exec: cd ../../../ && sh out/llt/scripts/test_hikpex.sh --type=fuzz --gen_report=on
+      args: null

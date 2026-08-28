@@ -1,0 +1,207 @@
+# forward
+# f32
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f32:f32
+--ss_dt=f32
+--dir=FWD_D,FWD_I
+--flags=G,C,H,CH,GCH,M,GCHM
+--batch=lnorm_shapes_func
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f32:f32
+--ss_dt=f32
+--dir=FWD_D,FWD_I
+--batch=lnorm_shapes_func
+
+# f16
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f16:f16
+--ss_dt=f16
+--dir=FWD_D,FWD_I
+--flags=G,C,H,CH,GCH,M,GCHM
+--batch=lnorm_shapes_func
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f16:f16
+--ss_dt=f16
+--dir=FWD_D,FWD_I
+--batch=lnorm_shapes_func
+
+# bf16
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=bf16:bf16
+--ss_dt=bf16,f32
+--dir=FWD_D,FWD_I
+--flags=G,C,H,CH,GCH,M,GCHM
+--batch=lnorm_shapes_func
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=bf16:bf16
+--ss_dt=bf16
+--dir=FWD_D,FWD_I
+--batch=lnorm_shapes_func
+
+# s8
+--tag=abcde:abcde
+--stat_tag=abcd
+--inplace=false,true
+--dt=s8:s8
+--ss_dt=f32
+--dir=FWD_D,FWD_I
+--flags=G,C,H,CH,GCH,M,GCHM
+--batch=lnorm_shapes_func
+
+## forward cross axis
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=false
+--dt=f32:f32
+--ss_dt=f32
+--dir=FWD_D
+--flags=GC,GH
+30x2x2x2x1
+
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=true
+--dt=f16:f16
+--ss_dt=f16
+--dir=FWD_D
+--flags=GCH
+30x2x2x2x1
+
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=false
+--dt=bf16:bf16
+--ss_dt=bf16,f32
+--dir=FWD_D
+30x2x2x2x1
+
+# backward
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f32:f32
+--ss_dt=f32
+--dir=BWD_DW
+--flags=G,CH,GCH,M,GCHM
+--batch=lnorm_shapes_func
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f32:f32
+--ss_dt=f32
+--dir=BWD_DW
+--batch=lnorm_shapes_func
+
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f16:f16
+--ss_dt=f16,f32
+--dir=BWD_DW
+--flags=G,CH,GCH,M,GCHM
+--batch=lnorm_shapes_func
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=f16:f16
+--ss_dt=f16
+--dir=BWD_DW
+--batch=lnorm_shapes_func
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=bf16:bf16
+--ss_dt=bf16
+--dir=BWD_DW
+--flags=G,CH,GCH,M,GCHM
+--batch=lnorm_shapes_func
+
+--tag=abcde:any
+--stat_tag=abcd
+--inplace=false,true
+--dt=bf16:bf16
+--ss_dt=bf16
+--dir=BWD_DW
+--batch=lnorm_shapes_func
+
+## backward cross axis
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=false
+--dt=f32:f32
+--ss_dt=f32
+--dir=BWD_DW
+--flags=G
+30x2x2x2x1
+
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=flase
+--flags=GCH
+--dt=f32:f32
+--ss_dt=f32
+--dir=BWD_DW
+30x2x2x2x1
+
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=flase
+--flags=CH
+--dt=f32:f32
+--ss_dt=f32
+--dir=BWD_DW
+30x2x2x2x1
+
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=true
+--dt=f16:f16
+--ss_dt=f16
+--dir=BWD_DW
+30x2x2x2x1
+
+--tag=acdeb:acdeb
+--stat_tag=acdb
+--inplace=flase
+--flags=GCH
+--dt=bf16:bf16
+--ss_dt=bf16
+--dir=BWD_DW
+30x2x2x2x1
+
+--reset
+--dir=FWD_D,FWD_I --dt=f32:f32,bf16:bf16,f16:f16,s32:s32,s8:s8,u8:u8 --ss_dt=s8,u8 --tag=axb,abx --stat_tag=axb,abx  --inplace=false,true 8x8x8x8x8
+--dir=FWD_D,FWD_I --dt=f32:f32,bf16:bf16,f16:f16,s32:s32,s8:s8,u8:u8 --ss_dt=f32,f16,bf16 --tag=axb,abx --stat_tag=axb,abx  --inplace=false,true --flags=G,C,H,CH 8x8x8x8x8
+# DTS2024081309124
+--dir=BWD_DW --ss_dt=bf16 --dt=bf16:bf16 --tag=bacde:bacde --stat_tag=bacd --inplace=false --flags=GC 21x48x21x35x1 
+--dir=BWD_DW --ss_dt=f16 --dt=f16:f16 --tag=cdeab:cdeab --stat_tag=cdab --inplace=true --flags=CH 31x31x7x31x1
+--dir=BWD_DW --ss_dt=bf16 --dt=bf16:bf16 --tag=bcda:bcda --stat_tag=bca --inplace=false --flags=GC 34x24x48x1
+--dir=BWD_DW --ss_dt=f16 --dt=f16:f16 --tag=decab:decab --stat_tag=dcab --inplace=true --flags=GH 31x31x1x31x3 
+--dir=BWD_DW --ss_dt=bf16 --dt=bf16:bf16 --tag=abced:abced --stat_tag=abcd --inplace=false --flags=C 26x16x41x15x1
+--dir=BWD_DW --ss_dt=f16 --dt=f16:f16 --tag=decab:decab --stat_tag=dcab --inplace=true --flags=GCH 31x1x31x31x3 
+--dir=BWD_DW --ss_dt=bf16 --dt=bf16:bf16 --tag=adecb:adecb --stat_tag=adcb --inplace=false --flags=GH 31x31x31x7x1 
+--dir=BWD_DW --ss_dt=f16 --dt=f16:f16 --tag=cdeba:cdeba --stat_tag=cdba --inplace=true --flags=CH 31x31x31x1x3
+--dir=BWD_DW --ss_dt=bf16 --dt=bf16:bf16 --tag=cdab:cdab --stat_tag=cab --inplace=true --flags=H 31x31x31x3 
+--dir=BWD_DW --ss_dt=bf16 --dt=bf16:bf16 --tag=decab:decab --stat_tag=dcab --inplace=false --flags=CH 22x28x5x43x1
+--dir=BWD_DW --ss_dt=f16 --dt=f16:f16 --tag=adecb:adecb --stat_tag=adcb --inplace=false --flags=CH 43x37x49x43x2
+--dir=BWD_DW --ss_dt=bf16 --dt=bf16:bf16 --tag=bacde:bacde --stat_tag=cdab --inplace=false --flags=GC 21x48x21x35x1
+--dir=BWD_DW --ss_dt=f32 --dt=f32 --tag=abx:abx --stat_tag=abx --flags=CH 6x2x8x9

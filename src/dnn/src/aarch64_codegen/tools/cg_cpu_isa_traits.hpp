@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -14,19 +14,29 @@
 #define CG_CPU_ISA_TRAITS_HPP
 
 #include <type_traits>
-#include <cassert>
-/* in order to make selinux happy memory that would be marked with X-bit should
- * be obtained with mmap */
-#ifdef __GNUC__
-#define CG_USE_MMAP_ALLOCATOR
-#endif
 
 #include "cg_cpu_isa_type.hpp"
 #include "tools/cg_util.hpp"
 #include "src/cg_reg.hpp"
 #include "src/cg_reg_v.hpp"
+#include "service/kudnn_exception.hpp"
 
 namespace ARMCG {
+
+constexpr int LEVEL_NUM_1 = 1;
+constexpr int LEVEL_NUM_2 = 2;
+constexpr int LEVEL_NUM_3 = 3;
+#ifdef KUDNNL_920F
+// KP920F HBM Cache Mode cpu cache info
+constexpr unsigned L1_CACHE_SIZE_PER_INSTANCE = 19 * 1024 * 1024 / 608;  // 19 MiB for 608 instances
+constexpr unsigned L2_CACHE_SIZE_PER_INSTANCE = 456 * 1024 * 1024 / 608; // 456 MiB for 608 instances
+constexpr unsigned L3_CACHE_SIZE_PER_INSTANCE = 0;                       // no L3 cache
+#else
+// KP920B cpu cache info
+constexpr unsigned L1_CACHE_SIZE_PER_INSTANCE = 10 * 1024 * 1024 / 160;  // 10 MiB for 160 instances
+constexpr unsigned L2_CACHE_SIZE_PER_INSTANCE = 200 * 1024 * 1024 / 160; // 200 MiB for 160 instances
+constexpr unsigned L3_CACHE_SIZE_PER_INSTANCE = 280 * 1024 * 1024 / 4;   // 280 MiB for 4 instances
+#endif
 
 enum class CpuIsaCmpT {
     // List of infix comparison relations between two  CPUISAT
@@ -56,7 +66,7 @@ inline bool CompareIsa(CPUISAT isa1, CpuIsaCmpT cmp, CPUISAT isa2)
     switch (cmp) {
         case CpuIsaCmpT::SUBSET: return mask1 == maskcommon;
         case CpuIsaCmpT::SUPERSET: return mask2 == maskcommon;
-        default: assert(!"unsupported comparison of isa"); return false;
+        default: return false;
     }
 }
 
@@ -93,7 +103,7 @@ struct CpuIsaTraits<CPUISAT::ASIMD> {
 };
 
 template <>
-struct CpuIsaTraits<CPUISAT::VectorComputation_128> {
+struct CpuIsaTraits<CPUISAT::VC_128> {
     using TReg = ZReg;
     using TRegB = ZRegB;
     using TRegH = ZRegH;
@@ -102,11 +112,11 @@ struct CpuIsaTraits<CPUISAT::VectorComputation_128> {
     static constexpr int VLEN_SHIFT = 4;
     static constexpr int VLEN = 16;
     static constexpr int N_VREGS = 32;
-    static constexpr const char *USER_OPTION_ENV = "VectorComputation_ ## bits";
+    static constexpr const char *USER_OPTION_ENV = "VC_ ## bits";
 };
 
 template <>
-struct CpuIsaTraits<CPUISAT::VectorComputation_256> {
+struct CpuIsaTraits<CPUISAT::VC_256> {
     using TReg = ZReg;
     using TRegB = ZRegB;
     using TRegH = ZRegH;
@@ -115,11 +125,11 @@ struct CpuIsaTraits<CPUISAT::VectorComputation_256> {
     static constexpr int VLEN_SHIFT = 5;
     static constexpr int VLEN = 32;
     static constexpr int N_VREGS = 32;
-    static constexpr const char *USER_OPTION_ENV = "VectorComputation_ ## bits";
+    static constexpr const char *USER_OPTION_ENV = "VC_ ## bits";
 };
 
 template <>
-struct CpuIsaTraits<CPUISAT::VectorComputation_512> {
+struct CpuIsaTraits<CPUISAT::VC_512> {
     using TReg = ZReg;
     using TRegB = ZRegB;
     using TRegH = ZRegH;
@@ -128,26 +138,26 @@ struct CpuIsaTraits<CPUISAT::VectorComputation_512> {
     static constexpr int VLEN_SHIFT = 6;
     static constexpr int VLEN = 64;
     static constexpr int N_VREGS = 32;
-    static constexpr const char *USER_OPTION_ENV = "VectorComputation_ ## bits";
+    static constexpr const char *USER_OPTION_ENV = "VC_ ## bits";
 };
 
 inline bool MayIUse(const CPUISAT cpuIsa)
 {
     using namespace ARMCG::Util;
     switch (cpuIsa) {
-        case CPUISAT::ASIMD: return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation);
-        case CPUISAT::VectorComputation_128:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_128;
-        case CPUISAT::VectorComputation_256:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_256;
-        case CPUISAT::VectorComputation_384:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_384;
-        case CPUISAT::VectorComputation_512:
-            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VectorComputation)
-                    && ARMCG::GetCpu().GetSveLen() >= SveLen::VectorComputation_512;
+        case CPUISAT::ASIMD: return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VC);
+        case CPUISAT::VC_128:
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VC)
+                    && ARMCG::GetCpu().GetVCLen() >= VCLen::VC_128;
+        case CPUISAT::VC_256:
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VC)
+                    && ARMCG::GetCpu().GetVCLen() >= VCLen::VC_256;
+        case CPUISAT::VC_384:
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VC)
+                    && ARMCG::GetCpu().GetVCLen() >= VCLen::VC_384;
+        case CPUISAT::VC_512:
+            return ARMCG::GetCpu().Has(HwCap::CG_HWCAP_VC)
+                    && ARMCG::GetCpu().GetVCLen() >= VCLen::VC_512;
         case CPUISAT::ISA_UNDEF: return true;
         case CPUISAT::ISA_ALL: return false;
         default: return false;
@@ -155,9 +165,9 @@ inline bool MayIUse(const CPUISAT cpuIsa)
     return false;
 }
 
-inline Util::SveLen GetSveLength()
+inline Util::VCLen GetVCLength()
 {
-    return ARMCG::GetCpu().GetSveLen();
+    return ARMCG::GetCpu().GetVCLen();
 }
 
 inline bool MayIUseAtomic()
@@ -168,6 +178,40 @@ inline bool MayIUseAtomic()
 inline bool MayIUseBF16()
 {
     return ARMCG::GetCpu().IsBf16Supported();
+}
+
+inline int IsaMaxVlen(ARMCG::CPUISAT isa)
+{
+    switch (isa) {
+        case ARMCG::CPUISAT::VC_512: return ARMCG::CpuIsaTraits<ARMCG::CPUISAT::VC_512>::VLEN;
+        case ARMCG::CPUISAT::VC_256: return ARMCG::CpuIsaTraits<ARMCG::CPUISAT::VC_256>::VLEN;
+        default: break;
+    }
+
+    return 0;
+}
+
+inline int IsaNumVregs(ARMCG::CPUISAT isa)
+{
+    switch (isa) {
+        case ARMCG::CPUISAT::VC_512: return ARMCG::CpuIsaTraits<ARMCG::CPUISAT::VC_512>::N_VREGS;
+        case ARMCG::CPUISAT::VC_256: return ARMCG::CpuIsaTraits<ARMCG::CPUISAT::VC_256>::N_VREGS;
+        default: break;
+    }
+
+    return 0;
+}
+
+inline unsigned GetCoreCacheSize(int level)
+{
+    switch (level) {
+        case LEVEL_NUM_1: return L1_CACHE_SIZE_PER_INSTANCE;
+        case LEVEL_NUM_2: return L2_CACHE_SIZE_PER_INSTANCE;
+        case LEVEL_NUM_3: return L3_CACHE_SIZE_PER_INSTANCE;
+        default: throw KuDNN::Service::Unsupported{"unsupported"}; break;
+    }
+
+    return static_cast<unsigned>(0);
 }
 
 } // namespace ARMCG

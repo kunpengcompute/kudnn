@@ -1,0 +1,2 @@
+--dt=f32,f16,bf16,s8
+--batch=dir

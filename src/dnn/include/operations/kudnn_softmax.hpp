@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,7 +10,6 @@
  * See the Mulan PSL v2 for more details.
  */
 
-
 #ifndef KUDNN_SOFTMAX_HPP
 #define KUDNN_SOFTMAX_HPP
 
@@ -21,7 +20,7 @@
 
 namespace KuDNN {
 
-enum class SoftmaxAlgorithmKind : std::uint32_t {
+enum class AlgorithmKind : std::uint32_t {
     SOFTMAX         = 0x0U,
     LOGSOFTMAX      = 0x1U,
 };
@@ -33,13 +32,13 @@ class SoftmaxLayerBWDImpl;
 
 } // Detail
 
-class KUDNN_API_PUBLIC SoftmaxLayerFWD final {
+class SoftmaxLayerFWD final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &srcInfo, const TensorInfo &dstInfo, SizeType axis,
-        SoftmaxAlgorithmKind algorithm) noexcept(false);
+        AlgorithmKind algorithm) noexcept;
     SoftmaxLayerFWD(const TensorInfo &srcInfo, const TensorInfo &dstInfo, SizeType axis,
-        SoftmaxAlgorithmKind algorithm) noexcept(false);
+        AlgorithmKind algorithm) noexcept(false);
     SoftmaxLayerFWD(const SoftmaxLayerFWD &other) noexcept(false);
     SoftmaxLayerFWD(SoftmaxLayerFWD &&other) noexcept;
     SoftmaxLayerFWD& operator=(const SoftmaxLayerFWD &other) noexcept(false);
@@ -50,13 +49,13 @@ private:
     std::unique_ptr<Detail::SoftmaxLayerFWDImpl> pImpl;
 };
 
-class KUDNN_API_PUBLIC SoftmaxLayerBWD final {
+class SoftmaxLayerBWD final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo,
-                                const TensorInfo &srcDiffInfo, SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept;
+                                const TensorInfo &srcDiffInfo, SizeType axis, AlgorithmKind algorithm) noexcept;
     SoftmaxLayerBWD(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo, const TensorInfo &srcDiffInfo,
-	                SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept(false);
+	                SizeType axis, AlgorithmKind algorithm) noexcept(false);
     SoftmaxLayerBWD(const SoftmaxLayerBWD &other) noexcept(false);
     SoftmaxLayerBWD(SoftmaxLayerBWD &&other) noexcept;
     SoftmaxLayerBWD& operator=(const SoftmaxLayerBWD &other) noexcept(false);

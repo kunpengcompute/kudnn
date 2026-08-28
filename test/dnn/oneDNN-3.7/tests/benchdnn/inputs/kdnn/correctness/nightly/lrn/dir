@@ -1,0 +1,3 @@
+--dir=FWD_D,BWD_D
+--alg=ACROSS,WITHIN
+--batch=sizes

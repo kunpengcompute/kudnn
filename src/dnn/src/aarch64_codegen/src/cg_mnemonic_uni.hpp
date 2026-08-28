@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -32,10 +32,6 @@ void UniAdd(const ZReg &regX1, const ZReg &regX2, const ZReg &op)
 template <typename T>
 void UdivMod(const T &q, const T &r, const T &divend, const T &divisor)
 {
-    assert(q.getIdx() != divisor.getIdx());
-    assert(q.getIdx() != divend.getIdx());
-    assert(r.getIdx() != divend.getIdx());
-
     Udiv(q, divend, divisor);
     Mul(r, q, divisor);
     Sub(r, divend, r);
@@ -44,9 +40,6 @@ void UdivMod(const T &q, const T &r, const T &divend, const T &divisor)
 template <typename T>
 void Umod(const T &r, const T &divend, const T &divisor)
 {
-    assert(r.getIdx() != divend.getIdx());
-    assert(r.getIdx() != divisor.getIdx());
-
     Udiv(r, divend, divisor);
     Mul(r, r, divisor);
     Sub(r, divend, r);
@@ -88,8 +81,6 @@ void UniFdiv(const TReg &dst, const TReg &src, const TReg &src2,
     uint32_t tmpIdx = tmp.getIdx();
 
     if (dstIdx == src2Idx) {
-        assert(tmpIdx != srcIdx && tmpIdx != src2Idx);
-
         Mov(ZRegD(tmpIdx), ZRegD(src2Idx));
         Mov(dst, pred / PredType::T_M, src);
         Fdiv(dst, pred / PredType::T_M, tmp);
@@ -252,14 +243,16 @@ void UniLdr(const ZReg &dst, const XReg &addr)
 template <typename T>
 void UniLdr(const ZReg &r, const XReg &base, const T off)
 {
-    assert(cpuSveLen != 0);
-    const int offMod = off % cpuSveLen;
-    const int offMulVl = off / cpuSveLen;
+    if (cpuVCLen == 0) {
+        return;
+    }
+    const int offMod = off % cpuVCLen;
+    const int offMulVl = off / cpuVCLen;
 
     if (offMod == 0 && offMulVl >= SIZE_NEG_256 && offMulVl <= VAL_255) {
         Ldr(r, Ptr(base, offMulVl, ExtMod::MUL_VL));
     } else {
-        const int offset = offMod * 0x10 * (cpuSveLen / VAL_16);
+        const int offset = offMod * 0x10 * (cpuVCLen / VAL_16);
         AddImm(xDefaultAddr, base, offset, X_TMP_0);
         Ldr(r, Ptr(xDefaultAddr));
     }

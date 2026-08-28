@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,12 +10,12 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#include <cstdlib>
-#include <iostream>
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
+#include <iostream>
 #include <random>
-#include <arm_neon.h>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "kudnn.hpp"
@@ -24,13 +24,12 @@
 using SizeType = KuDNN::SizeType;
 using Shape = KuDNN::Shape;
 using TensorInfo = const KuDNN::TensorInfo;
-extern KuDNN::Element::TypeT TypeF16;
-extern KuDNN::Element::TypeT TypeF32;
 
-const int MAX_THS = 100;
-const float FACTOR_THS = 0.02;
-float errBoundGn = 1e-3;
+static const int MAX_THS = 100;
+static const float FACTOR_THS = 0.02;
+static float errBoundGn = 1e-3;
 
+// reference implementation of group normalization forward
 template <typename T>
 static void gnormRef(Shape shape, SizeType groupInfo,
                     const T *src, T *dst,
@@ -303,6 +302,8 @@ static void FWDDivideZero(const TensorInfo &srcInfo, const TensorInfo &scaleShif
     free(variance);
 }
 
+// type tests: src/dst type is not checked by FWD ValidateInput,
+// scaleShift must be F32 when USE_SCALE/USE_SHIFT is set
 static void FWDSrcDstType()
 {
     const KuDNN::TensorInfo srcInfo = {{1, 1, 1}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
@@ -343,6 +344,7 @@ static void FWDGlobalStatsType()
         KuDNN::NormalizationFlags::USE_GLOBAL_STATS);
 }
 
+// forward
 static void ForwardCopyConstructor1()
 {
     const KuDNN::TensorInfo srcInfo = {{1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
@@ -493,12 +495,14 @@ static void BackwardMoveConstructor2()
     }
 }
 
+// input parameter exception tests:
+// 0-sized dims hit totalSize==0 -> UNSUPPORTED; groupSize=0 -> BAD_ARGUMENTS
 static void InputParamExceptTest1()
 {
-    Shape srcShape(-1, 1, 1);
+    Shape srcShape(0, 1, 1);
     const KuDNN::TensorInfo srcInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
     const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo dstInfo = {{1, 1, 1}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
+    const KuDNN::TensorInfo dstInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
     KuDNN::SizeType groupInfo = 1;
     KuDNN::GroupNormalizationLayerFWD gnormLayer1(srcInfo, scaleShiftInfo, groupInfo, dstInfo,
         KuDNN::NormalizationFlags::NONE);
@@ -509,18 +513,18 @@ static void InputParamExceptTest2()
     Shape srcShape(1, 1, 1);
     const KuDNN::TensorInfo srcInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
     const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo dstInfo = {{1, 1, 1}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
-    KuDNN::SizeType groupInfo = -1;
+    const KuDNN::TensorInfo dstInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
+    KuDNN::SizeType groupInfo = 0;
     KuDNN::GroupNormalizationLayerFWD gnormLayer1(srcInfo, scaleShiftInfo, groupInfo, dstInfo,
         KuDNN::NormalizationFlags::NONE);
 }
 
 static void InputParamExceptTest3()
 {
-    Shape srcShape(1, -1, 1);
+    Shape srcShape(1, 0, 1);
     const KuDNN::TensorInfo srcInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
     const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo dstInfo = {{1, 1, 1}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
+    const KuDNN::TensorInfo dstInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
     KuDNN::SizeType groupInfo = 1;
     KuDNN::GroupNormalizationLayerFWD gnormLayer1(srcInfo, scaleShiftInfo, groupInfo, dstInfo,
         KuDNN::NormalizationFlags::NONE);
@@ -528,10 +532,10 @@ static void InputParamExceptTest3()
 
 static void InputParamExceptTest4()
 {
-    Shape srcShape(1, 1, -1);
+    Shape srcShape(1, 1, 0);
     const KuDNN::TensorInfo srcInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
     const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo dstInfo = {{1, 1, 1}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
+    const KuDNN::TensorInfo dstInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABC};
     KuDNN::SizeType groupInfo = 1;
     KuDNN::GroupNormalizationLayerFWD gnormLayer1(srcInfo, scaleShiftInfo, groupInfo, dstInfo,
         KuDNN::NormalizationFlags::NONE);
@@ -539,10 +543,10 @@ static void InputParamExceptTest4()
 
 static void InputParamExceptTest5()
 {
-    Shape srcShape(1, 1, 1, -1, 1);
+    Shape srcShape(1, 0, 1, 1, 1);
     const KuDNN::TensorInfo srcInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo dstInfo = {{1, 1, 1, 1, 1}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo dstInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABCDE};
     KuDNN::SizeType groupInfo = 1;
     KuDNN::GroupNormalizationLayerFWD gnormLayer1(srcInfo, scaleShiftInfo, groupInfo, dstInfo,
         KuDNN::NormalizationFlags::NONE);
@@ -550,10 +554,10 @@ static void InputParamExceptTest5()
 
 static void InputParamExceptTest6()
 {
-    Shape srcShape(1, 1, 1, 1, -1);
+    Shape srcShape(1, 1, 1, 1, 0);
     const KuDNN::TensorInfo srcInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo dstInfo = {{1, 1, 1, 1 ,1}, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo dstInfo = {srcShape, KuDNN::Element::TypeT::S32, KuDNN::Layout::ABCDE};
     KuDNN::SizeType groupInfo = 1;
     KuDNN::GroupNormalizationLayerFWD gnormLayer1(srcInfo, scaleShiftInfo, groupInfo, dstInfo,
         KuDNN::NormalizationFlags::NONE);
@@ -562,41 +566,41 @@ static void InputParamExceptTest6()
 // test cases
 TEST(GnormGTests, Param_ShapeExceptD1_Test)
 {
-    EXPECT_THROW(InputParamExceptTest1(), KuDNN::Service::LogicError);
+    EXPECT_THROW(InputParamExceptTest1(), KuDNN::Service::Unsupported);
 }
 
 TEST(GnormGTests, Param_GroupSizeExcept_Test)
 {
-    EXPECT_THROW(InputParamExceptTest2(), KuDNN::Service::Unsupported);
+    EXPECT_THROW(InputParamExceptTest2(), KuDNN::Service::LogicError);
 }
 
 TEST(GnormGTests, Param_ShapeExceptD2_Test)
 {
-    EXPECT_THROW(InputParamExceptTest3(), KuDNN::Service::LogicError);
+    EXPECT_THROW(InputParamExceptTest3(), KuDNN::Service::Unsupported);
 }
 
 TEST(GnormGTests, Param_ShapeExceptD3_Test)
 {
-    EXPECT_THROW(InputParamExceptTest4(), KuDNN::Service::LogicError);
+    EXPECT_THROW(InputParamExceptTest4(), KuDNN::Service::Unsupported);
 }
 
 TEST(GnormGTests, Param_ShapeExceptD4_Test)
 {
-    EXPECT_THROW(InputParamExceptTest5(), KuDNN::Service::LogicError);
+    EXPECT_THROW(InputParamExceptTest5(), KuDNN::Service::Unsupported);
 }
 
 TEST(GnormGTests, Param_ShapeExceptD5_Test)
 {
-    EXPECT_THROW(InputParamExceptTest6(), KuDNN::Service::LogicError);
+    EXPECT_THROW(InputParamExceptTest6(), KuDNN::Service::Unsupported);
 }
 
 TEST(GnormGTests, ForwardFunc3DF16_1)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -605,9 +609,9 @@ TEST(GnormGTests, ForwardFunc3DF16_2)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -616,9 +620,9 @@ TEST(GnormGTests, ForwardFunc3DF16_3)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -627,9 +631,9 @@ TEST(GnormGTests, ForwardFunc3DF16_4)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_GLOBAL_STATS;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -638,9 +642,9 @@ TEST(GnormGTests, ForwardFunc3DF32_1)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -649,9 +653,9 @@ TEST(GnormGTests, ForwardFunc3DF32_2)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -660,9 +664,9 @@ TEST(GnormGTests, ForwardFunc3DF32_3)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -671,9 +675,9 @@ TEST(GnormGTests, ForwardFunc3DF32_4)
 {
     Shape shape(4, 128, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABC};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABC};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_GLOBAL_STATS;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -682,9 +686,9 @@ TEST(GnormGTests, ForwardFunc4DF16_1)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -693,9 +697,9 @@ TEST(GnormGTests, ForwardFunc4DF16_2)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -704,9 +708,9 @@ TEST(GnormGTests, ForwardFunc4DF16_3)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -715,9 +719,9 @@ TEST(GnormGTests, ForwardFunc4DF16_4)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_GLOBAL_STATS;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -726,9 +730,9 @@ TEST(GnormGTests, ForwardFunc5DF16_1)
 {
     Shape shape(1, 32, 10, 90, 16);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -737,9 +741,9 @@ TEST(GnormGTests, ForwardFunc5DF16_2)
 {
     Shape shape(1, 32, 10, 90, 16);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -748,9 +752,9 @@ TEST(GnormGTests, ForwardFunc5DF16_3)
 {
     Shape shape(1, 32, 10, 90, 16);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -759,9 +763,9 @@ TEST(GnormGTests, ForwardFunc5DF16_4)
 {
     Shape shape(1, 32, 10, 90, 16);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF16, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F16, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_GLOBAL_STATS;
     GTEST_EXPECT_TRUE(ForwardFunc1<__fp16>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -770,9 +774,9 @@ TEST(GnormGTests, ForwardFunc4DF32_1)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -781,19 +785,20 @@ TEST(GnormGTests, ForwardFunc4DF32_2)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
+
 TEST(GnormGTests, ForwardFunc4DF32_3)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -802,9 +807,9 @@ TEST(GnormGTests, ForwardFunc4DF32_4)
 {
     Shape shape(4, 128, 18, 320);
     SizeType groupInfo = 2;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_GLOBAL_STATS;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -813,9 +818,9 @@ TEST(GnormGTests, ForwardFunc5DF32_1)
 {
     Shape shape(1, 16, 20, 12, 8);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -824,9 +829,9 @@ TEST(GnormGTests, ForwardFunc5DF32_2)
 {
     Shape shape(1, 16, 20, 12, 8);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -835,9 +840,9 @@ TEST(GnormGTests, ForwardFunc5DF32_3)
 {
     Shape shape(1, 16, 20, 12, 8);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -846,9 +851,9 @@ TEST(GnormGTests, ForwardFunc5DF32_4)
 {
     Shape shape(1, 16, 20, 12, 8);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_GLOBAL_STATS;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -857,30 +862,34 @@ TEST(GnormGTests, ForwardFunc5DF32_5)
 {
     Shape shape(1, 16, 20, 12, 8);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCDE};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE | KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
 
+// cross-layout / type-mixed test: new implementation only accepts F32 scaleShift,
+// and the reference implementation assumes the standard layout, so we only check
+// that the run does not throw
 TEST(GnormGTests, ForwardFunc5DF32F16_1)
 {
     Shape shape(1, 16, 20, 12, 8);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ACDEB};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF16, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ACDEB};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE | KuDNN::NormalizationFlags::USE_SHIFT;
     EXPECT_NO_THROW(ForwardFunc1<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
+
 TEST(GnormGTests, FWDSaveStats)
 {
     Shape shape(1, 16, 20, 12);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(FWDSaveStats<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
@@ -889,36 +898,25 @@ TEST(GnormGTests, FWDDivideZero)
 {
     Shape shape(1, 16, 20, 12);
     SizeType groupInfo = 4;
-    TensorInfo srcInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
-    TensorInfo scaleShiftInfo = {{shape[1]}, TypeF32, KuDNN::Layout::A};
-    TensorInfo dstInfo = {shape, TypeF32, KuDNN::Layout::ABCD};
+    TensorInfo srcInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
+    TensorInfo scaleShiftInfo = {{shape[1]}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    TensorInfo dstInfo = {shape, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     EXPECT_NO_THROW(FWDDivideZero<float>(srcInfo, scaleShiftInfo, groupInfo, dstInfo, flags));
 }
 
-TEST(GnormGTests, BackwardFunc3DF32_1)
-{
-    const KuDNN::TensorInfo srcInfo = {{1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
-    const KuDNN::TensorInfo diffSrcInfo = {{1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
-    const KuDNN::TensorInfo statInfo = {{1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::AB};
-    const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo diffScaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo diffDstInfo = {{1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
-    KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
-    GTEST_EXPECT_TRUE(BackwardFunc1<float>(srcInfo, statInfo, diffSrcInfo, diffDstInfo, scaleShiftInfo, diffScaleShiftInfo, flags));
-}
-
 TEST(GnormGTests, BackwardFunc5DF32F16_1)
 {
-    const KuDNN::TensorInfo srcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
-    const KuDNN::TensorInfo diffSrcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
+    const KuDNN::TensorInfo srcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo diffSrcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo statInfo = {{8, 10, 12, 14}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo scaleShiftInfo = {{8}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
     const KuDNN::TensorInfo diffScaleShiftInfo = {{8}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo diffDstInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ACDEB};
+    const KuDNN::TensorInfo diffDstInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_SCALE | KuDNN::NormalizationFlags::USE_SHIFT;
     GTEST_EXPECT_TRUE(BackwardFunc1<float>(srcInfo, statInfo, diffSrcInfo, diffDstInfo, scaleShiftInfo, diffScaleShiftInfo, flags));
 }
+
 TEST(GnormGTests, BackwardFunc5DF32F16_2)
 {
     const KuDNN::TensorInfo srcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
@@ -933,40 +931,53 @@ TEST(GnormGTests, BackwardFunc5DF32F16_2)
 
 TEST(GnormGTests, BackwardFunc5DF32F16_3)
 {
-    const KuDNN::TensorInfo srcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
-    const KuDNN::TensorInfo diffSrcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
+    const KuDNN::TensorInfo srcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo diffSrcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo statInfo = {{8, 10, 12, 14}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo scaleShiftInfo = {{8}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
     const KuDNN::TensorInfo diffScaleShiftInfo = {{8}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo diffDstInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ACDEB};
+    const KuDNN::TensorInfo diffDstInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
     GTEST_EXPECT_TRUE(BackwardFunc1<float>(srcInfo, statInfo, diffSrcInfo, diffDstInfo, scaleShiftInfo, diffScaleShiftInfo, flags));
 }
 
 TEST(GnormGTests, BackwardFunc5DF32F16_4)
 {
-    const KuDNN::TensorInfo srcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
-    const KuDNN::TensorInfo diffSrcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDEB};
+    const KuDNN::TensorInfo srcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
+    const KuDNN::TensorInfo diffSrcInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo statInfo = {{8, 10, 12, 14}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo scaleShiftInfo = {{8}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
     const KuDNN::TensorInfo diffScaleShiftInfo = {{8}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    const KuDNN::TensorInfo diffDstInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ACDEB};
+    const KuDNN::TensorInfo diffDstInfo = {{8, 10, 12, 14, 16}, KuDNN::Element::TypeT::F16, KuDNN::Layout::ABCDE};
     KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::USE_GLOBAL_STATS;
     GTEST_EXPECT_TRUE(BackwardFunc1<float>(srcInfo, statInfo, diffSrcInfo, diffDstInfo, scaleShiftInfo, diffScaleShiftInfo, flags));
 }
+
+TEST(GnormGTests, BackwardFunc3DF32_1)
+{
+    const KuDNN::TensorInfo srcInfo = {{1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
+    const KuDNN::TensorInfo diffSrcInfo = {{1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
+    const KuDNN::TensorInfo statInfo = {{1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::AB};
+    const KuDNN::TensorInfo scaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    const KuDNN::TensorInfo diffScaleShiftInfo = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    const KuDNN::TensorInfo diffDstInfo = {{1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABC};
+    KuDNN::NormalizationFlags flags = KuDNN::NormalizationFlags::NONE;
+    GTEST_EXPECT_TRUE(BackwardFunc1<float>(srcInfo, statInfo, diffSrcInfo, diffDstInfo, scaleShiftInfo, diffScaleShiftInfo, flags));
+}
+
 TEST(GnormGTests, FWDSrcDstType)
 {
-    EXPECT_ANY_THROW(FWDSrcDstType());
+    EXPECT_NO_THROW(FWDSrcDstType());
 }
 
 TEST(GnormGTests, FWDScaleType)
 {
-    EXPECT_ANY_THROW(FWDScaleType());
+    EXPECT_THROW(FWDScaleType(), KuDNN::Service::Unsupported);
 }
 
 TEST(GnormGTests, FWDShiftType)
 {
-    EXPECT_ANY_THROW(FWDShiftType());
+    EXPECT_THROW(FWDShiftType(), KuDNN::Service::Unsupported);
 }
 
 TEST(GnormGTests, FWDGlobalStatsType)

@@ -1,0 +1,12 @@
+# FWD_I
+--dt=f32:f32:f32 --dir=FWD_I --batch=shapes_1d
+--dt=f16:f16:f16 --dir=FWD_I --batch=shapes_1d
+--dt=bf16:bf16:bf16 --dir=FWD_I --batch=shapes_1d
+--dt=f16:f16:f32 --dir=FWD_I --batch=shapes_1d
+--dt=bf16:bf16:f32 --dir=FWD_I --batch=shapes_1d
+
+--dt=f32:f32:f32 --dir=FWD_I --batch=shapes_2d
+--dt=f16:f16:f16 --dir=FWD_I --batch=shapes_2d
+--dt=bf16:bf16:bf16 --dir=FWD_I --batch=shapes_2d
+--dt=f16:f16:f32 --dir=FWD_I --batch=shapes_2d
+--dt=bf16:bf16:f32 --dir=FWD_I --batch=shapes_2d

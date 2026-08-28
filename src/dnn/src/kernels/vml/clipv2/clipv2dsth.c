@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -19,39 +19,39 @@ static void ClipV2DstMainKernelBwdF16(const float alpha, const float beta, const
     svbool_t pgB32 = svptrue_b32();
     svbool_t pgB16 = svptrue_b16();
 
-    VML_VectorComputation_DECLARE(svfloat32_t, xEven);
-    VML_VectorComputation_DECLARE(svfloat32_t, xOdd);
-    VML_VectorComputation_DECLARE(svfloat32_t, ddEven);
-    VML_VectorComputation_DECLARE(svfloat32_t, ddOdd);
+    VML_VC_DECLARE(svfloat32_t, xEven);
+    VML_VC_DECLARE(svfloat32_t, xOdd);
+    VML_VC_DECLARE(svfloat32_t, ddEven);
+    VML_VC_DECLARE(svfloat32_t, ddOdd);
 
     LOAD_CONVERT_FP16_TO_FP32_2(src, dd, pgB16, xEven, xOdd, ddEven, ddOdd, step);
 
     // clip_v2_dst compute
-    VML_VectorComputation_DECLARE(svbool_t, pgRetZeroEven);
-    VML_VectorComputation_DECLARE(svfloat32_t, resEven);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroEven, svcmpge_n_f32, pgB32, xEven, beta);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resEven, svdup_f32_m, ddEven, pgRetZeroEven, FLOAT_ZERO);
+    VML_VC_DECLARE(svbool_t, pgRetZeroEven);
+    VML_VC_DECLARE(svfloat32_t, resEven);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroEven, svcmpge_n_f32, pgB32, xEven, beta);
+    VML_VC_FUNC_NOPG_N3_3PARA(resEven, svdup_f32_m, ddEven, pgRetZeroEven, FLOAT_ZERO);
 
-    VML_VectorComputation_DECLARE(svbool_t, pgRetZeroOdd);
-    VML_VectorComputation_DECLARE(svfloat32_t, resOdd);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroOdd, svcmpge_n_f32, pgB32, xOdd, beta);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resOdd, svdup_f32_m, ddOdd, pgRetZeroOdd, FLOAT_ZERO);
+    VML_VC_DECLARE(svbool_t, pgRetZeroOdd);
+    VML_VC_DECLARE(svfloat32_t, resOdd);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroOdd, svcmpge_n_f32, pgB32, xOdd, beta);
+    VML_VC_FUNC_NOPG_N3_3PARA(resOdd, svdup_f32_m, ddOdd, pgRetZeroOdd, FLOAT_ZERO);
 
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroEven, svcmple_n_f32, pgB32, xEven, alpha);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resEven, svdup_f32_m, resEven, pgRetZeroEven, FLOAT_ZERO);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgRetZeroOdd, svcmple_n_f32, pgB32, xOdd, alpha);
-    VML_VectorComputation_FUNC_NOPG_N3_3PARA(resOdd, svdup_f32_m, resOdd, pgRetZeroOdd, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroEven, svcmple_n_f32, pgB32, xEven, alpha);
+    VML_VC_FUNC_NOPG_N3_3PARA(resEven, svdup_f32_m, resEven, pgRetZeroEven, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgRetZeroOdd, svcmple_n_f32, pgB32, xOdd, alpha);
+    VML_VC_FUNC_NOPG_N3_3PARA(resOdd, svdup_f32_m, resOdd, pgRetZeroOdd, FLOAT_ZERO);
 
     CONVERT_STORE_FP32_TO_FP16(ds, pgB16, resEven, resOdd, step);
 }
 
-void ClipV2DstSveBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
+void ClipV2DstVCBWDF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, const __fp16 *dd,
     __fp16 *ds)
 {
     int64_t i = 0;
     int64_t loopClipDstV2h = svcnth();
 
-    for (; i <= len - loopClipDstV2h * VML_VectorComputation_UNFOLD_N; i += loopClipDstV2h * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopClipDstV2h * VML_VC_UNFOLD_N; i += loopClipDstV2h * VML_VC_UNFOLD_N) {
         ClipV2DstMainKernelBwdF16(alpha, beta, src + i, dd + i, ds + i, loopClipDstV2h);
     }
     for (; i < len; i += loopClipDstV2h) {

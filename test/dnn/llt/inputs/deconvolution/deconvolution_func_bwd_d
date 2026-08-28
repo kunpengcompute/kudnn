@@ -1,0 +1,17 @@
+# BWD_D
+--dt=f32:f32:f32 --dir=BWD_D --batch=shapes_1d
+--dt=f16:f16:f16 --dir=BWD_D --batch=shapes_1d
+--dt=bf16:bf16:bf16 --dir=BWD_D --batch=shapes_1d
+--dt=f32:f16:f16 --dir=BWD_D --batch=shapes_1d
+--dt=f32:bf16:bf16 --dir=BWD_D --batch=shapes_1d
+
+--dt=f32:f32:f32 --dir=BWD_D --batch=shapes_2d
+--dt=f16:f16:f16 --dir=BWD_D --batch=shapes_2d
+--dt=bf16:bf16:bf16 --dir=BWD_D --batch=shapes_2d
+--dt=f32:f16:f16 --dir=BWD_D --batch=shapes_2d
+--dt=f32:bf16:bf16 --dir=BWD_D --batch=shapes_2d
+
+# Boundary Check
+#--dt=f32:f32:f32 --dir=FWD_B --batch=shapes_data_boundary_check
+#--dt=f32:f32:f32 --dir=BWD_D --batch=shapes_data_boundary_check
+#--dt=f32:f32:f32 --dir=BWD_WB --batch=shapes_weights_boundary_check

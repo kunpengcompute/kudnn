@@ -1,0 +1,33 @@
+# FWD_B
+--dt=f32:f32:f32 --dir=FWD_B --batch=shapes_1d
+--dt=f16:f16:f16 --dir=FWD_B --batch=shapes_1d
+--dt=bf16:bf16:bf16 --dir=FWD_B --batch=shapes_1d
+--dt=f16:f16:f32 --dir=FWD_B --batch=shapes_1d
+--dt=bf16:bf16:f32 --dir=FWD_B --batch=shapes_1d
+
+--dt=f32:f32:f32 --dir=FWD_B --batch=shapes_2d
+--dt=f16:f16:f16 --dir=FWD_B --batch=shapes_2d
+--dt=bf16:bf16:bf16 --dir=FWD_B --batch=shapes_2d
+--dt=f16:f16:f32 --dir=FWD_B --batch=shapes_2d
+--dt=bf16:bf16:f32 --dir=FWD_B --batch=shapes_2d
+
+# 3D
+--dt=f32:f32:f32 --dir=FWD_B oc16ic16_od5id5kd1pd0_n"deconv_ci_3d:1x1"
+ 
+# axb
+--dt=f32:f32:f32 --dir=FWD_B --stag=axb --wtag=axb --dtag=axb ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=f32:f32:f32 --dir=BWD_D --stag=axb --wtag=axb --dtag=axb ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=f32:f32:f32 --dir=BWD_W --stag=axb --wtag=axb --dtag=axb ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+
+--dt=u8:s8:u8 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=u8:s8:s8 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=u8:s8:s32 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=u8:s8:f32 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=u8:s8:f16 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=u8:s8:bf16 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=s8:s8:u8 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=s8:s8:s8 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=s8:s8:s32 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=s8:s8:f32 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=s8:s8:f16 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"
+--dt=s8:s8:bf16 --dir=FWD_B ic8iw5oc8ow2kw3pw3dw2n"deconv1d:1"

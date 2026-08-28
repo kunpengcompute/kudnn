@@ -1,0 +1,75 @@
+# forward: f32 and f16 precision
+--alg=DIRECT --dt=f32:f32:f32 --dir=FWD_B,FWD_I,FWD_D --batch=conv2d_shapes_func
+--alg=DIRECT --dt=f16:f16:f16 --dir=FWD_B,FWD_I,FWD_D --batch=conv2d_shapes_func
+--alg=AUTO --dt=f32:f32:f32 --dir=FWD_B,FWD_I,FWD_D --batch=conv2d_shapes_func
+--alg=AUTO --dt=f16:f16:f16 --dir=FWD_B,FWD_I,FWD_D --batch=conv2d_shapes_func
+--alg=AUTO --dt=f16:f16:f16 --dir=FWD_B mb1ic16iw7oc16ow7kw3pw1
+# --alg=DIRECT --dt=f32:f32:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_1D
+# --alg=DIRECT --dt=f16:f16:f16 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_1D
+# --alg=AUTO --dt=f32:f32:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_1D
+# --alg=AUTO --dt=f16:f16:f16 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_1D
+#--alg=DIRECT --dt=f32:f32:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_2D
+#--alg=DIRECT --dt=f16:f16:f16 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_2D
+#--alg=AUTO --dt=f32:f32:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_2D
+#--alg=AUTO --dt=f16:f16:f16 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_2D
+
+# forward: bf16 and mixed precision
+--alg=AUTO --dt=bf16:bf16:bf16 --dir=FWD_B,FWD_I,FWD_D --batch=conv2d_shapes_func
+--alg=AUTO --dt=f16:f16:f32 --dir=FWD_B,FWD_I,FWD_D --batch=conv2d_shapes_func
+--alg=AUTO --dt=bf16:bf16:f32 --dir=FWD_B,FWD_I,FWD_D --batch=conv2d_shapes_func
+--alg=AUTO --dt=f32 --dir=BWD_W,BWD_WB --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=f16 --dir=BWD_W,BWD_WB  --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=bf16 --dir=BWD_W,BWD_WB  --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=bf16:f32:bf16 --dir=BWD_W,BWD_WB --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=f16:f32:f16 --dir=BWD_W,BWD_WB --stag=abcd --dtag=abcd --batch=conv2d_shapes_func
+# --alg=AUTO --dt=bf16:bf16:bf16 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_1D
+# --alg=AUTO --dt=f16:f16:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_1D
+# --alg=AUTO --dt=bf16:bf16:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_1D
+# --alg=AUTO --dt=f32 --dir=BWD_W,BWD_WB --stag=abc --dtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=f16 --dir=BWD_W,BWD_WB  --stag=abc --dtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=bf16 --dir=BWD_W,BWD_WB  --stag=abc --dtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=bf16:f32:bf16 --dir=BWD_W,BWD_WB --stag=abc --dtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=f16:f32:f16 --dir=BWD_W,BWD_WB --stag=abc --dtag=abc --batch=corner_cases_1D
+#--alg=AUTO --dt=bf16:bf16:bf16 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_2D
+#--alg=AUTO --dt=f16:f16:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_2D
+#--alg=AUTO --dt=bf16:bf16:f32 --dir=FWD_B,FWD_I,FWD_D --batch=corner_cases_2D
+#--alg=AUTO --dt=f32 --dir=BWD_W,BWD_WB --stag=abcd --dtag=abcd --batch=corner_cases_2D
+#--alg=AUTO --dt=f16 --dir=BWD_W,BWD_WB  --stag=abcd --dtag=abcd --batch=corner_cases_2D
+#--alg=AUTO --dt=bf16 --dir=BWD_W,BWD_WB  --stag=abcd --dtag=abcd --batch=corner_cases_2D
+#--alg=AUTO --dt=bf16:f32:bf16 --dir=BWD_W,BWD_WB --stag=abcd --dtag=abcd --batch=corner_cases_2D
+#--alg=AUTO --dt=f16:f32:f16 --dir=BWD_W,BWD_WB --stag=abcd --dtag=abcd --batch=corner_cases_2D
+
+--alg=AUTO --dt=f32:f32:f32 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=f16:f16:f16 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=bf16:bf16:bf16 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=conv2d_shapes_func
+--alg=AUTO --dt=f32:f16:f16 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=conv2d_shapes_func
+# --alg=AUTO --dt=f32:f32:f32 --dir=BWD_D --stag=abc --dtag=abc --wtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=f16:f16:f16 --dir=BWD_D --stag=abc --dtag=abc --wtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=bf16:bf16:bf16 --dir=BWD_D --stag=abc --dtag=abc --wtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=f32:f16:f16 --dir=BWD_D --stag=abc --dtag=abc --wtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=f32:bf16:bf16 --dir=BWD_D --stag=abc --dtag=abc --wtag=abc --batch=corner_cases_1D
+# --alg=AUTO --dt=f32:f32:f32 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=corner_cases_2D
+# --alg=AUTO --dt=f16:f16:f16 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=corner_cases_2D
+# --alg=AUTO --dt=bf16:bf16:bf16 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=corner_cases_2D
+# --alg=AUTO --dt=f32:f16:f16 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=corner_cases_2D
+# --alg=AUTO --dt=f32:bf16:bf16 --dir=BWD_D --stag=abcd --dtag=abcd --wtag=abcd --batch=corner_cases_2D
+
+#--alg=AUTO --dt=f32:f32:f32 --dir=BWD_D --stag=abcde --dtag=abcde --wtag=abcde --batch=conv3d_shapes_func
+--alg=AUTO --dt=f16:f16:f16 --dir=BWD_D --stag=abcde --dtag=abcde --wtag=abcde --batch=conv3d_shapes_func
+#--alg=AUTO --dt=bf16:bf16:bf16 --dir=BWD_D --stag=abcde --dtag=abcde --wtag=abcde --batch=conv3d_shapes_func
+--alg=AUTO --dt=f32:f16:f16 --dir=BWD_D --stag=abcde --dtag=abcde --wtag=abcde --batch=conv3d_shapes_func
+#--alg=AUTO --dt=f32:bf16:bf16 --dir=BWD_D --stag=abcde --dtag=abcde --wtag=abcde --batch=conv3d_shapes_func
+--alg=AUTO --dt=f32 --dir=BWD_W,BWD_WB --stag=abcde --dtag=abcde --batch=conv3d_shapes_func
+#--alg=AUTO --dt=f16 --dir=BWD_W,BWD_WB  --stag=abcde --dtag=abcde --batch=conv3d_shapes_func
+#--alg=AUTO --dt=bf16 --dir=BWD_W,BWD_WB  --stag=abcde --dtag=abcde --batch=conv3d_shapes_func
+#--alg=AUTO --dt=bf16:f32:bf16 --dir=BWD_W,BWD_WB --stag=abcde --dtag=abcde --batch=conv3d_shapes_func
+--alg=AUTO --dt=f16:f32:f16 --dir=BWD_W,BWD_WB --stag=abcde --dtag=abcde --batch=conv3d_shapes_func
+
+
+# backward axb
+--dir=BWD_D --dt=f32:f32:f32 --stag=axb --wtag=axb --dtag=axb ic16oc16_ih5oh5kh1ph0_n"conv_basic_2d:1x1"
+--dir=BWD_W --dt=f32:f32:f32 --stag=axb --wtag=axb --dtag=axb ic16oc16_ih5oh5kh1ph0_n"conv_basic_2d:1x1"
+--dir=BWD_WB --dt=f16:f16:f16 --stag=abx --wtag=abx --dtag=abx g1mb1000ic1024ih1oc1024oh1kh1ph0n"masknet_p2:conv2"
+--dir=BWD_W --dt=f16:f16:f16 --stag=abx --wtag=abx --dtag=abx g1mb1000ic1024ih1oc1024oh1kh1ph0n"masknet_p2:conv2"
+--dir=BWD_W --dt=f16:f16:f16 --stag=axb --wtag=axb --dtag=axb g1mb1000ic1024ih1oc1024oh1kh1ph0n"masknet_p2:conv2"
+--dir=BWD_WB --dt=f16:f16:f16 --stag=axb --wtag=axb --dtag=axb g1mb1000ic1024ih1oc1024oh1kh1ph0n"masknet_p2:conv2"

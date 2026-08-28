@@ -1,0 +1,4 @@
+--dir=FWD_B
+--batch=sizes
+--dir=BWD_D
+--batch=sizes

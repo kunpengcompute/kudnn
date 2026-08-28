@@ -1,0 +1,6 @@
+--dt=f32:f32:f32,f16:f16:f16 --stag=ab --wtag=ba --dtag=ab 9728x2560:2560x49152
+--dt=f32:f32:f32,f16:f16:f16 --stag=ab --wtag=ba --dtag=ab 21888x21888:21888x21888
+--dt=f32:f32:f32,f16:f16:f16 --stag=ab --wtag=ba --dtag=ab 36864x49512:49512x5120
+
+--dt=bf16:bf16:bf16,bf16:bf16:f32,f16:f16:f32
+--batch=shapes_numa

@@ -1,0 +1,16 @@
+--alg=norm_lp_max
+--p=2
+--eps=100
+--batch=sizes
+--alg=norm_lp_sum
+--p=2
+--eps=-15
+--batch=sizes
+--alg=norm_lp_power_p_max
+--p=1.8
+--eps=1000
+--batch=sizes
+--alg=norm_lp_power_p_sum
+--p=1.5
+--eps=100
+--batch=sizes

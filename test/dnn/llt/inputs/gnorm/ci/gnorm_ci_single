@@ -1,0 +1,9 @@
+--dt=f32:f32,f16:f16,bf16:bf16,s8:s8,u8:u8
+--tag=abx:abx
+--dir=FWD_D
+--batch=shapes_single
+
+--dt=f32:f32,f16:f16,bf16:bf16
+--tag=abx:abx
+--dir=BWD_D
+--batch=shapes_single

@@ -1,0 +1,4 @@
+ic4oc4_ih13kh3ph1_iw50kw3pw1_id10kd3pd1_n"3d_conv_pad:1"
+ic3ih227iw227_oc16oh55ow55_kh11kw11_sh4sw4ph1pw1dh0dw0_n"alexnet:conv1"
+ic8oc8_iw5ow2kw3sw1dw2pw3n"conv1d_gemm:1"
+g2ic8oc8_ih5oh5kh3ph1_n"conv_basic_2d:grouped"

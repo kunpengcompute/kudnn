@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -159,6 +159,7 @@ void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst,
     bool calculateStats = !static_cast<bool>(flags & NormalizationFlags::USE_GLOBAL_STATS);
     bool useScale = static_cast<bool>(flags & NormalizationFlags::USE_SCALE);
     bool useShift = static_cast<bool>(flags & NormalizationFlags::USE_SHIFT);
+    bool skipMean = static_cast<bool>(flags & NormalizationFlags::RMS_NORM);
     SizeType loopInc = Vector::UnrollLength<InType, CompType, OutType, ScaleShiftType, float>();
     typename Vector::Vec<float>::Type axisSizeVec0;
     typename Vector::Vec<float>::Type axisSizeVec1;
@@ -198,15 +199,17 @@ void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst,
                 Vector::DupFloatN<InType, float,
                     Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
                     0.0f, vVariance0, vVariance1, vVariance2, vVariance3);
-                Service::UnrollFor::Do<1>(axisSize, LayerNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{},
-                    src + offset, innerSize,
-                    ldStatspg0, ldStatspg1, ldStatspg2, ldStatspg3,
-                    opStatspg0, opStatspg1, opStatspg2, opStatspg3,
-                    vMean0, vMean1, vMean2, vMean3);
-                Vector::DivXN<float,
-                    Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
-                    opStatspg0, opStatspg1, opStatspg2, opStatspg3, vMean0, vMean1, vMean2, vMean3,
-                    axisSizeVec0, axisSizeVec1, axisSizeVec2, axisSizeVec3, vMean0, vMean1, vMean2, vMean3);
+                if (!skipMean) {
+                    Service::UnrollFor::Do<1>(axisSize, LayerNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{},
+                        src + offset, innerSize,
+                        ldStatspg0, ldStatspg1, ldStatspg2, ldStatspg3,
+                        opStatspg0, opStatspg1, opStatspg2, opStatspg3,
+                        vMean0, vMean1, vMean2, vMean3);
+                    Vector::DivXN<float,
+                        Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+                        opStatspg0, opStatspg1, opStatspg2, opStatspg3, vMean0, vMean1, vMean2, vMean3,
+                        axisSizeVec0, axisSizeVec1, axisSizeVec2, axisSizeVec3, vMean0, vMean1, vMean2, vMean3);
+                }
                 Service::UnrollFor::Do<1>(axisSize, LayerNormCrossFWD<CompType, InType, OutType, ScaleShiftType>{},
                     src + offset, innerSize,
                     ldStatspg0, ldStatspg1, ldStatspg2, ldStatspg3,
@@ -226,10 +229,12 @@ void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst,
                     Vector::InitPGN<float,
                         Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
                         stStatspg0, stStatspg1, stStatspg2, stStatspg3, in, innerSize);
-                    Vector::StoreN<float, float,
-                        Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
-                        stStatspg0, stStatspg1, stStatspg2, stStatspg3, vMean0, vMean1, vMean2, vMean3,
-                        mean + offsetStats);
+                    if (!skipMean) {
+                        Vector::StoreN<float, float,
+                            Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+                            stStatspg0, stStatspg1, stStatspg2, stStatspg3, vMean0, vMean1, vMean2, vMean3,
+                            mean + offsetStats);
+                    }
                     Vector::StoreN<float, float,
                         Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
                         stStatspg0, stStatspg1, stStatspg2, stStatspg3, vVariance0, vVariance1, vVariance2, vVariance3,
@@ -243,10 +248,16 @@ void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst,
                 Vector::InitPGN<float,
                     Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
                     ldStatspg0, ldStatspg1, ldStatspg2, ldStatspg3, in, innerSize);
-                Vector::LoadN<float, float,
-                    Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
-                    static_cast<const float *>(mean) + offsetStats, ldStatspg0, ldStatspg1,
-                    ldStatspg2, ldStatspg3, vMean0, vMean1, vMean2, vMean3);
+                if (!skipMean) {
+                    Vector::LoadN<float, float,
+                        Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
+                        static_cast<const float *>(mean) + offsetStats, ldStatspg0, ldStatspg1,
+                        ldStatspg2, ldStatspg3, vMean0, vMean1, vMean2, vMean3);
+                } else {
+                    Vector::DupFloatN<InType, float,
+                        Vector::GetUsedRegsN<InType, CompType, OutType, ScaleShiftType, float>()>::Do(
+                        0.0f, vMean0, vMean1, vMean2, vMean3);
+                }
                 Vector::LoadN<float, float,
                     Vector::GetUsedRegsN<float, InType, CompType, OutType, ScaleShiftType>()>::Do(
                     static_cast<const float *>(variance) + offsetStats, ldStatspg0, ldStatspg1,

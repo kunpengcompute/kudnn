@@ -1,0 +1,6 @@
+# float type matmul
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f32 1x1:1x1
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=abx --wtag=abx --dtag=abx --bia_dt=f32 1x111x99:1x99x11
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=abc --wtag=acb --dtag=abc --bia_dt=f32 1x111x200:1x200x111
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=ba --wtag=ba --dtag=ba --bia_dt=f32 1x1:1x1
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=acb --wtag=acb --dtag=abc --bia_dt=f32 1x111x200:1x200x111

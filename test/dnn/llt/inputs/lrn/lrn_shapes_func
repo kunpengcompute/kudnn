@@ -1,0 +1,5 @@
+#mb56ic16_ih15n"alexnet:norm1"
+#mb28ic14_ih16ih28iw17_ls9_alpha1.5_beta0.6
+mb2ic16_ih15n"alexnet:norm1"
+mb3ic2_id9ih8iw7_ls3_alpha1.5_beta0.6
+mb2ic1_iw1n

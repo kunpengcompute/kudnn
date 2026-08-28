@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -14,6 +14,7 @@
 #define KUDNN_GNORM_KERNELS_HPP
 
 #include "kudnn.hpp"
+#include "vector_wrappers.hpp"
 
 namespace KuDNN {
 namespace Detail {
@@ -23,7 +24,7 @@ namespace GNorm {
 template <typename CompType, typename InType, typename OutType, typename ScaleShiftType>
 void EvaluateCrossAxis(SizeType outerSize, const InType *src, OutType *dst, SizeType groupSize,
                        const ScaleShiftType *scale, const ScaleShiftType *shift, float *mean, float *variance,
-                       bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize,
+                       SizeType start, bool saveStats, float eps, NormalizationFlags flags, SizeType axisSize,
                        SizeType innerSize) noexcept;
 
 template <typename CompType, typename InType, typename OutType, typename ScaleShiftType>

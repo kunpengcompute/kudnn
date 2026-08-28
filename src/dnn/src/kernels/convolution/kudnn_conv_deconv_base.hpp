@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,10 +9,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
+
 #ifndef KUDNN_CONVOLUTION_BASE_HPP
 #define KUDNN_CONVOLUTION_BASE_HPP
 
-#include <cassert>
 #include "kudnn_conv_deconv_base_common.hpp"
 
 namespace KuDNN {
@@ -138,6 +138,46 @@ public:
         return Status::SUCCESS;
     }
 
+    static Status ValidateAlgSizesDeconv(const Shape &argStrides, const Shape &argDilates, const Shape &argPaddingL,
+        const Shape &argPaddingR, DeconvolutionAlgorithm argAlg, const TensorInfo &src, const TensorInfo &wei,
+        const TensorInfo &dst)
+    {
+        if (argAlg == DeconvolutionAlgorithm::UNIMPLEMENTED) {
+            return Status::BAD_ARGUMENTS;
+        }
+        if (argAlg == DeconvolutionAlgorithm::WINOGRAD) {
+            return Status::UNSUPPORTED;
+        }
+        bool gConv = src.GetNumDims() != wei.GetNumDims();
+        SizeType numDims = src.GetNumDims();
+        SizeType ow = ComputeOutDeconvolution(src.GetDims()[numDims - IDX_1],
+            wei.GetDims()[(gConv ? numDims : (numDims - IDX_1))],
+            argStrides[numDims - DIM_3], argPaddingL[numDims - DIM_3],
+            argPaddingR[numDims - DIM_3], argDilates[numDims - DIM_3]);
+        if (dst.GetDims()[numDims - IDX_1] != ow) {
+            return Status::BAD_ARGUMENTS;
+        }
+        if (numDims >= DIM_4) {
+            SizeType oh = ComputeOutDeconvolution(src.GetDims()[numDims - DIM_2],
+                wei.GetDims()[(gConv ? (numDims - IDX_1) : (numDims - IDX_2))],
+                argStrides[numDims - DIM_4], argPaddingL[numDims - DIM_4],
+                argPaddingR[numDims - DIM_4], argDilates[numDims - DIM_4]);
+            if (dst.GetDims()[numDims - DIM_2] != oh) {
+                return Status::BAD_ARGUMENTS;
+            }
+        }
+        if (numDims == DIM_5) {
+            SizeType od = ComputeOutDeconvolution(src.GetDims()[numDims - 3],
+                wei.GetDims()[(gConv ? (numDims - IDX_2) : (numDims - IDX_3))],
+                argStrides[numDims - DIM_5], argPaddingL[numDims - DIM_5],
+                argPaddingR[numDims - DIM_5], argDilates[numDims - DIM_5]);
+            if (dst.GetDims()[numDims - DIM_3] != od) {
+                return Status::BAD_ARGUMENTS;
+            }
+        }
+        return Status::SUCCESS;
+    }
+
     template<typename... Args>
     static Status ValidateDataShapes(const TensorInfo &src, const TensorInfo &wei, const TensorInfo &dst,
         Args&& ... args)
@@ -190,13 +230,6 @@ public:
         if (IsAnyNoDense(in1, in2, out, args...)) {
             return Status::UNSUPPORTED;
         }
-#ifdef KUDNNL_920Pro
-        bool precisionCond = ((out.GetType() == Element::TypeT::U8) || (out.GetType() == Element::TypeT::S8)
-                              || (out.GetType() == Element::TypeT::S32));
-        if (precisionCond) {
-            return Status::UNSUPPORTED;
-        }
-#endif
         return Status::SUCCESS;
     }
 
@@ -227,7 +260,9 @@ protected:
 
     static SizeType ComputeOutConvolution(SizeType i, SizeType k, SizeType s, SizeType pl, SizeType pr, SizeType d)
     {
-        assert((s + 1) != 0);
+        if ((s + 1) == 0) {
+            return 0;
+        }
         return (i - ((k - 1) * (d + 1) + 1) + (pl + pr)) / s + 1;
     }
 

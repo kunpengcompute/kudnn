@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,13 +16,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
 #include <dirent.h>
 #include <regex.h>
 #include <sys/auxv.h>
 #include <sys/prctl.h>
 #include <unistd.h>
-
 
 #include "src/cg_error.hpp"
 #include "src/cg_arm_const.hpp"
@@ -77,34 +77,8 @@ public:
         SetSysRegVal();
         SetNumCores();
         SetHwCap();
-        SetImplementer();
     }
-
 private:
-int GetFilePathMaxTailNumPlus1(const char *path)
-    {
-        char dirPath[MAX_PATH_LEN];
-        char filePattern[MAX_PATH_LEN];
-        int retVal = 0;
-        GetRegEx(dirPath, path, "/([^/]+/)+");
-        // Remove last '/'
-        dirPath[strlen(dirPath) - 1] = '\0';
-        GetRegEx(filePattern, path, "[^/]+$");
-        std::string pattern = filePattern;
-        pattern += "[0-9]+";
-        DIR *dir = opendir(dirPath);
-        if (dir != nullptr) {
-            struct dirent *dp = readdir(dir);
-            while (dp != nullptr) {
-                if (GetRegEx(dirPath, dp->d_name, pattern.c_str()) == 0) {
-                    retVal++;
-                }
-                dp = readdir(dir);
-            }
-            closedir(dir);
-        }
-        return retVal;
-    }
     void GetLineInFile(char *buf, const char *path, const int num)
     {
         auto chomp = [](char *ptr, const int size) {
@@ -118,7 +92,7 @@ int GetFilePathMaxTailNumPlus1(const char *path)
         };
         char resolvedPath[PATH_MAX];
         if (realpath(path, resolvedPath) == nullptr) {
-            printf("%s path is not real path\n", __FUNCTION__);
+            std::cout << __FUNCTION__ << "path is not real path" << std::endl;
             return;
         }
         FILE *fp = fopen(resolvedPath, "r");
@@ -174,14 +148,14 @@ int GetFilePathMaxTailNumPlus1(const char *path)
             type_ |= static_cast<Type>(HwCap::CG_HWCAP_BF16);
         }
 #endif
-#ifdef HWCAP_VectorComputation
-        // Some old <sys/auxv.h> may not define HWCAP_VectorComputation.
-        // In that case, VectorComputation is treated as if it were not supported.
-        if (hwcap & HWCAP_VectorComputation) {
-            type_ |= static_cast<Type>(HwCap::CG_HWCAP_VectorComputation);
+#ifdef HWCAP_VC
+        // Some old <sys/auxv.h> may not define HWCAP_VC.
+        // In that case, VC is treated as if it were not supported.
+        if (hwcap & HWCAP_VC) {
+            type_ |= static_cast<Type>(HwCap::CG_HWCAP_VC);
             // svcntb(); if arm_sve.h is available
-            // PR_VectorComputation_GET_VL
-            sveLen_ = static_cast<uint64_t>(static_cast<SveLen>(prctl(VAL_51)));
+            // PR_VC_GET_VL
+            sveLen_ = static_cast<uint64_t>(static_cast<VCLen>(prctl(VAL_51)));
         }
 #endif
     }
@@ -298,11 +272,6 @@ int CpuInfo::GetCodeCacheSize(int level) const
     return cacheInfo_.levelCache[level - 1].size[0];
 }
 
-const char *CpuInfo::GetImplementer() const
-{
-    return implementer_;
-}
-
 int CpuInfo::GetLastDataCacheLevel() const
 {
     return lastDataCacheLevel_;
@@ -320,7 +289,7 @@ int CpuInfo::GetNumCores(Arm64CpuTopologyLevel level) const
     }
 }
 
-uint64_t CpuInfo::GetSveLen() const
+uint64_t CpuInfo::GetVCLen() const
 {
     return sveLen_;
 }
@@ -354,20 +323,15 @@ void CpuInfo::Put() const
     }
 }
 
-void CpuInfo::SetImplementer()
-{
-    const uint32_t id = (cacheInfo_.midrEL1 >> BITFIELD_24) & 0xff;
-    const int lastId = sizeof(IMPLEMENTERS) / sizeof(Implementer);
-    for (int i = 0; i < lastId; i++) {
-        if (IMPLEMENTERS[i].id == id) {
-            implementer_ = IMPLEMENTERS[i].implementer;
-            return;
-        }
-    }
-    implementer_ = static_cast<const char *>(IMPLEMENTERS[lastId - 1].implementer);
-}
-
 Cpu::Cpu() : info(new CpuInfoLinux()) {}
+
+Cpu::~Cpu()
+{
+    if (info != nullptr) {
+        delete info;
+        info = nullptr;
+    }
+}
 
 void Cpu::DumpCacheInfo() const
 {
@@ -377,11 +341,6 @@ void Cpu::DumpCacheInfo() const
 Arm64CacheType Cpu::GetCacheType(const Arm64CacheLevel i) const
 {
     return info->GetCacheType(static_cast<int>(i));
-}
-
-const char *Cpu::GetImplementer() const
-{
-    return info->GetImplementer();
 }
 
 uint32_t Cpu::GetLastDataCacheLevel() const
@@ -394,9 +353,9 @@ uint32_t Cpu::GetNumCores(Arm64CpuTopologyLevel level) const
     return info->GetNumCores(level);
 }
 
-SveLen Cpu::GetSveLen() const
+VCLen Cpu::GetVCLen() const
 {
-    return static_cast<SveLen>(info->GetSveLen());
+    return static_cast<VCLen>(info->GetVCLen());
 }
 
 Type Cpu::GetType() const

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,14 +13,12 @@
 #include <memory>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <arm_sve.h>
 
 #include "kudnn.hpp"
 
 #include "internal_funcs.hpp"
 #include "threading_impl.hpp"
-#include "kudnn_group_normalization_impl.hpp"
 #include "kernels/gnorm/kudnn_gnorm_kernels.hpp"
 
 namespace KuDNN {
@@ -54,7 +52,7 @@ public:
         /* since all the arrays are broadcasted to 5D, we need to add extra dimensions which were broadcasted */
         channelAxisNum(srcInfo.GetAxisNumAccordingToLayout(IDX_1) + MAX_DIMS - srcInfo.GetNumDims()),
         batchAxisNum(srcInfo.GetAxisNumAccordingToLayout(IDX_0) + MAX_DIMS - srcInfo.GetNumDims()),
-        srcLayout(srcInfo.GetLayout()),
+        srcLayout(srcInfo.GetLayout()), srcStandardABXLayout(srcInfo.GetStandardABXLayout()),
         normFlags(flags)
     {
         // threading implementation depends on the value of calculateStats flag
@@ -64,6 +62,7 @@ public:
         reorderedDims = Service::BroadcastTo5D(Service::GetShapeAccordingToLayout(srcInfo.GetDims(),
             srcInfo.GetLayout()));
         channelAxisSize = reorderedDims[channelAxisNum];
+        batchAxisSize = reorderedDims[batchAxisNum];
         innerSize = Service::ArrayProduct(reorderedDims, reorderedDims.GetNumDims(), channelAxisNum + 1);
 
         Parallelizable::Initialize(GetOptNumThreads(), BatchedDims());
@@ -71,60 +70,75 @@ public:
 
     template <typename CompType, typename InType, typename OutType>
     void Evaluate(const Shape &batchSplitDims, const void *src, void *dst, const void *scale,
-            const void *shift, float *mean, float *variance, bool saveStats, const float eps) const noexcept
+            const void *shift, float *mean, float *variance, SizeType start,
+            bool saveStats, const float eps) const noexcept
     {
         const InType *typedSrc = static_cast<const InType *>(src);
         OutType *typedDst = static_cast<OutType *>(dst);
         const OutType *typedScale = static_cast<const OutType *>(scale);
         const OutType *typedShift = static_cast<const OutType *>(shift);
         ChooseImpl<CompType>(batchSplitDims, typedSrc, typedDst, typedScale, typedShift,
-            mean, variance, saveStats, eps);
+            mean, variance, start, saveStats, eps);
     }
 
     void RunSequential(const Shape &batchSplitDims, const void *src, void *dst, const void *scale,
-            const void *shift, float *mean, float *variance, bool saveStats, const float eps) const noexcept
+            const void *shift, float *mean, float *variance, SizeType start,
+            bool saveStats, const float eps) const noexcept
     {
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
             Service::ParseType<true, false>(compType, Element::TypeT::F32, Element::TypeT::F32, *this,
-                batchSplitDims, src, dst, scale, shift, mean, variance, saveStats, eps);
+                batchSplitDims, src, dst, scale, shift, mean, variance, start, saveStats, eps);
         } else {
             Service::ParseType<true, false>(compType, compType, dstType, *this, batchSplitDims, src, dst, scale, shift,
-                mean, variance, saveStats, eps);
+                mean, variance, start, saveStats, eps);
         }
     }
 
     void RunSequential(const Shape &batchSplitDims, const Shape &batchStrides,
             const void *src, void *dst, const void *scale,
-            const void *shift, float *mean, float *variance,
+            const void *shift, float *mean, float *variance, SizeType start,
         bool saveStats, const float eps) const noexcept(false)
     {
+        Service::Unused(start);
         SizeType strideSrc = 0;
         SizeType strideDst = 0;
         SizeType strideScale = 0;
         SizeType strideMean = 0;
         SizeType elementSize = dstType.GetSize();
+        SizeType groupOrder = 0;
+
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
             elementSize = sizeof(float);
         }
 
-        for (SizeType i = 0; i < batchStrides.GetNumDims(); ++i) {
-            SizeType size = Service::ArrayProduct(reorderedDims, reorderedDims.GetNumDims(), batchAxisNum + 1);
-            strideSrc += batchStrides[i] * elementSize * size;
-            strideDst += batchStrides[i] * elementSize * size;
-            strideMean += batchStrides[i] * groupSize;
+        if (srcLayout == srcStandardABXLayout) {
+            groupOrder = batchStrides[0];
+            for (SizeType i = 0; i < batchStrides.GetNumDims(); ++i) {
+                SizeType size = Service::ArrayProduct(reorderedDims, reorderedDims.GetNumDims(), batchAxisNum + 2);
+                strideSrc += batchStrides[i] * elementSize * size * (reorderedDims[channelAxisNum] / groupSize);
+                strideDst += batchStrides[i] * elementSize * size * (reorderedDims[channelAxisNum] / groupSize);
+                strideMean += batchStrides[i];
+            }
+        } else {
+            for (SizeType i = 0; i < batchStrides.GetNumDims(); ++i) {
+                SizeType size = Service::ArrayProduct(reorderedDims, reorderedDims.GetNumDims(), batchAxisNum + 1);
+                strideSrc += batchStrides[i] * elementSize * size;
+                strideDst += batchStrides[i] * elementSize * size;
+                strideMean += batchStrides[i] * groupSize;
+            }
         }
 
-        SizeType strideShift = strideScale;
-        SizeType strideVariance = strideMean;
+        SizeType strideShiftGn = strideScale;
+        SizeType strideVarianceGn = strideMean;
         if ((!static_cast<bool>(normFlags & NormalizationFlags::USE_GLOBAL_STATS)) && (!saveStats)) {
             strideMean = 0;
-            strideVariance = 0;
+            strideVarianceGn = 0;
         }
 
         RunSequential(batchSplitDims, static_cast<const std::byte *>(src) + strideSrc,
             static_cast<std::byte *>(dst) + strideDst, static_cast<const std::byte *>(scale) + strideScale,
-            static_cast<const std::byte *>(shift) + strideShift, mean + strideMean,
-            variance + strideVariance, saveStats, eps);
+            static_cast<const std::byte *>(shift) + strideShiftGn, mean + strideMean,
+            variance + strideVarianceGn, groupOrder, saveStats, eps);
     }
 
     void Run(const void *src, void *dst, const void *scale,
@@ -136,18 +150,16 @@ public:
 
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
             void *tmp = Service::AlignedAlloc(reorderedDims.GetTotalDimsSize() * sizeof(float));
-            ReorderLayer r({
-                reorderedDims, srcType, Layout::ABCDE}, {
-                reorderedDims, Element::TypeT::F32, Layout::ABCDE});
+            ReorderLayer r({reorderedDims, srcType, Layout::ABCDE},
+                {reorderedDims, Element::TypeT::F32, Layout::ABCDE});
             r.Run(src, tmp);
             srcExec = tmp;
         }
         const void *scaleExec = scale;
         const void *shiftExec = shift;
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
-            ReorderLayer r({{
-                channelAxisSize}, scaleShiftType, Layout::A}, {{
-                channelAxisSize}, Element::TypeT::F32, Layout::A});
+            ReorderLayer r({{channelAxisSize}, scaleShiftType, Layout::A},
+                           {{channelAxisSize}, Element::TypeT::F32, Layout::A});
             void *tmp;
             if (scale != nullptr) {
                 tmp = Service::AlignedAlloc(channelAxisSize * sizeof(float));
@@ -164,19 +176,20 @@ public:
         if (((srcType != dstType) || (scaleShiftType != dstType)) && (dstType != Element::TypeT::F32)) {
             dstExec = Service::AlignedAlloc(reorderedDims.GetTotalDimsSize() * sizeof(float));
         }
-        Threading::BatchThreader(*this, srcExec, dstExec, scaleExec,
-            shiftExec, mean, variance, saveStats, eps);
+
+        SizeType start = 0;
+        Threading::BatchThreader(*this, srcExec, dstExec, scaleExec, shiftExec, mean, variance, start, saveStats, eps);
+
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
-            Service::Deallocate(const_cast<void *>(srcExec));
+            Service::Deallocate(srcExec);
         }
         if ((srcType != dstType) || (scaleShiftType != dstType)) {
-            Service::Deallocate(const_cast<void *>(scaleExec));
-            Service::Deallocate(const_cast<void *>(shiftExec));
+            Service::Deallocate(scaleExec);
+            Service::Deallocate(shiftExec);
         }
         if (((srcType != dstType) || (scaleShiftType != dstType)) && (dstType != Element::TypeT::F32)) {
-            ReorderLayer r({
-                reorderedDims, Element::TypeT::F32, Layout::ABCDE}, {
-                reorderedDims, dstType, Layout::ABCDE});
+            ReorderLayer r({reorderedDims, Element::TypeT::F32, Layout::ABCDE},
+                {reorderedDims, dstType, Layout::ABCDE});
             r.Run(dstExec, dst);
             Service::Deallocate(dstExec);
         }
@@ -190,8 +203,10 @@ private:
     SizeType channelAxisNum;
     SizeType batchAxisNum;
     Layout srcLayout;
+    Layout srcStandardABXLayout;
     NormalizationFlags normFlags;
     SizeType channelAxisSize;
+    SizeType batchAxisSize;
     SizeType innerSize;
     Shape reorderedDims;
 
@@ -237,16 +252,22 @@ private:
 
     Shape BatchedDims() const noexcept
     {
-        std::array<SizeType, MAX_DIMS> batchedDIms;
-        for (SizeType i = 0; i < batchAxisNum + 1; ++i) {
-            batchedDIms[i] = reorderedDims[i];
+        std::array<SizeType, MAX_DIMS> dims;
+        SizeType num;
+        if (srcLayout == srcStandardABXLayout) {
+            dims = {batchAxisSize, groupSize};
+            num = IDX_2;
+        } else {
+            dims = {batchAxisSize};
+            num = IDX_1;
         }
-        return {Shape{batchedDIms.data(), batchAxisNum + 1}.GetTotalDimsSize()};
+        return {Shape{dims.data(), num}.GetTotalDimsSize()};
     }
 
     template <typename CompType, typename InType, typename OutType, typename ScaleShiftType>
     void ChooseImpl(const Shape &batchSplitDims, const InType *src, OutType *dst, const ScaleShiftType *scale,
-            const ScaleShiftType *shift, float *mean, float *variance, bool saveStats, const float eps) const noexcept
+            const ScaleShiftType *shift, float *mean, float *variance, SizeType start,
+            bool saveStats, const float eps) const noexcept
     {
         SizeType outerSize = batchSplitDims.GetTotalDimsSize();
         if (channelAxisNum == (reorderedDims.GetNumDims() - 1)) {
@@ -256,7 +277,7 @@ private:
                 scale, shift, mean, variance, saveStats, eps, normFlags, channelAxisSize);
         } else {
             GNorm::EvaluateCrossAxis<CompType>(outerSize, src, dst, groupSize,
-                scale, shift, mean, variance, saveStats, eps, normFlags, channelAxisSize, innerSize);
+                scale, shift, mean, variance, start, saveStats, eps, normFlags, channelAxisSize, innerSize);
         }
     }
 };
@@ -302,7 +323,7 @@ void GroupNormalizationLayerFWD::Run(const void *src, void *dst,
 }
 
 Status GroupNormalizationLayerFWD::ValidateInput(const TensorInfo &srcInfo, const TensorInfo &scaleshiftInfo,
-    SizeType groupInfo, const TensorInfo &dstInfo, NormalizationFlags flags) noexcept(false)
+    SizeType groupInfo, const TensorInfo &dstInfo, NormalizationFlags flags) noexcept
 {
     Service::Unused(flags);
     if (srcInfo.GetDims() != dstInfo.GetDims()) {
@@ -311,13 +332,10 @@ Status GroupNormalizationLayerFWD::ValidateInput(const TensorInfo &srcInfo, cons
     if (srcInfo.GetLayout() != dstInfo.GetLayout()) {
         return Status::UNSUPPORTED;
     }
-    if (!(srcInfo.GetType() == Element::TypeT::F16 && dstInfo.GetType() == Element::TypeT::F16) &&
-        !(srcInfo.GetType() == Element::TypeT::F32 && dstInfo.GetType() == Element::TypeT::F32)) {
-        return Status::UNSUPPORTED;
-    }
+
     if (((static_cast<bool>(flags & NormalizationFlags::USE_SCALE)) ||
         (static_cast<bool>(flags & NormalizationFlags::USE_SHIFT))) &&
-        (scaleshiftInfo.GetType() != Element::TypeT::F32) && (scaleshiftInfo.GetType() != Element::TypeT::F16)) {
+        (scaleshiftInfo.GetType() != Element::TypeT::F32)) {
         return Status::UNSUPPORTED;
     }
     if (srcInfo.GetLayout() != dstInfo.GetLayout()) {

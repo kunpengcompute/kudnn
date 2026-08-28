@@ -1,0 +1,10 @@
+mb1_ic64_ih112iw112_n"densenet_121:conv1/bn" # folded
+mb1_ic64_ih57iw57_n"densenet_121:conv2_1/x1/bn"
+mb1_ic128_ih57iw57_n"densenet_121:conv2_1/x2/bn*7"
+mb1_ic1024_ih8iw8_n"densenet_121:conv5_blk/bn"
+
+mb96_ic64_ih112iw112_n"googlenet_v2:conv1/7x7_s2/bn"
+mb96_ic64_ih56iw56_n"googlenet_v2:conv2/3x3_reduce/bn"
+mb96_ic192_ih56iw56_n"googlenet_v2:conv2/3x3/bn"
+mb96_ic224_ih14iw14_n"googlenet_v2:inception_4a/1x1/bn"
+mb88ic900ih16

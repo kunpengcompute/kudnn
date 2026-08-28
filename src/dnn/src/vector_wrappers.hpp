@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -15,20 +15,18 @@
 
 #include <arm_sve.h>
 
-#if defined(__clang__)
+#if defined(__clang__) || defined(KUDNNL_920G)
 #include <arm_neon.h>
-
 #endif
-
-#include "kudnn.hpp"
-
-#include "internal_funcs.hpp"
 
 #ifdef KUDNN_DEBUG
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #endif
+
+#include "kudnn.hpp"
+#include "internal_funcs.hpp"
 
 #define CONCAT(a, b) a##b
 #define CONCAT_MACRO(a, b) CONCAT(a, b)
@@ -48,10 +46,11 @@ namespace Vector {
 // because f32 is precise enough. So 4 is maximum pseudo-unroll factor and all functions take quad arguemnts instead
 // of a single one.
 
-constexpr SizeType VectorComputation_MAX_BYTE_LEN_920B = 32;
-constexpr SizeType VectorComputation_MAX_BYTE_LEN_920Pro = 64;
+constexpr SizeType VC_MAX_BYTE_LEN_920B = 32;
+constexpr SizeType VC_MAX_BYTE_LEN_920F = 64;
+constexpr SizeType VC_MAX_BYTE_LEN_920G = 64;
 
-template <typename ScalarType>
+template <typename ScalarType, ARCH Arch = ARCH::VC>
 struct Vec {
 };
 
@@ -85,6 +84,80 @@ struct Vec<std::uint8_t> {
     using Type = svuint8_t;
 };
 
+#ifdef KUDNNL_920G
+template <>
+struct Vec<float, ARCH::NEON> {
+    using Type = float32x4x2_t;
+};
+
+template <>
+struct Vec<__fp16, ARCH::NEON> {
+    using Type = float16x8x2_t;
+};
+
+template <>
+struct Vec<__bf16, ARCH::NEON> {
+    using Type = bfloat16x8x2_t;
+};
+
+template <>
+struct Vec<std::int32_t, ARCH::NEON> {
+    using Type = int32x4x2_t;
+};
+
+template <>
+struct Vec<std::int8_t, ARCH::NEON> {
+    using Type = int8x16x2_t;
+};
+
+template <>
+struct Vec<std::uint8_t, ARCH::NEON> {
+    using Type = uint8x16x2_t;
+};
+
+#endif
+
+template <typename ScalarType, ARCH Arch = ARCH::VC>
+struct MaskVec {
+};
+
+template <typename ScalarType>
+struct MaskVec<ScalarType, ARCH::VC> {
+    using Type = svbool_t;
+};
+
+#ifdef KUDNNL_920G
+template <>
+struct MaskVec<float, ARCH::NEON> {
+    using Type = uint32x4x2_t;
+};
+
+template <>
+struct MaskVec<__fp16, ARCH::NEON> {
+    using Type = uint16x8x2_t;
+};
+
+template <>
+struct MaskVec<__bf16, ARCH::NEON> {
+    using Type = uint16x8x2_t;
+};
+
+template <>
+struct MaskVec<std::int32_t, ARCH::NEON> {
+    using Type = uint32x4x2_t;
+};
+
+template <>
+struct MaskVec<std::int8_t, ARCH::NEON> {
+    using Type = uint8x16x2_t;
+};
+
+template <>
+struct MaskVec<std::uint8_t, ARCH::NEON> {
+    using Type = uint8x16x2_t;
+};
+#endif
+
 template <typename T>
 KUDNN_INLINE constexpr inline SizeType GetMinSize()
 {
@@ -97,13 +170,19 @@ KUDNN_INLINE constexpr inline SizeType GetMinSize()
     return (sizeof(T1) > GetMinSize<T2, Rest ...>()) ? GetMinSize<T2, Rest ...>() : sizeof(T1);
 }
 
-template <typename ScalarType>
+template <typename ScalarType, ARCH Arch = ARCH::VC>
 KUDNN_INLINE inline SizeType Length();
 
 template <typename ... Args>
 KUDNN_INLINE inline SizeType UnrollLength()
 {
     return svcntb() / GetMinSize<Args ...>();
+}
+
+template <typename ... Args>
+constexpr SizeType NeonLanes()
+{
+    return NUM_16 / GetMinSize<Args ...>();   // 128 bits = 16 bytes
 }
 
 // Computes how many of T-type registers will be used
@@ -131,8 +210,13 @@ struct WhileLt final {
     }
 };
 
-template <typename Type>
+template <typename Type, ARCH Arch = ARCH::VC>
 struct DupFloat final {
+    static void Do(const float &src, typename Vec<Type>::Type &in) noexcept;
+};
+
+template <typename Type>
+struct DupFloat<Type, ARCH::VC> final {
     static void Do(const float &src, typename Vec<Type>::Type &in) noexcept
     {
         if constexpr (std::is_same_v<Type, double>) {
@@ -155,6 +239,20 @@ struct DupFloat final {
         // no other options
     }
 };
+
+#ifdef KUDNNL_920G
+template <typename Type>
+struct DupFloat<Type, ARCH::NEON> final {
+    static void Do(const float &src, typename Vec<Type, ARCH::NEON>::Type &in) noexcept
+    {
+        if constexpr (std::is_same_v<Type, float>) {
+            in.val[0] = vdupq_n_f32(src);
+            in.val[1] = vdupq_n_f32(src);
+        }
+        // add other options if needed
+    }
+};
+#endif // KUDNNL_920G
 
 template <typename Type>
 struct GatherLoad final {
@@ -257,41 +355,45 @@ struct ScatterStore final {
 
 // Predicate operations
 
-template <typename Type, SizeType N>
+template <typename Type, SizeType N, ARCH Arch = ARCH::VC>
 struct InitPGN final {
-    static void Do(svbool_t &pg0, svbool_t &pg1, svbool_t &pg2, svbool_t &pg3, SizeType loopVar,
-        SizeType loopMax) noexcept;
+    static void Do(typename Vector::MaskVec<Type, Arch>::Type &pg0, typename Vector::MaskVec<Type, Arch>::Type &pg1,
+    typename Vector::MaskVec<Type, Arch>::Type &pg2, typename Vector::MaskVec<Type, Arch>::Type &pg3,
+    SizeType loopVar, SizeType loopMax) noexcept;
 };
 
 // Memory operations
 
-template <typename InType, typename ComputeType, SizeType N>
+template <typename InType, typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
 struct LoadN final {
     static void Do(const InType *src,
         const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
-        typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
+        typename Vec<ComputeType, Arch>::Type &in0, typename Vec<ComputeType, Arch>::Type &in1,
+        typename Vec<ComputeType, Arch>::Type &in2, typename Vec<ComputeType, Arch>::Type &in3) noexcept;
 };
 
-template <typename InType, typename ComputeType, SizeType N>
+template <typename InType, typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
 struct DupN {
     static void Do(const InType &src,
-        typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
-        typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
+        typename Vec<ComputeType, Arch>::Type &in0, typename Vec<ComputeType, Arch>::Type &in1,
+        typename Vec<ComputeType, Arch>::Type &in2, typename Vec<ComputeType, Arch>::Type &in3) noexcept;
 };
 
-template <typename InType, typename ComputeType, SizeType N>
+template <typename InType, typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
 struct DupFloatN final {
     static void Do(const float &src,
-        typename Vec<ComputeType>::Type &in0, typename Vec<ComputeType>::Type &in1,
-        typename Vec<ComputeType>::Type &in2, typename Vec<ComputeType>::Type &in3) noexcept;
+        typename Vec<ComputeType, Arch>::Type &in0, typename Vec<ComputeType, Arch>::Type &in1,
+        typename Vec<ComputeType, Arch>::Type &in2, typename Vec<ComputeType, Arch>::Type &in3) noexcept;
 };
 
-template <typename OutType, typename ComputeType, SizeType N>
+template <typename OutType, typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
 struct StoreN final {
     static void Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<ComputeType>::Type &out0, const typename Vec<ComputeType>::Type &out1,
-        const typename Vec<ComputeType>::Type &out2, const typename Vec<ComputeType>::Type &out3,
+        const svbool_t &pg3,
+        const typename Vec<ComputeType, Arch>::Type &out0,
+        const typename Vec<ComputeType, Arch>::Type &out1,
+        const typename Vec<ComputeType, Arch>::Type &out2,
+        const typename Vec<ComputeType, Arch>::Type &out3,
         OutType *dst) noexcept;
 };
 
@@ -309,34 +411,45 @@ struct ConvertN final {
         typename Vec<ToType>::Type &out2, typename Vec<ToType>::Type &out3) noexcept;
 };
 
-template <typename InType, typename ComputeType, SizeType N>
+template <typename InType, typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
 struct LoadWrapperN final {
     static void Do(const InType *src, SizeType higherIdx, SizeType lowerIdx,
         const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
-        typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3) noexcept
+        typename Vector::Vec<ComputeType, Arch>::Type &in0, typename Vector::Vec<ComputeType, Arch>::Type &in1,
+        typename Vector::Vec<ComputeType, Arch>::Type &in2, typename Vector::Vec<ComputeType, Arch>::Type &in3) noexcept
     {
-        Vector::LoadN<InType, ComputeType, N>::Do(src + higherIdx + lowerIdx, pg0, pg1, pg2, pg3,
+        Vector::LoadN<InType, ComputeType, N, Arch>::Do(src + higherIdx + lowerIdx, pg0, pg1, pg2, pg3,
             in0, in1, in2, in3);
     }
 };
 
-template <typename InType, typename ComputeType, SizeType N>
+template <typename InType, typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
 struct DupWrapperN final {
     static void Do(const InType *src, SizeType higherIdx, SizeType lowerIdx,
         const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
-        typename Vector::Vec<ComputeType>::Type &in0, typename Vector::Vec<ComputeType>::Type &in1,
-        typename Vector::Vec<ComputeType>::Type &in2, typename Vector::Vec<ComputeType>::Type &in3) noexcept
+        typename Vector::Vec<ComputeType, Arch>::Type &in0, typename Vector::Vec<ComputeType, Arch>::Type &in1,
+        typename Vector::Vec<ComputeType, Arch>::Type &in2, typename Vector::Vec<ComputeType, Arch>::Type &in3) noexcept
     {
-        Vector::DupN<InType, ComputeType, N>::Do(*(src + higherIdx), in0, in1, in2, in3);
+        Vector::DupN<InType, ComputeType, N, Arch>::Do(*(src + higherIdx), in0, in1, in2, in3);
         Service::Unused(lowerIdx, pg0, pg1, pg2, pg3);
     }
 };
 
 // Element selection
+template <typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
+struct SelN final {
+    static void Do(const typename MaskVec<ComputeType>::Type &mask0, const typename MaskVec<ComputeType>::Type &mask1,
+        const typename MaskVec<ComputeType>::Type  &mask2, const typename MaskVec<ComputeType>::Type  &mask3,
+        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+        const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3,
+        const typename Vec<ComputeType>::Type &rhs0, const typename Vec<ComputeType>::Type &rhs1,
+        const typename Vec<ComputeType>::Type &rhs2, const typename Vec<ComputeType>::Type &rhs3,
+        typename Vec<ComputeType>::Type &out0, typename Vec<ComputeType>::Type &out1,
+        typename Vec<ComputeType>::Type &out2, typename Vec<ComputeType>::Type &out3) noexcept;
+};
 
 template <typename ComputeType, SizeType N>
-struct SelN final {
+struct SelN<ComputeType, N, ARCH::VC> final {
     static void Do(const svbool_t& mask0, const svbool_t &mask1,
         const svbool_t &mask2, const svbool_t &mask3,
         const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
@@ -360,12 +473,77 @@ struct SelN final {
     }
 };
 
+#ifdef KUDNNL_920G
+template <typename ComputeType, SizeType N>
+struct SelN<ComputeType, N, ARCH::NEON> final {
+    static inline void  Operation(const typename MaskVec<float, ARCH::NEON>::Type &mask,
+        const typename Vec<float, ARCH::NEON>::Type &lhs, const typename Vec<float, ARCH::NEON>::Type &rhs,
+        typename Vec<float, ARCH::NEON>::Type &out)
+    {
+        out.val[0] = vbslq_f32(mask.val[0], lhs.val[0], rhs.val[0]);
+        out.val[1] = vbslq_f32(mask.val[1], lhs.val[1], rhs.val[1]);
+    }
+    static inline void Operation(const typename MaskVec<float16_t, ARCH::NEON>::Type &mask,
+        const typename Vec<float16_t, ARCH::NEON>::Type &lhs, const typename Vec<float16_t, ARCH::NEON>::Type &rhs,
+        typename Vec<float16_t, ARCH::NEON>::Type &out)
+    {
+        out.val[0] = vbslq_f16(mask.val[0], lhs.val[0], rhs.val[0]);
+        out.val[1] = vbslq_f16(mask.val[1], lhs.val[1], rhs.val[1]);
+    }
+    static inline void  Operation(const typename MaskVec<int32_t, ARCH::NEON>::Type &mask,
+        const typename Vec<int32_t, ARCH::NEON>::Type &lhs, const typename Vec<int32_t, ARCH::NEON>::Type &rhs,
+        typename Vec<int32_t, ARCH::NEON>::Type &out)
+    {
+        out.val[0] = vbslq_s32(mask.val[0], lhs.val[0], rhs.val[0]);
+        out.val[1] = vbslq_s32(mask.val[1], lhs.val[1], rhs.val[1]);
+    }
+
+    static void Do(
+        const typename MaskVec<ComputeType, ARCH::NEON>::Type &mask0,
+        const typename MaskVec<ComputeType, ARCH::NEON>::Type &mask1,
+        const typename MaskVec<ComputeType, ARCH::NEON>::Type &mask2,
+        const typename MaskVec<ComputeType, ARCH::NEON>::Type &mask3,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs0,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs1,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs2,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs3,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &rhs0,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &rhs1,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &rhs2,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &rhs3,
+        typename Vec<ComputeType, ARCH::NEON>::Type &out0,
+        typename Vec<ComputeType, ARCH::NEON>::Type &out1,
+        typename Vec<ComputeType, ARCH::NEON>::Type &out2,
+        typename Vec<ComputeType, ARCH::NEON>::Type &out3) noexcept
+    {
+        static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
+        Operation(mask0, lhs0, rhs0, out0);
+        if constexpr (N > 1) {
+            Operation(mask1, lhs1, rhs1, out1);
+            if constexpr (N > 2) {
+                Operation(mask2, lhs2, rhs2, out2);
+                if constexpr (N > 3) {
+                    Operation(mask3, lhs3, rhs3, out3);
+                }
+            }
+        }
+    }
+};
+#endif
+
 // Across vector math operations
 
-template <typename ComputeType, SizeType N>
+template <typename ComputeType, SizeType N, ARCH Arch = ARCH::VC>
 struct AddvN final {
-    static ComputeType Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2,
-        const svbool_t &pg3, const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
+    static ComputeType Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+        const typename Vec<ComputeType, Arch>::Type &lhs0, const typename Vec<ComputeType, Arch>::Type &lhs1,
+        const typename Vec<ComputeType, Arch>::Type &lhs2, const typename Vec<ComputeType, Arch>::Type &lhs3) noexcept;
+};
+
+template <typename ComputeType, SizeType N>
+struct AddvN<ComputeType, N, ARCH::VC> final {
+    static ComputeType Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+        const typename Vec<ComputeType>::Type &lhs0, const typename Vec<ComputeType>::Type &lhs1,
         const typename Vec<ComputeType>::Type &lhs2, const typename Vec<ComputeType>::Type &lhs3) noexcept
     {
         static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
@@ -382,6 +560,34 @@ struct AddvN final {
         return result;
     }
 };
+
+#ifdef KUDNNL_920G
+template <typename ComputeType, SizeType N>
+struct AddvN<ComputeType, N, ARCH::NEON> final {
+    static ComputeType Do(const svbool_t& pg0, const svbool_t &pg1, const svbool_t &pg2, const svbool_t &pg3,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs0,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs1,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs2,
+        const typename Vec<ComputeType, ARCH::NEON>::Type &lhs3) noexcept
+    {
+        Service::Unused(pg0, pg1, pg2, pg3);
+        static_assert(N <= 4, "Pseudo unroll by 4 is maximum");
+        if constexpr (std::is_same_v<ComputeType, float>) {
+            ComputeType result = vaddvq_f32(lhs0.val[0]) + vaddvq_f32(lhs0.val[1]);
+            if constexpr (N > 1) {
+                result += vaddvq_f32(lhs1.val[0]) + vaddvq_f32(lhs1.val[1]);
+                if constexpr (N > 2) {
+                    result += vaddvq_f32(lhs2.val[0]) + vaddvq_f32(lhs2.val[1]);
+                    if constexpr (N > 3) {
+                        result += vaddvq_f32(lhs3.val[0]) + vaddvq_f32(lhs3.val[1]);
+                    }
+                }
+            }
+            return result;
+        }
+    }
+};
+#endif
 
 template <>
 struct AddvN<int32_t, 1> final {
@@ -464,12 +670,12 @@ struct ExpN final {
 template <typename Type>
 inline void PrintRegister(const svbool_t& pg, typename Vector::Vec<Type>::Type &data) noexcept
 {
-#ifdef KUDNNL_920Pro
-    Type buffer[VectorComputation_MAX_BYTE_LEN_920Pro / sizeof(Type)];
+#ifdef KUDNNL_920F
+    Type buffer[VC_MAX_BYTE_LEN_920F / sizeof(Type)];
 #else
-    Type buffer[VectorComputation_MAX_BYTE_LEN_920B / sizeof(Type)];
+    Type buffer[VC_MAX_BYTE_LEN_920B / sizeof(Type)];
 #endif
-    
+
     svst1(pg, buffer, data);
 
     SizeType activeCount = svcntp_b8(svptrue_b8(), pg);
@@ -518,7 +724,12 @@ inline void PrintRegister(const svbool_t& pg0,
 } // KuDNN
 
 #include "vector_apis/vector_compare.hpp"
+#include "vector_apis/vector_compare_sve.hpp"
+#include "vector_apis/vector_compare_neon.hpp"
 #include "vector_apis/vector_arithmetic.hpp"
+#include "vector_apis/vector_arithmetic_neon.hpp"
+#include "vector_apis/vector_arithmetic_sve.hpp"
+#include "vector_apis/vector_arithmetic_sve_mul_div.hpp"
 #include "vector_apis/vector_length.hpp"
 #include "vector_apis/vector_init_predicate.hpp"
 #include "vector_apis/vector_mem_operations.hpp"

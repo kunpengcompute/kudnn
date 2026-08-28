@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -12,7 +12,7 @@
 
 #include "vml_sve_la_tanh.h"
 
-const struct VmlSveTanhfData G_VML_VSTANH_DATA = {
+const struct VmlVCTanhfData G_VML_VSTANH_DATA = {
     .min = 0x1.bb67aep-12f, // 0x39ddb3d7
     .max = 0x1.205966p3f, // 0x41102cb3
     .idxMin = 0x1p-12f,

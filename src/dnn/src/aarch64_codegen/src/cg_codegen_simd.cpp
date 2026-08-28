@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 #include "cg_codegen.hpp"
 
 #include "src/cg_error.hpp"
@@ -104,6 +103,57 @@ void CodeGenerator::AdvSimdLdStSingleStructPostImm(
     WriteData(code);
 }
 
+// Advanced SIMD load/store multple structures (post-indexed register offset)
+void CodeGenerator::AdvSimdLdStMultiStructPostRegExceptLd1St1(
+    uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostReg &adr)
+{
+    uint32_t q = GenQ(vt);
+    uint32_t size = GenSize(vt);
+
+    VerifyIncRange(adr.GetXm().GetIdx(), 0, SP_IDX - 1, Err::ILLEGAL_REG_IDX);
+
+    uint32_t len = vt.GetLen();
+    VerifyIncRange(len, VAL_1, VAL_4, Err::ILLEGAL_REG_IDX);
+    opc = (opc == 0x2 && len == VAL_1) ? 0x7 : (opc == 0x2 && len == VAL_2)
+                                       ? 0xa : (opc == 0x2 && len == VAL_3) ? 0x6 : opc;
+    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x19, BITFIELD_23), LeftShift(l, BITFIELD_22),
+        LeftShift(adr.GetXm().GetIdx(), BITFIELD_16), LeftShift(opc, BITFIELD_12), LeftShift(size, BITFIELD_10),
+        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+void CodeGenerator::AdvSimdLdStMultiStructPostRegForLd1St1(
+    uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStMultiStructPostRegExceptLd1St1(l, opc, vt, adr);
+}
+
+// Advanced SIMD load/store multple structures (post-indexed immediate offset)
+void CodeGenerator::AdvSimdLdStMultiStructPostImmExceptLd1St1(
+    uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostImm &adr)
+{
+    uint32_t q = GenQ(vt);
+    uint32_t size = GenSize(vt);
+    uint32_t len = vt.GetLen();
+
+    VerifyIncRange(adr.GetImm(), 0, ((VAL_8 * len) << q), Err::ILLEGAL_IMM_RANGE);
+    VerifyIncRange(len, VAL_1, VAL_4, Err::ILLEGAL_REG_IDX);
+
+    opc = (opc == 0x2 && len == VAL_1) ? 0x7 : (opc == 0x2 && len == VAL_2)
+                                       ? 0xa : (opc == 0x2 && len == VAL_3) ? 0x6 : opc;
+    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x19, BITFIELD_23), LeftShift(l, BITFIELD_22),
+        LeftShift(0x1f, BITFIELD_16), LeftShift(opc, BITFIELD_12), LeftShift(size, BITFIELD_10),
+        LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// Advanced SIMD load/store multple structures (post-indexed immediate offset)
+void CodeGenerator::AdvSimdLdStMultiStructPostImmForLd1St1(
+    uint32_t l, uint32_t opc, const VRegList &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStMultiStructPostImmExceptLd1St1(l, opc, vt, adr);
+}
+
 // Load/store pair (offset)
 void CodeGenerator::LdStSimdFpPair(uint32_t l, const VRegSc &vt1, const VRegSc &vt2, const AdrImm &adr)
 {
@@ -174,7 +224,7 @@ void CodeGenerator::LdStSimdFpPairPostImm(uint32_t l, const VRegSc &vt1, const V
 void CodeGenerator::LdStSimdFpUnImm(uint32_t opc, const VRegSc &vt, const AdrUimm &adr)
 {
     uint32_t imm = adr.GetImm();
-    uint32_t times = vt.GetBit() / VectorComputation_ELT_BITLEN_B;
+    uint32_t times = vt.GetBit() / VC_ELT_BITLEN_B;
     uint32_t sh = static_cast<uint32_t>(std::log2(times));
     uint32_t imm12 = (imm >> sh) & Ones(IMM12_BIT_LENGTH);
 
@@ -185,6 +235,23 @@ void CodeGenerator::LdStSimdFpUnImm(uint32_t opc, const VRegSc &vt, const AdrUim
     uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(0x1, BITFIELD_26),
         LeftShift(0x1, BITFIELD_24), LeftShift(opc, BITFIELD_22), LeftShift(imm12, BITFIELD_10),
         LeftShift(adr.GetXn().GetIdx(), BITFIELD_5), LeftShift(vt.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// Load/store register (SIMD&FP, unscaled immediate)
+void CodeGenerator::LdStSimdFpRegUnsImm(uint32_t opc, const VRegSc &vt, const AdrImm &adr)
+{
+    uint32_t size = (vt.GetBit() == 16) ? 1 : (vt.GetBit() == 32) ? 2 : (vt.GetBit() == 64) ? 3 : 0;
+
+    int imm = adr.GetImm();
+    uint32_t imm9 = adr.GetImm() & Ones(IMM9_BIT_LENGTH);
+
+    VerifyIncRange(imm, IMM9_RANGE_LOW, IMM9_RANGE_HIGH, Err::ILLEGAL_IMM_RANGE, true);
+
+    uint32_t v = 1;
+    uint32_t code = Concat({LeftShift(size, BITFIELD_30), LeftShift(0x7, BITFIELD_27), LeftShift(v, BITFIELD_26),
+        LeftShift(opc, BITFIELD_22), LeftShift(imm9, BITFIELD_12), LeftShift(adr.GetXn().GetIdx(), BITFIELD_5),
+        LeftShift(vt.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
 
@@ -303,6 +370,12 @@ void CodeGenerator::AdvSimd2RegMiscSz0x(uint32_t u, uint32_t opcode, const VRegV
 }
 
 // Advanced SIMD two-register miscellaneous
+void CodeGenerator::AdvSimd2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn,
+    double zero)
+{
+    VerifyIncList(std::lround(zero * VAL_10), {0}, Err::ILLEGAL_CONST_VALUE);
+    AdvSimd2RegMiscSz1x(u, opcode, vd, vn);
+}
 void CodeGenerator::AdvSimd2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegVec &vd, const VRegVec &vn)
 {
     uint32_t q = GenQ(vd);
@@ -332,6 +405,27 @@ void CodeGenerator::AdvSimd3Same(uint32_t u, uint32_t opcode, const VRegVec &vd,
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
         LeftShift(size, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
         LeftShift(opcode, BITFIELD_11), LeftShift(0x1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+        LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// Advanced SIMD three same
+void CodeGenerator::AdvSimd3Same(uint32_t opc2, const VRegVec &vd, const VRegVec &vn, const VRegVec &vm)
+{
+    uint32_t q = GenQ(vd);
+    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(0x1, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+        LeftShift(opc2, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+        LeftShift(0x7, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+ 
+void CodeGenerator::AdvSimd2RegMVN(uint32_t u, uint32_t opcode,
+    const VRegVec &vd, const VRegVec &vn)
+{
+    uint32_t q = GenQ(vd);
+    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+        LeftShift(opcode, BITFIELD_21), LeftShift(0x1, BITFIELD_14),
+        LeftShift(0x6, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
         LeftShift(vd.GetIdx(), BITFIELD_0)});
     WriteData(code);
 }
@@ -379,19 +473,19 @@ void CodeGenerator::AdvSimdModiImmMoviMvni(
     uint32_t op, uint32_t o2, const VRegVec &vd, uint32_t imm, ShMod shmod, uint32_t sh)
 {
     uint32_t q = GenQ(vd);
-    uint32_t crmode = (vd.GetBit() == VectorComputation_ELT_BITLEN_B) ? 0xe :
-        (vd.GetBit() == VectorComputation_ELT_BITLEN_H) ? 0x8 | (sh >> OFFSET_TWO) :
-        (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::LSL) ? (sh >> OFFSET_TWO) :
-        (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::MSL) ? 0xc | (sh >> OFFSET_FOUR) : 0xe;
+    uint32_t crmode = (vd.GetBit() == VC_ELT_BITLEN_B) ? 0xe :
+        (vd.GetBit() == VC_ELT_BITLEN_H) ? 0x8 | (sh >> OFFSET_TWO) :
+        (vd.GetBit() == VC_ELT_BITLEN_S && shmod == ShMod::LSL) ? (sh >> OFFSET_TWO) :
+        (vd.GetBit() == VC_ELT_BITLEN_S && shmod == ShMod::MSL) ? 0xc | (sh >> OFFSET_FOUR) : 0xe;
 
-    if (vd.GetBit() == VectorComputation_ELT_BITLEN_B) {
+    if (vd.GetBit() == VC_ELT_BITLEN_B) {
         VerifyIncList(sh, {0}, Err::ILLEGAL_CONST_VALUE);
-    } else if (vd.GetBit() == VectorComputation_ELT_BITLEN_H) {
-        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, BITFIELD_1, BITFIELD_1)}, Err::ILLEGAL_CONST_VALUE);
-    } else if (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::LSL) {
-        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, BITFIELD_2, BITFIELD_1)}, Err::ILLEGAL_CONST_VALUE);
-    } else if (vd.GetBit() == VectorComputation_ELT_BITLEN_S && shmod == ShMod::MSL) {
-        VerifyIncList(sh, {VectorComputation_ELT_BITLEN_B * Field(crmode, 0, 0) + VectorComputation_ELT_BITLEN_B}, Err::ILLEGAL_CONST_VALUE);
+    } else if (vd.GetBit() == VC_ELT_BITLEN_H) {
+        VerifyIncList(sh, {VC_ELT_BITLEN_B * Field(crmode, BITFIELD_1, BITFIELD_1)}, Err::ILLEGAL_CONST_VALUE);
+    } else if (vd.GetBit() == VC_ELT_BITLEN_S && shmod == ShMod::LSL) {
+        VerifyIncList(sh, {VC_ELT_BITLEN_B * Field(crmode, BITFIELD_2, BITFIELD_1)}, Err::ILLEGAL_CONST_VALUE);
+    } else if (vd.GetBit() == VC_ELT_BITLEN_S && shmod == ShMod::MSL) {
+        VerifyIncList(sh, {VC_ELT_BITLEN_B * Field(crmode, 0, 0) + VC_ELT_BITLEN_B}, Err::ILLEGAL_CONST_VALUE);
     }
 
     uint32_t abc = Field(imm, BITFIELD_7, BITFIELD_5);
@@ -399,6 +493,69 @@ void CodeGenerator::AdvSimdModiImmMoviMvni(
     uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xf, BITFIELD_24),
         LeftShift(abc, BITFIELD_16), LeftShift(crmode, BITFIELD_12), LeftShift(o2, BITFIELD_11),
         LeftShift(0x1, BITFIELD_10), LeftShift(defgh, BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// Advanced SIMD modified immediate
+void CodeGenerator::AdvSimdModiImmFmov(uint32_t op, uint32_t o2, const VRegVec &vd, double imm)
+{
+    uint32_t q = GenQ(vd);
+    uint32_t crmode = 0xf;
+    uint32_t imm8 = Code8bitFloat(imm);
+    uint32_t abc = Field(imm8, BITFIELD_7, BITFIELD_5);
+    uint32_t defgh = Field(imm8, BITFIELD_4, BITFIELD_0);
+    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(op, BITFIELD_29), LeftShift(0xf, BITFIELD_24),
+        LeftShift(abc, BITFIELD_16), LeftShift(crmode, BITFIELD_12), LeftShift(o2, BITFIELD_11),
+        LeftShift(0x1, BITFIELD_10), LeftShift(defgh, BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// Advanced SIMD Scalar two-register miscellaneous
+void CodeGenerator::AdvSimdSc2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegSc &vd, const VRegSc &vn)
+{
+    uint32_t size = GenSize(vd);
+    uint32_t code = Concat({LeftShift(1, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+        LeftShift(size, BITFIELD_22), LeftShift(1, BITFIELD_21), LeftShift(opcode, BITFIELD_12),
+        LeftShift(VAL_2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), 0)});
+    WriteData(code);
+}
+void CodeGenerator::AdvSimdSc2RegMiscSz1x(uint32_t u, uint32_t opcode, const VRegSc &vd, const VRegSc &vn,
+    double zero)
+{
+    VerifyIncList(std::lround(zero * VAL_10), {0}, Err::ILLEGAL_CONST_VALUE);
+    AdvSimdSc2RegMiscSz1x(u, opcode, vd, vn);
+}
+
+// advanced simd three same fp16
+void CodeGenerator::AdvSimd3SameFp16(uint32_t u, uint32_t a, uint32_t opcode, const VRegVec &vd, const VRegVec &vn,
+    const VRegVec &vm)
+{
+    uint32_t q = GenQ(vd);
+    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xe, BITFIELD_24),
+        LeftShift(a, BITFIELD_23), LeftShift(0x2, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+        LeftShift(opcode, BITFIELD_11), LeftShift(1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+        LeftShift(vd.GetIdx(), 0)});
+    WriteData(code);
+}
+
+// Advanced SIMD scalar three same
+void CodeGenerator::AdvSimdSc3SameSz0x(uint32_t u, uint32_t opcode, const VRegSc &vd, const VRegSc &vn,
+    const VRegSc &vm)
+{
+    uint32_t size = GenSize(vd) & 1;
+    uint32_t code = Concat({LeftShift(1, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+        LeftShift(size, BITFIELD_22), LeftShift(1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+        LeftShift(opcode, BITFIELD_11), LeftShift(1, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5),
+        LeftShift(vd.GetIdx(), 0)});
+    WriteData(code);
+}
+
+// advanced simd scalar pairwize
+void CodeGenerator::AdvSimdScPairwise(uint32_t u, uint32_t size, uint32_t opcode, const VRegSc &vd, const VRegVec &vn)
+{
+    uint32_t code = Concat({LeftShift(1, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+        LeftShift(size, BITFIELD_22), LeftShift(0x3, BITFIELD_20), LeftShift(opcode, BITFIELD_12),
+        LeftShift(0x2, BITFIELD_10), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), 0)});
     WriteData(code);
 }
 
@@ -423,6 +580,16 @@ void CodeGenerator::AdvSimdShImm(uint32_t u, uint32_t opcode, const VRegVec &vd,
     WriteData(code);
 }
 
+// Floating-piont data-processing (1 source)
+void CodeGenerator::FpDataProc1Reg(uint32_t m, uint32_t s, uint32_t type, uint32_t opcode,
+    const VRegSc &vd, const VRegSc &vn)
+{
+    uint32_t code = Concat({LeftShift(m, BITFIELD_31), LeftShift(s, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+        LeftShift(type, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(opcode, BITFIELD_15),
+        LeftShift(0x1, BITFIELD_14), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
 // Floating-piont data-processing (2 source)
 void CodeGenerator::FpDataProc2Reg(
     uint32_t m, uint32_t s, uint32_t type, uint32_t opcode, const VRegSc &vd, const VRegSc &vn, const VRegSc &vm)
@@ -434,9 +601,146 @@ void CodeGenerator::FpDataProc2Reg(
     WriteData(code);
 }
 
+// Advanced SIMD vector x indexed element
+void CodeGenerator::AdvSimdVecXindElemEnc(uint32_t q, uint32_t u, uint32_t size, uint32_t opcode,
+    const VRegVec &vd, const VRegVec &vn, const VRegElem &vm)
+{
+    bool ucmla = (u == 1 && (opcode & 0x9) == 1);
+    uint32_t bits = (vm.GetBit() == BITFIELD_8) ? BITFIELD_32 : (ucmla) ? vm.GetBit() * 2 : vm.GetBit();
+    uint32_t eidx = vm.GetElemIdx();
+    uint32_t h = (bits == BITFIELD_16) ? Field(eidx, BITFIELD_2, BITFIELD_2)
+                                       : (bits == 32) ? Field(eidx, BITFIELD_1, BITFIELD_1)
+                                                      : Field(eidx, BITFIELD_0, BITFIELD_0);
+    uint32_t l = (bits == BITFIELD_16) ? Field(eidx, BITFIELD_1, BITFIELD_1)
+                                       : (bits == BITFIELD_32) ? Field(eidx, BITFIELD_0, BITFIELD_0) : 0;
+    uint32_t m = (bits == BITFIELD_16) ? Field(eidx, BITFIELD_0, BITFIELD_0)
+                                       : Field(vm.GetIdx(), BITFIELD_4, BITFIELD_4);
+    uint32_t vmidx = vm.GetIdx() & Ones(BITFIELD_4);
+
+    if (bits == BITFIELD_16) {
+        VerifyIncRange(vm.GetIdx(), BITFIELD_0, BITFIELD_15, Err::ILLEGAL_REG_IDX);
+    } else {
+        VerifyIncRange(vm.GetIdx(), BITFIELD_0, BITFIELD_31, Err::ILLEGAL_REG_IDX);
+    }
+
+    uint32_t code = Concat({LeftShift(q, BITFIELD_30), LeftShift(u, BITFIELD_29), LeftShift(0xf, BITFIELD_24),
+        LeftShift(size, BITFIELD_22), LeftShift(l, BITFIELD_21), LeftShift(m, BITFIELD_20),
+        LeftShift(vmidx, BITFIELD_16), LeftShift(opcode, BITFIELD_12), LeftShift(h, BITFIELD_11),
+        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+void CodeGenerator::AdvSimdVecXindElemSz(uint32_t u, uint32_t size, uint32_t opcode, const VRegVec &vd,
+    const VRegVec &vn, const VRegElem &vm)
+{
+    uint32_t q = GenQ(vd);
+    AdvSimdVecXindElemEnc(q, u, size, opcode, vd, vn, vm);
+}
+
+// Floating-piont immediate
+void CodeGenerator::FpImm(uint32_t m, uint32_t s, uint32_t type, const VRegSc &vd, double imm)
+{
+    uint32_t imm8 = Code8bitFloat(imm);
+    uint32_t code = Concat({LeftShift(m, BITFIELD_31), LeftShift(s, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+        LeftShift(type, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(imm8, BITFIELD_13),
+        LeftShift(0x1, BITFIELD_12), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+// Floating-piont compare
+void CodeGenerator::FpComp(uint32_t m, uint32_t s, uint32_t type, uint32_t op, uint32_t opcode2,
+    const VRegSc &vn, const VRegSc &vm)
+{
+    uint32_t code = Concat({LeftShift(m, BITFIELD_31), LeftShift(s, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+        LeftShift(type, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+        LeftShift(op, BITFIELD_14), LeftShift(0x1, BITFIELD_13), LeftShift(vn.GetIdx(), BITFIELD_5),
+        LeftShift(opcode2, BITFIELD_0)});
+    WriteData(code);
+}
+
+void CodeGenerator::FpComp(uint32_t m, uint32_t s, uint32_t type, uint32_t op, uint32_t opcode2,
+    const VRegSc &vn, double imm)
+{
+    VerifyIncList(std::lround(imm), {0}, Err::ILLEGAL_CONST_VALUE);
+    uint32_t code = Concat({LeftShift(m, BITFIELD_31), LeftShift(s, BITFIELD_29), LeftShift(0xf, BITFIELD_25),
+        LeftShift(type, BITFIELD_22), LeftShift(0x1, BITFIELD_21), LeftShift(op, BITFIELD_14),
+        LeftShift(0x1, BITFIELD_13), LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(opcode2, BITFIELD_0)});
+    WriteData(code);
+}
+
+void CodeGenerator::Ld1(const VReg16BList &vt, const AdrNoOfs &adr)
+{
+    AdvSimdLdStMultiStructForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VReg16BList &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStMultiStructPostRegForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VReg16BList &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStMultiStructPostImmForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VReg8HList &vt, const AdrNoOfs &adr)
+{
+    AdvSimdLdStMultiStructForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VReg8HList &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStMultiStructPostRegForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VReg8HList &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStMultiStructPostImmForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
 void CodeGenerator::Ld1(const VReg4SList &vt, const AdrNoOfs &adr)
 {
     AdvSimdLdStMultiStructForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VReg4SList &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStMultiStructPostRegForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VReg4SList &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStMultiStructPostImmForLd1St1(VAL_1, VAL_2, vt, adr);
+}
+
+void CodeGenerator::St1(const VReg16BList &vt, const AdrNoOfs &adr)
+{
+    AdvSimdLdStMultiStructForLd1St1(VAL_0, VAL_2, vt, adr);
+}
+
+void CodeGenerator::St1(const VReg16BList &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStMultiStructPostRegForLd1St1(VAL_0, VAL_2, vt, adr);
+}
+
+void CodeGenerator::St1(const VReg16BList &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStMultiStructPostImmForLd1St1(VAL_0, VAL_2, vt, adr);
+}
+
+void CodeGenerator::St1(const VReg8HList &vt, const AdrNoOfs &adr)
+{
+    AdvSimdLdStMultiStructForLd1St1(VAL_0, VAL_2, vt, adr);
+}
+
+void CodeGenerator::St1(const VReg8HList &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStMultiStructPostRegForLd1St1(VAL_0, VAL_2, vt, adr);
+}
+
+void CodeGenerator::St1(const VReg8HList &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStMultiStructPostImmForLd1St1(VAL_0, VAL_2, vt, adr);
 }
 
 void CodeGenerator::St1(const VReg4SList &vt, const AdrNoOfs &adr)
@@ -444,19 +748,59 @@ void CodeGenerator::St1(const VReg4SList &vt, const AdrNoOfs &adr)
     AdvSimdLdStMultiStructForLd1St1(VAL_0, VAL_2, vt, adr);
 }
 
+void CodeGenerator::St1(const VReg4SList &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStMultiStructPostRegForLd1St1(VAL_0, VAL_2, vt, adr);
+}
+
+void CodeGenerator::St1(const VReg4SList &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStMultiStructPostImmForLd1St1(VAL_0, VAL_2, vt, adr);
+}
+
 void CodeGenerator::St1(const VRegBElem &vt, const AdrNoOfs &adr)
 {
-    AdvSimdLdStSingleStruct(0, 0, VAL_1, vt, adr);
+    AdvSimdLdStSingleStruct(VAL_0, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::St1(const VRegBElem &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStSingleStructPostReg(VAL_0, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::St1(const VRegBElem &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStSingleStructPostImm(VAL_0, VAL_0, VAL_1, vt, adr);
 }
 
 void CodeGenerator::St1(const VRegHElem &vt, const AdrNoOfs &adr)
 {
-    AdvSimdLdStSingleStruct(0, 0, VAL_1, vt, adr);
+    AdvSimdLdStSingleStruct(VAL_0, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::St1(const VRegHElem &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStSingleStructPostReg(VAL_0, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::St1(const VRegHElem &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStSingleStructPostImm(VAL_0, VAL_0, VAL_1, vt, adr);
 }
 
 void CodeGenerator::St1(const VRegSElem &vt, const AdrNoOfs &adr)
 {
-    AdvSimdLdStSingleStruct(0, 0, VAL_1, vt, adr);
+    AdvSimdLdStSingleStruct(VAL_0, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::St1(const VRegSElem &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStSingleStructPostReg(VAL_0, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::St1(const VRegSElem &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStSingleStructPostImm(VAL_0, VAL_0, VAL_1, vt, adr);
 }
 
 void CodeGenerator::Ld4(const VRegDElem &vt, const AdrNoOfs &adr)
@@ -466,42 +810,62 @@ void CodeGenerator::Ld4(const VRegDElem &vt, const AdrNoOfs &adr)
 
 void CodeGenerator::Ld1(const VRegBElem &vt, const AdrNoOfs &adr)
 {
-    AdvSimdLdStSingleStruct(VAL_1, 0, VAL_1, vt, adr);
+    AdvSimdLdStSingleStruct(VAL_1, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VRegBElem &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStSingleStructPostReg(VAL_1, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VRegBElem &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStSingleStructPostImm(VAL_1, VAL_0, VAL_1, vt, adr);
 }
 
 void CodeGenerator::Ld1(const VRegHElem &vt, const AdrNoOfs &adr)
 {
-    AdvSimdLdStSingleStruct(VAL_1, 0, VAL_1, vt, adr);
+    AdvSimdLdStSingleStruct(VAL_1, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VRegHElem &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStSingleStructPostReg(VAL_1, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VRegHElem &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStSingleStructPostImm(VAL_1, VAL_0, VAL_1, vt, adr);
 }
 
 void CodeGenerator::Ld1(const VRegSElem &vt, const AdrNoOfs &adr)
 {
-    AdvSimdLdStSingleStruct(VAL_1, 0, VAL_1, vt, adr);
+    AdvSimdLdStSingleStruct(VAL_1, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VRegSElem &vt, const AdrPostReg &adr)
+{
+    AdvSimdLdStSingleStructPostReg(VAL_1, VAL_0, VAL_1, vt, adr);
+}
+
+void CodeGenerator::Ld1(const VRegSElem &vt, const AdrPostImm &adr)
+{
+    AdvSimdLdStSingleStructPostImm(VAL_1, VAL_0, VAL_1, vt, adr);
 }
 
 void CodeGenerator::Ld1r(const VReg4SList &vt, const AdrNoOfs &adr)
 {
-    AdvSimdLdRepSingleStruct(VAL_1, 0, VAL_6, 0, vt, adr);
+    AdvSimdLdRepSingleStruct(VAL_1, VAL_0, VAL_6, VAL_0, vt, adr);
 }
 
 void CodeGenerator::St4(const VRegDElem &vt, const AdrPostReg &adr)
 {
-    AdvSimdLdStSingleStructPostReg(0, VAL_1, VAL_4, vt, adr);
-}
-
-void CodeGenerator::St1(const VRegHElem &vt, const AdrPostReg &adr)
-{
-    AdvSimdLdStSingleStructPostReg(0, 0, VAL_1, vt, adr);
-}
-
-void CodeGenerator::St1(const VRegSElem &vt, const AdrPostReg &adr)
-{
-    AdvSimdLdStSingleStructPostReg(0, 0, VAL_1, vt, adr);
+    AdvSimdLdStSingleStructPostReg(VAL_0, VAL_1, VAL_4, vt, adr);
 }
 
 void CodeGenerator::St4(const VRegDElem &vt, const AdrPostImm &adr)
 {
-    AdvSimdLdStSingleStructPostImm(0, VAL_1, VAL_4, vt, adr);
+    AdvSimdLdStSingleStructPostImm(VAL_0, VAL_1, VAL_4, vt, adr);
 }
 
 void CodeGenerator::Ld4(const VRegDElem &vt, const AdrPostImm &adr)
@@ -509,12 +873,32 @@ void CodeGenerator::Ld4(const VRegDElem &vt, const AdrPostImm &adr)
     AdvSimdLdStSingleStructPostImm(VAL_1, VAL_1, VAL_4, vt, adr);
 }
 
+void CodeGenerator::Stp(const SReg &vt1, const SReg &vt2, const AdrPostImm &adr)
+{
+    LdStSimdFpPairPostImm(0, vt1, vt2, adr);
+}
+
 void CodeGenerator::Stp(const DReg &vt1, const DReg &vt2, const AdrPostImm &adr)
 {
     LdStSimdFpPairPostImm(0, vt1, vt2, adr);
 }
 
+void CodeGenerator::Stp(const QReg &vt1, const QReg &vt2, const AdrPostImm &adr)
+{
+    LdStSimdFpPairPostImm(0, vt1, vt2, adr);
+}
+
+void CodeGenerator::Stp(const SReg &vt1, const SReg &vt2, const AdrImm &adr)
+{
+    LdStSimdFpPair(0, vt1, vt2, adr);
+}
+
 void CodeGenerator::Stp(const DReg &vt1, const DReg &vt2, const AdrImm &adr)
+{
+    LdStSimdFpPair(0, vt1, vt2, adr);
+}
+
+void CodeGenerator::Stp(const QReg &vt1, const QReg &vt2, const AdrImm &adr)
 {
     LdStSimdFpPair(0, vt1, vt2, adr);
 }
@@ -524,12 +908,32 @@ void CodeGenerator::Stp(const DReg &vt1, const DReg &vt2, const AdrPreImm &adr)
     LdStSimdFpPairPre(0, vt1, vt2, adr);
 }
 
+void CodeGenerator::Ldp(const SReg &vt1, const SReg &vt2, const AdrPostImm &adr)
+{
+    LdStSimdFpPairPostImm(VAL_1, vt1, vt2, adr);
+}
+
 void CodeGenerator::Ldp(const DReg &vt1, const DReg &vt2, const AdrPostImm &adr)
 {
     LdStSimdFpPairPostImm(VAL_1, vt1, vt2, adr);
 }
 
+void CodeGenerator::Ldp(const QReg &vt1, const QReg &vt2, const AdrPostImm &adr)
+{
+    LdStSimdFpPairPostImm(VAL_1, vt1, vt2, adr);
+}
+
+void CodeGenerator::Ldp(const SReg &vt1, const SReg &vt2, const AdrImm &adr)
+{
+    LdStSimdFpPair(VAL_1, vt1, vt2, adr);
+}
+
 void CodeGenerator::Ldp(const DReg &vt1, const DReg &vt2, const AdrImm &adr)
+{
+    LdStSimdFpPair(VAL_1, vt1, vt2, adr);
+}
+
+void CodeGenerator::Ldp(const QReg &vt1, const QReg &vt2, const AdrImm &adr)
 {
     LdStSimdFpPair(VAL_1, vt1, vt2, adr);
 }
@@ -589,6 +993,21 @@ void CodeGenerator::Ldr(const QReg &vt, const AdrUimm &adr)
     LdStSimdFpUnImm((vt.GetBit() != VAL_128) ? VAL_1 : VAL_3, vt, adr);
 }
 
+void CodeGenerator::Ldur(const QReg &vt, const AdrImm &adr)
+{
+    LdStSimdFpRegUnsImm((vt.GetBit() != VAL_128) ? VAL_1 : VAL_3, vt, adr);
+}
+
+void CodeGenerator::Zip1(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    AdvSimdPermute(VAL_3, vd, vn, vm);
+}
+
+void CodeGenerator::Zip2(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    AdvSimdPermute(VAL_7, vd, vn, vm);
+}
+
 void CodeGenerator::Uzp1(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
 {
     AdvSimdPermute(VAL_1, vd, vn, vm);
@@ -599,12 +1018,57 @@ void CodeGenerator::Uzp1(const VReg8H &vd, const VReg8H &vn, const VReg8H &vm)
     AdvSimdPermute(VAL_1, vd, vn, vm);
 }
 
+void CodeGenerator::Uzp1(const VReg2S &vd, const VReg2S &vn, const VReg2S &vm)
+{
+    AdvSimdPermute(VAL_1, vd, vn, vm);
+}
+
+void CodeGenerator::Uzp1(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
+{
+    AdvSimdPermute(VAL_1, vd, vn, vm);
+}
+
+void CodeGenerator::Uzp1(const VReg2D &vd, const VReg2D &vn, const VReg2D &vm)
+{
+    AdvSimdPermute(VAL_1, vd, vn, vm);
+}
+
+void CodeGenerator::Trn1(const VReg2D &vd, const VReg2D &vn, const VReg2D &vm)
+{
+    AdvSimdPermute(VAL_2, vd, vn, vm);
+}
+
+void CodeGenerator::Uzp2(const VReg2S &vd, const VReg2S &vn, const VReg2S &vm)
+{
+    AdvSimdPermute(VAL_5, vd, vn, vm);
+}
+
+void CodeGenerator::Uzp2(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
+{
+    AdvSimdPermute(VAL_5, vd, vn, vm);
+}
+
+void CodeGenerator::Uzp2(const VReg2D &vd, const VReg2D &vn, const VReg2D &vm)
+{
+    AdvSimdPermute(VAL_5, vd, vn, vm);
+}
+
+void CodeGenerator::Trn2(const VReg2D &vd, const VReg2D &vn, const VReg2D &vm)
+{
+    AdvSimdPermute(VAL_6, vd, vn, vm);
+}
+
 void CodeGenerator::Ext(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm, const uint32_t index)
 {
     AdvSimdExtract(0, vd, vn, vm, index);
 }
 
 void CodeGenerator::Dup(const VReg16B &vd, const VRegBElem &vn)
+{
+    AdvSimdCopyDupElem(0, 0, vd, vn);
+}
+
+void CodeGenerator::Dup(const VReg4S &vd, const VRegSElem &vn)
 {
     AdvSimdCopyDupElem(0, 0, vd, vn);
 }
@@ -630,6 +1094,11 @@ void CodeGenerator::Ins(const VRegBElem &vd, const WReg &rn)
 }
 
 void CodeGenerator::Mov(const VRegDElem &vd, const XReg &rn)
+{
+    AdvSimdCopyInsGen(0, VAL_3, vd, rn);
+}
+
+void CodeGenerator::Mov(const VRegSElem &vd, const WReg &rn)
 {
     AdvSimdCopyInsGen(0, VAL_3, vd, rn);
 }
@@ -672,6 +1141,26 @@ void CodeGenerator::Frinti(const VReg4S &vd, const VReg4S &vn)
 void CodeGenerator::Fsqrt(const VReg4S &vd, const VReg4S &vn)
 {
     AdvSimd2RegMiscSz1x(VAL_1, VAL_31, vd, vn);
+}
+
+void CodeGenerator::Fmov(const VReg4S &vd, const double imm)
+{
+    AdvSimdModiImmFmov(0, 0, vd, imm);
+}
+
+void CodeGenerator::Fmov(const SReg &vd, const double imm)
+{
+    FpImm(VAL_0, VAL_0, VAL_0, vd, imm);
+}
+
+void CodeGenerator::Fmov(const DReg &vd, const double imm)
+{
+    FpImm(VAL_0, VAL_0, VAL_1, vd, imm);
+}
+
+void CodeGenerator::Fmov(const HReg &vd, const double imm)
+{
+    FpImm(VAL_0, VAL_0, VAL_3, vd, imm);
 }
 
 void CodeGenerator::Addv(const SReg &vd, const VReg4S &vn)
@@ -719,6 +1208,38 @@ void CodeGenerator::Fmla(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
     AdvSimd3SameSz0x(0, VAL_25, vd, vn, vm);
 }
 
+void CodeGenerator::Fmla(const VReg4S &vd, const VReg4S &vn, const VRegSElem &vm)
+{
+    AdvSimdVecXindElemSz(0, VAL_2, VAL_1, vd, vn, vm);
+}
+
+void CodeGenerator::Smmla(const VReg4S &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    uint32_t code = Concat({LeftShift(VAL_1, BITFIELD_30), LeftShift(VAL_0, BITFIELD_29),
+        LeftShift(0x74, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+        LeftShift(0xa, BITFIELD_12), LeftShift(0x0, BITFIELD_11), LeftShift(VAL_1, BITFIELD_10),
+        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+void CodeGenerator::Usmmla(const VReg4S &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    uint32_t code = Concat({LeftShift(VAL_1, BITFIELD_30), LeftShift(VAL_0, BITFIELD_29),
+        LeftShift(0x74, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+        LeftShift(VAL_10, BITFIELD_12), LeftShift(VAL_1, BITFIELD_11), LeftShift(VAL_1, BITFIELD_10),
+        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
+void CodeGenerator::Ummla(const VReg4S &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    uint32_t code = Concat({LeftShift(VAL_1, BITFIELD_30), LeftShift(VAL_1, BITFIELD_29),
+        LeftShift(0x74, BITFIELD_21), LeftShift(vm.GetIdx(), BITFIELD_16),
+        LeftShift(0xa, BITFIELD_12), LeftShift(VAL_0, BITFIELD_11), LeftShift(VAL_1, BITFIELD_10),
+        LeftShift(vn.GetIdx(), BITFIELD_5), LeftShift(vd.GetIdx(), BITFIELD_0)});
+    WriteData(code);
+}
+
 void CodeGenerator::Fadd(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
 {
     AdvSimd3SameSz0x(0, VAL_26, vd, vn, vm);
@@ -732,6 +1253,11 @@ void CodeGenerator::Fmax(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
 void CodeGenerator::Fmul(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
 {
     AdvSimd3SameSz0x(1, VAL_27, vd, vn, vm);
+}
+
+void CodeGenerator::Fmul(const VReg4S &vd, const VReg4S &vn, const VRegSElem &vm)
+{
+    AdvSimdVecXindElemSz(0, VAL_2, VAL_9, vd, vn, vm);
 }
 
 void CodeGenerator::Fdiv(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
@@ -757,6 +1283,11 @@ void CodeGenerator::Bic(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
 void CodeGenerator::Orr(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
 {
     AdvSimd3SameSz(0, VAL_2, VAL_3, vd, vn, vm);
+}
+
+void CodeGenerator::Mov(const VReg8B &vd, const VReg8B &vn)
+{
+    AdvSimd3SameSz(0, VAL_2, VAL_3, vd, vn, vn);
 }
 
 void CodeGenerator::Mov(const VReg16B &vd, const VReg16B &vn)
@@ -807,6 +1338,201 @@ void CodeGenerator::Uxtl(const VReg4S &vd, const VReg4H &vn)
 void CodeGenerator::Fadd(const SReg &vd, const SReg &vn, const SReg &vm)
 {
     FpDataProc2Reg(0, 0, 0, VAL_2, vd, vn, vm);
+}
+
+void CodeGenerator::Fcvt(const HReg &vd, const SReg &vn)
+{
+    FpDataProc1Reg(0, 0, 0, VAL_7, vd, vn);
+}
+
+void CodeGenerator::Sshr(const VReg16B &vd, const VReg16B &vn, const uint32_t sh)
+{
+    AdvSimdShImm(VAL_0, VAL_0, vd, vn, sh);
+}
+
+void CodeGenerator::Sshr(const VReg4S &vd, const VReg4S &vn, const uint32_t sh)
+{
+    AdvSimdShImm(VAL_0, VAL_0, vd, vn, sh);
+}
+
+void CodeGenerator::Ushr(const VReg16B &vd, const VReg16B &vn, const uint32_t sh)
+{
+    AdvSimdShImm(VAL_1, VAL_0, vd, vn, sh);
+}
+
+void CodeGenerator::Ushr(const VReg4S &vd, const VReg4S &vn, const uint32_t sh)
+{
+    AdvSimdShImm(VAL_1, VAL_0, vd, vn, sh);
+}
+
+void CodeGenerator::Shl(const VReg16B &vd, const VReg16B &vn, const uint32_t sh)
+{
+    AdvSimdShImm(VAL_0, VAL_10, vd, vn, sh);
+}
+
+void CodeGenerator::Shl(const VReg4S &vd, const VReg4S &vn, const uint32_t sh)
+{
+    AdvSimdShImm(VAL_0, VAL_10, vd, vn, sh);
+}
+
+void CodeGenerator::Sshl(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    AdvSimd3Same(VAL_0, VAL_8, vd, vn, vm);
+}
+
+void CodeGenerator::Sshl(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
+{
+    AdvSimd3Same(VAL_0, VAL_8, vd, vn, vm);
+}
+
+void CodeGenerator::Ushl(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    AdvSimd3Same(VAL_1, VAL_8, vd, vn, vm);
+}
+
+void CodeGenerator::Ushl(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
+{
+    AdvSimd3Same(VAL_1, VAL_8, vd, vn, vm);
+}
+
+void CodeGenerator::Bif(const VReg8B &vd, const VReg8B &vn, const VReg8B &vm)
+{
+    AdvSimd3Same(VAL_7, vd, vn, vm);
+}
+
+void CodeGenerator::Bif(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    AdvSimd3Same(VAL_7, vd, vn, vm);
+}
+
+void CodeGenerator::Bit(const VReg8B &vd, const VReg8B &vn, const VReg8B &vm)
+{
+    AdvSimd3Same(VAL_5, vd, vn, vm);
+}
+
+void CodeGenerator::Bit(const VReg16B &vd, const VReg16B &vn, const VReg16B &vm)
+{
+    AdvSimd3Same(VAL_5, vd, vn, vm);
+}
+
+void CodeGenerator::Mvn(const VReg8B &vd, const VReg8B &vn)
+{
+    AdvSimd2RegMVN(VAL_1, VAL_1, vd, vn);
+}
+
+void CodeGenerator::Mvn(const VReg16B &vd, const VReg16B &vn)
+{
+    AdvSimd2RegMVN(VAL_1, VAL_1, vd, vn);
+}
+
+void CodeGenerator::Faddp(const HReg &vd, const VReg2H &vn)
+{
+    AdvSimdScPairwise(0, 0, 0xd, vd, vn);
+}
+void CodeGenerator::Faddp(const SReg &vd, const VReg2S &vn)
+{
+    AdvSimdScPairwise(1, (vd.GetBit() == 0x20) ? 0 : 1, 0xd, vd, vn);
+}
+void CodeGenerator::Faddp(const VReg4H &vd, const VReg4H &vn, const VReg4H &vm)
+{
+    AdvSimd3SameFp16(1, 0, 0x2, vd, vn, vm);
+}
+void CodeGenerator::Faddp(const VReg8H &vd, const VReg8H &vn, const VReg8H &vm)
+{
+    AdvSimd3SameFp16(1, 0, 0x2, vd, vn, vm);
+}
+void CodeGenerator::Faddp(const VReg2S &vd, const VReg2S &vn, const VReg2S &vm)
+{
+    AdvSimd3SameSz0x(1, 0x1a, vd, vn, vm);
+}
+void CodeGenerator::Faddp(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
+{
+    AdvSimd3SameSz0x(1, 0x1a, vd, vn, vm);
+}
+
+void CodeGenerator::Fcmge(const VReg2S &vd, const VReg2S &vn, const double zero)
+{
+    AdvSimd2RegMiscSz1x(1, 0xc, vd, vn, zero);
+}
+void CodeGenerator::Fcmge(const VReg4S &vd, const VReg4S &vn, const double zero)
+{
+    AdvSimd2RegMiscSz1x(1, 0xc, vd, vn, zero);
+}
+void CodeGenerator::Fcmge(const VReg2S &vd, const VReg2S &vn, const VReg2S &vm)
+{
+    AdvSimd3SameSz0x(1, 0x1c, vd, vn, vm);
+}
+void CodeGenerator::Fcmge(const VReg4S &vd, const VReg4S &vn, const VReg4S &vm)
+{
+    AdvSimd3SameSz0x(1, 0x1c, vd, vn, vm);
+}
+void CodeGenerator::Fcmge(const SReg &vd, const SReg &vn, const double zero)
+{
+    AdvSimdSc2RegMiscSz1x(1, 0xc, vd, vn, zero);
+}
+void CodeGenerator::Fcmge(const SReg &vd, const SReg &vn, const SReg &vm)
+{
+    AdvSimdSc3SameSz0x(1, 0x1c, vd, vn, vm);
+}
+
+void CodeGenerator::Fcmp(const SReg &vn, const SReg &vm)
+{
+    FpComp(VAL_0, VAL_0, VAL_0, VAL_0, VAL_0, vn, vm);
+}
+
+void CodeGenerator::Fcmp(const SReg &vn, const double imm)
+{
+    FpComp(VAL_0, VAL_0, VAL_0, VAL_0, VAL_8, vn, imm);
+}
+
+void CodeGenerator::Fcmp(const DReg &vn, const DReg &vm)
+{
+    FpComp(VAL_0, VAL_0, VAL_1, VAL_0, VAL_0, vn, vm);
+}
+
+void CodeGenerator::Fcmp(const DReg &vn, const double imm)
+{
+    FpComp(VAL_0, VAL_0, VAL_1, VAL_0, VAL_8, vn, imm);
+}
+
+void CodeGenerator::Fcmp(const HReg &vn, const HReg &vm)
+{
+    FpComp(VAL_0, VAL_0, VAL_3, VAL_0, VAL_0, vn, vm);
+}
+
+void CodeGenerator::Fcmp(const HReg &vn, const double imm)
+{
+    FpComp(VAL_0, VAL_0, VAL_3, VAL_0, VAL_8, vn, imm);
+}
+
+void CodeGenerator::Fcmpe(const SReg &vn, const SReg &vm)
+{
+    FpComp(VAL_0, VAL_0, VAL_0, VAL_0, VAL_16, vn, vm);
+}
+
+void CodeGenerator::Fcmpe(const SReg &vn, const double imm)
+{
+    FpComp(VAL_0, VAL_0, VAL_0, VAL_0, VAL_24, vn, imm);
+}
+
+void CodeGenerator::Fcmpe(const DReg &vn, const DReg &vm)
+{
+    FpComp(VAL_0, VAL_0, VAL_1, VAL_0, VAL_16, vn, vm);
+}
+
+void CodeGenerator::Fcmpe(const DReg &vn, const double imm)
+{
+    FpComp(VAL_0, VAL_0, VAL_1, VAL_0, VAL_24, vn, imm);
+}
+
+void CodeGenerator::Fcmpe(const HReg &vn, const HReg &vm)
+{
+    FpComp(VAL_0, VAL_0, VAL_3, VAL_0, VAL_16, vn, vm);
+}
+
+void CodeGenerator::Fcmpe(const HReg &vn, const double imm)
+{
+    FpComp(VAL_0, VAL_0, VAL_3, VAL_0, VAL_24, vn, imm);
 }
 
 } // ARMCG

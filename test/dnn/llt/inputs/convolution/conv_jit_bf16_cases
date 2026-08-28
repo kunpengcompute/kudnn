@@ -1,0 +1,3 @@
+# BF16 JIT
+--dir=FWD_B --dt=bf16:bf16:bf16 --stag=axb --dtag=axb --wtag=any --batch=conv_jit_shapes_func
+--dir=FWD_B --dt=bf16:bf16:bf16 --stag=any --dtag=any --wtag=any --batch=conv_jit_shapes_func

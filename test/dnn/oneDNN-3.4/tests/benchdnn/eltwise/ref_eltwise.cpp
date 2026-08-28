@@ -1,0 +1,122 @@
+/*******************************************************************************
+* Copyright 2019-2022 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
+
+#include "utils/parallel.hpp"
+
+#include "eltwise/eltwise.hpp"
+
+namespace eltwise {
+
+void compute_ref_fwd(const prb_t *prb, const args_t &args) {
+    const dnn_mem_t &src = args.find(DNNL_ARG_SRC);
+    const dnn_mem_t &dst = args.find(DNNL_ARG_DST);
+
+    float *dst_ptr = (float *)dst;
+
+    const auto nelems = src.nelems();
+    auto v_po_masks = prb->attr.post_ops.get_po_masks();
+
+    auto po_len = prb->attr.post_ops.len();
+
+    if (po_len == 0) {
+        benchdnn_parallel_nd(nelems, [&](int64_t i) {
+            float res = compute_eltwise_fwd(
+                prb->alg, src.get_elem(i), prb->alpha, prb->beta);
+
+            const auto v_po_vals = prepare_po_vals(dst, args, v_po_masks, i);
+
+            maybe_post_ops(prb->attr, res, 0.f, v_po_vals);
+
+            // Backward use_dst case requires data adjustment since lower data type
+            // may have less exact values which will be propagated further.
+            res = ((prb->dir & FLAG_BWD) && prb->use_dst())
+                    ? round_to_nearest_representable(prb->dt, res)
+                    : res;
+            dst_ptr[i] = res;
+        });
+    } else {
+        std::vector<float> vec_src, vec_dst;
+        vec_src.resize(nelems);
+        vec_dst.resize(nelems);
+
+        benchdnn_parallel_nd(nelems, [&](int64_t i) {
+            vec_src[i] = src.get_elem(i);
+            vec_dst[i] = 0.0f;
+        });
+
+        compute_eltwise_fwd_new_all(prb->alg, nelems, prb->alpha, prb->beta, vec_src, vec_dst);
+
+        benchdnn_parallel_nd(nelems, [&](int64_t i) {
+            float res = 0.0f;
+            if (std::isnan(src.get_elem(i))) {
+                res = NAN;
+            } else {
+                res = vec_dst[i];
+            }
+
+            const auto v_po_vals = prepare_po_vals(dst, args, v_po_masks, i);
+
+            maybe_post_ops(prb->attr, res, 0.f, v_po_vals);
+
+            // Backward use_dst case requires data adjustment since lower data type
+            // may have less exact values which will be propagated further.
+            res = ((prb->dir & FLAG_BWD) && prb->use_dst())
+                    ? round_to_nearest_representable(prb->dt, res)
+                    : res;
+            dst_ptr[i] = res;
+        });
+    }
+}
+
+void compute_ref_bwd(const prb_t *prb, const args_t &args) {
+    const dnn_mem_t &src = args.find(DNNL_ARG_SRC);
+    const dnn_mem_t &dst = args.find(DNNL_ARG_DST);
+    const dnn_mem_t &source = prb->use_dst() ? dst : src;
+    const dnn_mem_t &d_dst = args.find(DNNL_ARG_DIFF_DST);
+    const dnn_mem_t &d_src = args.find(DNNL_ARG_DIFF_SRC);
+
+    float *d_src_ptr = (float *)d_src;
+    const auto nelems = src.nelems();
+
+    benchdnn_parallel_nd(nelems, [&](int64_t i) {
+        d_src_ptr[i] = compute_eltwise_bwd(prb->alg, d_dst.get_elem(i),
+                source.get_elem(i), prb->alpha, prb->beta);
+    });
+}
+
+void compute_ref(
+        const prb_t *prb, const args_t &args, dnnl_primitive_t prim_ref) {
+#if (defined(__aarch64__) || defined(__ARM_ARCH))
+        const auto threads_num = benchdnn_get_max_threads();
+
+        benchdnn_parallel_nd(threads_num, [&](int64_t i) {
+            uint64_t fpcr;
+            __asm__ __volatile__("mrs %[fpcr], fpcr" : [fpcr] "=r" (fpcr));
+            __asm__ __volatile__("msr fpcr, %0" : :"ri" (fpcr | (1 << 24U))); // bit 24 controls Flush-To-Zero, set to 1 as that on X86
+        });
+#endif
+    compute_ref_fwd(prb, args);
+    if (prb->dir & FLAG_BWD) compute_ref_bwd(prb, args);
+#if (defined(__aarch64__) || defined(__ARM_ARCH))
+        benchdnn_parallel_nd(threads_num, [&](int64_t i) {
+            uint64_t fpcr;
+            __asm__ __volatile__("mrs %[fpcr], fpcr" : [fpcr] "=r" (fpcr));
+            __asm__ __volatile__("msr fpcr, %0" : :"ri" (fpcr & ~(1 << 24U))); // set bit 24 back to 0
+        });
+#endif
+}
+
+} // namespace eltwise

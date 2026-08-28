@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,7 +10,6 @@
  * See the Mulan PSL v2 for more details.
  */
 
-
 #ifndef KUDNN_ELTWISE_HPP
 #define KUDNN_ELTWISE_HPP
 
@@ -18,41 +17,12 @@
 
 #include "types/kudnn_tensor_info.hpp"
 #include "service/kudnn_err_codes.hpp"
+#include "types/kudnn_eltwise_kinds.hpp"
 
 namespace KuDNN {
-
-// supported functions
-enum class ActivationFunction {
-    UNIMPLEMENTED,
-    ABS,
-    EXP,
-    LINEAR,
-    LOG,
-    RELU,
-    ROUND,
-    SQRT,
-    SQUARE,
-    TANH,
-    SIGMOID,
-    POW,
-    CLIP,
-    CLIP_V2,
-    HARDSIGMOID,
-    HARDSWISH,
-    EXP_DST,
-    LOGISTIC_DST,
-    TANH_DST,
-    ELU,
-    GELU_TANH,
-    CLIP_V2_DST,
-    ELU_DST,
-    RELU_DST,
-    SQRT_DST,
-    SWISH,
-    SRELU,
-    GELU_ERF,
-    MISH
-};
+#ifndef INFINITY
+#define INFINITY (__builtin_inff())
+#endif
 
 namespace Detail {
 
@@ -61,11 +31,11 @@ class ActivationLayerImplBWD;
 
 } // Detail
 
-class KUDNN_API_PUBLIC ActivationLayerFWD final {
+class ActivationLayerFWD final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &srcInfo, const TensorInfo &dstInfo,
-        ActivationFunction kind, float alpha = 0.0f, float beta = 0.0f) noexcept(false);
+        ActivationFunction kind, float alpha = 0.0f, float beta = 0.0f) noexcept;
     ActivationLayerFWD(const TensorInfo &srcInfo, const TensorInfo &dstInfo,
         ActivationFunction kind, float alpha = 0.0f, float beta = 0.0f) noexcept(false);
     ActivationLayerFWD(const ActivationLayerFWD &other) noexcept(false);
@@ -78,7 +48,7 @@ private:
     std::unique_ptr<Detail::ActivationLayerImplFWD> pImpl;
 };
 
-class KUDNN_API_PUBLIC ActivationLayerBWD final {
+class ActivationLayerBWD final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &dsInfo, const TensorInfo &ddInfo,

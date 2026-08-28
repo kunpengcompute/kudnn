@@ -1,0 +1,52 @@
+# post-ops
+--sdt=bf16 --ddt=f16 --stag=bca --dtag=bca --attr-post-ops=mish,add:f32,sum:1.5 --alg=norm_lp_power_p_sum 63x7x127:63x7x1
+--sdt=bf16 --ddt=f16 --stag=bca --dtag=bca --attr-post-ops=exp_dst,logistic_dst,tanh_dst,clip_v2_dst,elu_dst --alg=norm_lp_power_p_sum 63x7x127:63x7x1
+
+# DTS2024090302484
+--sdt=bf16 --ddt=f16 --stag=bca --dtag=bca --attr-post-ops= --alg=norm_lp_power_p_sum 63x7x127:63x7x1
+--sdt=f16 --ddt=s32 --stag=bcda --dtag=bcda --alg=norm_lp_power_p_max 31x31x7x7:31x1x1x7
+--sdt=f32 --ddt=f32 --stag=cdab --dtag=cdab --alg=norm_lp_power_p_max 15x15x31x7:15x1x31x1
+--sdt=bf16 --ddt=f32 --stag=cdba --dtag=cdba --alg=norm_lp_sum 15x15x15x15:15x1x1x15
+--sdt=f16 --ddt=f32 --stag=cdeab --dtag=cdeab --alg=norm_lp_sum 31x15x31x15x3:31x15x31x1x3
+--sdt=f16 --ddt=f16 --stag=bacde --dtag=bacde --alg=norm_lp_power_p_max 15x3x3x31x15:15x3x1x1x15
+--sdt=f16 --ddt=f16 --stag=bcdea --dtag=bcdea --alg=norm_lp_max 7x31x15x15x7:7x1x1x1x7
+--sdt=f16 --ddt=f16 --stag=bcdea --dtag=bcdea --alg=norm_lp_sum 3x15x31x7x3:3x15x31x7x1
+--sdt=f16 --ddt=f16 --stag=cdeba --dtag=cdeba --alg=norm_lp_max 7x31x31x7x15:7x31x31x7x1
+--sdt=f16 --ddt=f16 --stag=cdeba --dtag=cdeba --alg=norm_lp_power_p_sum 3x7x31x15x7:3x1x31x1x1
+--sdt=f16 --ddt=f16 --stag=decab --dtag=decab --alg=norm_lp_power_p_sum 31x15x7x31x3:31x1x7x1x1
+--sdt=bf16 --ddt=f32 --stag=bcdea --dtag=bcdea --alg=norm_lp_power_p_max 31x3x31x1x15:31x1x1x1x15
+--sdt=bf16 --ddt=f32 --stag=decab --dtag=decab --alg=norm_lp_power_p_sum 15x7x31x7x7:15x7x1x7x7
+--sdt=bf16 --ddt=bf16 --stag=acbde --dtag=acbde --alg=norm_lp_sum 1x31x15x15x15:1x31x15x1x1
+--sdt=bf16 --ddt=bf16 --stag=cdeab --dtag=cdeab --alg=norm_lp_max 3x31x3x7x15:3x31x1x7x15
+--sdt=bf16 --ddt=bf16 --stag=cdeab --dtag=cdeab --alg=norm_lp_sum 7x31x15x31x31:7x31x15x1x1
+--sdt=bf16 --ddt=bf16 --stag=decab --dtag=decab --alg=norm_lp_sum 31x31x31x15x31:31x1x1x15x1
+--sdt=bf16 --ddt=bf16 --stag=decab --dtag=decab --alg=norm_lp_power_p_max 31x3x31x15x31:31x3x1x1x31
+--sdt=bf16 --ddt=bf16 --stag=decab --dtag=decab --alg=norm_lp_power_p_sum 31x15x3x7x15:31x15x3x7x1
+
+--reset
+
+# max,min,mul,mean,sum
+--sdt=f32,f16,bf16,s8,u8,s32
+--ddt=f32,f16,bf16,s8,u8,s32
+--alg=max,min,mul,mean,sum
+
+512x512:512x1
+8x128x256:8x1x256
+1023:1
+
+--reset
+
+# 920f norm_lp
+--sdt=f32,f16,bf16
+--ddt=f32,f16,bf16,s8,u8,s32
+--alg=norm_lp_max,norm_lp_sum,norm_lp_power_p_max,norm_lp_power_p_sum
+--p=1.5 --eps=512
+
+8x128x1024:8x128x1
+24x1024:1x1024
+
+--reset
+
+# 920f multithreading
+--sdt=f32 --ddt=f32 --alg=norm_lp_max --p=2 --eps=512 255x32x20x128:255x32x20x1
+--sdt=f32 --ddt=f32 --alg=norm_lp_max --p=2 --eps=512 2x36:2x1

@@ -1,0 +1,4 @@
+# sve impl with large index
+# from DTS2025040140502
+# as memory is not enough while ut & fuzz, change f32 to bf16 to save memory
+--dir=FWD_D --sdt=bf16 --ddt=bf16 --tag=abc --alg=linear mb1813ic1726_iw1491_ow1491

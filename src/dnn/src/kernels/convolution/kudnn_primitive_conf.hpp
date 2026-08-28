@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 #ifndef KUDNN_PRIMITIVE_CONF_HPP
 #define KUDNN_PRIMITIVE_CONF_HPP
 
@@ -20,16 +19,16 @@
 
 namespace KuDNN {
 
-enum class KudnnConvVersionT {
+enum class KdnnConvVersionT {
     KUDNN_VER_UNUSED,
     KUDNN_VER_FMA,
-    KUDNN_VER_VectorComputation_512,
-    KUDNN_VER_VectorComputation_256,
-    KUDNN_VER_MatrixComputation_DIRECT,
-    KUDNN_VER_MatrixComputation_GEMM
+    KUDNN_VER_VC_512,
+    KUDNN_VER_VC_256,
+    KUDNN_VER_MC_DIRECT,
+    KUDNN_VER_MC_GEMM
 };
 
-enum class KudnnConvLoopOrderT {
+enum class KdnnConvLoopOrderT {
     KUDNN_LOOP_CGN,
     KUDNN_LOOP_GNC,
     KUDNN_LOOP_NGC,
@@ -40,13 +39,13 @@ enum class KudnnConvLoopOrderT {
     KUDNN_LOOP_NWCG
 };
 
-enum class KudnnConvKernelKindT {
+enum class KdnnConvKernelKindT {
     KUDNN_EMBD_BCAST,
     KUDNN_EXPL_BCAST,
     KUDNN_CONT_BCAST,
 };
 
-enum class KudnnConvHarnessT {
+enum class KdnnConvHarnessT {
     KUDNN_HARNESS_2D_REDUCTION,
     KUDNN_HARNESS_3D_REDUCTION,
     KUDNN_HARNESS_MB_REDUCTION,
@@ -54,7 +53,7 @@ enum class KudnnConvHarnessT {
     KUDNN_HARNESS_NXC
 };
 
-enum class KudnnConvFlag : unsigned {
+enum class KdnnConvFlag : unsigned {
     KUDNN_FLAG_MB_FIRST = 1 << 0,
     KUDNN_FLAG_MB_LAST = 1 << 1,
     KUDNN_FLAG_OC_FIRST = 1 << 2,
@@ -75,11 +74,11 @@ enum class KudnnConvFlag : unsigned {
                                     pass */
 };
 
-struct KudnnConvJitConfT {
+struct KdnnConvJitConfT {
     Propagation propKind;
-    KudnnConvVersionT ver;
-    KudnnConvLoopOrderT loopOrder;
-    KudnnConvHarnessT harness;
+    KdnnConvVersionT ver;
+    KdnnConvLoopOrderT loopOrder;
+    KdnnConvHarnessT harness;
 
     IntType simdW;
     IntType ndims;
@@ -122,7 +121,7 @@ struct KudnnConvJitConfT {
     bool is1stConv;
     IntType nonblkGroupOff;
     /* fma sve core */
-    KudnnConvKernelKindT kernelKind;
+    KdnnConvKernelKindT kernelKind;
 
     IntType trIw, trIh;
     IntType trKw, trKh;
@@ -181,7 +180,7 @@ struct KudnnConvJitConfT {
     bool isWithGroups;
 };
 
-struct KudnnConvJitCallS {
+struct KdnnConvJitCallS {
     const void *src; /* hack, non-const for backward_data */
     const void *dst; /* hack, non-const for forward */
     const void *filt; /* hack, non-const for backward_weights */
@@ -198,6 +197,15 @@ struct KudnnConvJitCallS {
     const int32_t *dstZeroPoint;
     const void *tileCfg;
     const void *tileCfgTail;
+
+    // MC parameter
+    const void *matrixA;
+    const void *matrixB;
+    const void *matrixC;
+
+    size_t matrixM;
+    size_t matrixN;
+    size_t matrixK;
 
     // ptr to table of void * elements that are pointers to
     // post_op binary src1 tensors
@@ -249,17 +257,6 @@ struct KudnnConvJitCallS {
     IntType flags;
     IntType flagsPrf;
     IntType ocFlag;
-};
-
-struct JitGemmCallS {
-    const void *matrixA;
-    const void *matrixB;
-    const void *matrixC;
-    const void *bias;
-
-    size_t matrixM;
-    size_t matrixN;
-    size_t matrixK;
 };
 
 } // KuDNN

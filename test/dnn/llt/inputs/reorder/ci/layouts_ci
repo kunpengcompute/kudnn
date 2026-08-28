@@ -1,0 +1,7 @@
+--stag=abx
+--dtag=axb
+--batch=shapes_ci
+
+--stag=axb
+--dtag=abx
+--batch=shapes_ci

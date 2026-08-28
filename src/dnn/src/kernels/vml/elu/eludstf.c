@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,41 +13,32 @@
 #include "kernels/vml/vml_sve_base.h"
 #include "kernels/vml/common_macro.h"
 
-/* only for backward_use_dst */
-void EluDstSveFWDF32(const int64_t len, const float alpha, const float *src, float *dst)
-{
-    int64_t i = 0;
-    for (; i < len; i++) {
-        dst[i] = src[i] > 0.f ? src[i] : alpha * expm1f(src[i]);
-    }
-}
-
 static void EluMainKernelBwdF32(svfloat32_t a, const float *src, const float *dd, float *ds, int step)
 {
     svbool_t pg = svptrue_b32();
-    VML_VectorComputation_DECLARE(svfloat32_t, src_x);
-    VML_VectorComputation_DECLARE(svfloat32_t, dd_x);
-    VML_VectorComputation_DECLARE(svfloat32_t, res);
-    VML_VectorComputation_DECLARE(svbool_t, mask_lez);
+    VML_VC_DECLARE(svfloat32_t, src_x);
+    VML_VC_DECLARE(svfloat32_t, dd_x);
+    VML_VC_DECLARE(svfloat32_t, res);
+    VML_VC_DECLARE(svbool_t, mask_lez);
 
-    VML_VectorComputation_LD_STEP(src_x, svld1_f32, pg, src, step);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(mask_lez, svcmple_n_f32, pg, src_x, 0.0f);
+    VML_VC_LD_STEP(src_x, svld1_f32, pg, src, step);
+    VML_VC_FUNC_PG_N2_2PARA(mask_lez, svcmple_n_f32, pg, src_x, 0.0f);
 
-    VML_VectorComputation_LD_STEP(dd_x, svld1_f32, pg, dd, step);
+    VML_VC_LD_STEP(dd_x, svld1_f32, pg, dd, step);
 
-    VML_VectorComputation_FUNC_UPG_N2_2PARA(res, svadd_f32_m, mask_lez, src_x, a);
-    VML_VectorComputation_FUNC_NOPG_3PARA(res, svmul_f32_m, mask_lez, dd_x, res);
+    VML_VC_FUNC_UPG_N2_2PARA(res, svadd_f32_m, mask_lez, src_x, a);
+    VML_VC_FUNC_NOPG_3PARA(res, svmul_f32_m, mask_lez, dd_x, res);
 
-    VML_VectorComputation_ST_STEP(svst1_f32, pg, ds, step, res);
+    VML_VC_ST_STEP(svst1_f32, pg, ds, step, res);
 }
 
-void EluDstSveBWDF32(const int64_t len, const float alpha, const float *src, const float *dd, float *ds)
+void EluDstVCBWDF32(const int64_t len, const float alpha, const float *src, const float *dd, float *ds)
 {
     int64_t i = 0;
     int64_t loopEluDstf = svcntw();
     svfloat32_t va = svdup_n_f32(alpha);
 
-    for (; i <= len - loopEluDstf * VML_VectorComputation_UNFOLD_N; i += loopEluDstf * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopEluDstf * VML_VC_UNFOLD_N; i += loopEluDstf * VML_VC_UNFOLD_N) {
         EluMainKernelBwdF32(va, src + i, dd + i, ds + i, loopEluDstf);
     }
     for (; i < len; i += loopEluDstf) {

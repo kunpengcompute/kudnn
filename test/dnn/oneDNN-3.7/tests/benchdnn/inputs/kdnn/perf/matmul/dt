@@ -1,0 +1,9 @@
+--dt=f32:f32:f32
+--batch=sizes2d
+--batch=sizes3d
+--dt=f16:f16:f16
+--batch=sizes2d
+--batch=sizes3d
+--dt=bf16:bf16:bf16
+--batch=sizes2d
+--batch=sizes3d

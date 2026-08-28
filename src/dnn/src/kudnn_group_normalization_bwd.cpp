@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -32,8 +32,8 @@ public:
         const TensorInfo &scaleShiftInfo, const TensorInfo &diffSc,
         NormalizationFlags flags) noexcept(false) : srcType(srcInfo.GetType()),
         scaleShiftType(scaleShiftInfo.GetType()), dstType(diffDstInfo.GetType()), compType(Element::TypeT::F32),
-        axisNum(srcInfo.GetAxisNumAccordingToLayout((srcInfo.GetNumDims() - 1)) + MAX_DIMS - srcInfo.GetNumDims()),
-        normFlags(flags)
+        finalDimIdx(srcInfo.GetAxisNumAccordingToLayout((srcInfo.GetNumDims() - 1)) + MAX_DIMS - srcInfo.GetNumDims()),
+        numDims(srcInfo.GetNumDims()), normFlags(flags)
     {
         Service::ThrowOnStatus(GroupNormalizationLayerBWD::ValidateInput(
             srcInfo, statInfo, diffSrcInfo, diffDstInfo, scaleShiftInfo, diffSc, flags), "GroupNormalization Layer");
@@ -42,7 +42,7 @@ public:
 
         needToConvert = (srcType != dstType) ||
                         (scaleShiftType != dstType) ||
-                        (axisNum != (reorderedDims.GetNumDims() - 1) &&
+                        (finalDimIdx != (reorderedDims.GetNumDims() - 1) &&
                         (static_cast<bool>(flags & NormalizationFlags::USE_SCALE) ||
                         static_cast<bool>(flags & NormalizationFlags::USE_SHIFT) ||
                         !(static_cast<bool>(flags & NormalizationFlags::USE_GLOBAL_STATS))));
@@ -149,20 +149,19 @@ public:
             diffSrcExec, diffScaleExec, diffShiftExec, eps);
 
         if (needToConvert && (dstType != Element::TypeT::F32)) {
-            Service::Deallocate(const_cast<void *>(diffDstExec));
+            Service::Deallocate(diffDstExec);
         }
         if (needToConvert) {
-            ReorderLayer r({
-                reorderedDims, Element::TypeT::F32, Layout::ABCDE}, {
-                reorderedDims, srcType, Layout::ABCDE});
+            ReorderLayer r({reorderedDims, Element::TypeT::F32, Layout::ABCDE},
+                           {reorderedDims, srcType, Layout::ABCDE});
             r.Run(diffSrcExec, diffSrc);
             Service::Deallocate(diffSrcExec);
         }
         if (needToConvert) {
-            Service::Deallocate(const_cast<void *>(srcExec));
+            Service::Deallocate(srcExec);
         }
         if (needToConvert && scale) {
-            Service::Deallocate(const_cast<void *>(scaleExec));
+            Service::Deallocate(scaleExec);
         }
     }
 
@@ -171,7 +170,8 @@ private:
     Element::Type scaleShiftType;
     Element::Type dstType;
     Element::Type compType;
-    SizeType axisNum;
+    SizeType finalDimIdx;
+    SizeType numDims;
     NormalizationFlags normFlags;
     SizeType channelSize;
     SizeType groupNum;
@@ -204,9 +204,8 @@ private:
     {
         if (needToConvert) {
             void *tmp = Service::AlignedAlloc(reorderedDims.GetTotalDimsSize() * sizeof(float));
-            ReorderLayer r({
-                reorderedDims, srcType, Layout::ABCDE}, {
-                reorderedDims, Element::TypeT::F32, Layout::ABCDE});
+            ReorderLayer r({reorderedDims, srcType, Layout::ABCDE},
+                           {reorderedDims, Element::TypeT::F32, Layout::ABCDE});
             r.Run(src, tmp);
             *srcExec = tmp;
         }
@@ -222,9 +221,8 @@ private:
         }
         if (needToConvert && (dstType != Element::TypeT::F32)) {
             void *tmp = Service::AlignedAlloc(reorderedDims.GetTotalDimsSize() * sizeof(float));
-            ReorderLayer r({
-                reorderedDims, dstType, Layout::ABCDE}, {
-                reorderedDims, Element::TypeT::F32, Layout::ABCDE});
+            ReorderLayer r({reorderedDims, dstType, Layout::ABCDE},
+                           {reorderedDims, Element::TypeT::F32, Layout::ABCDE});
             r.Run(diffDst, tmp);
             *diffDstExec = tmp;
         }
@@ -245,10 +243,9 @@ private:
         const OutType *diffDst, const ScaleShiftType *scale, InType *diffSrc,
         float *diffScale, float *diffShift, float eps) const noexcept(false)
     {
-        SizeType actualThreadNum = reorderedDims.GetTotalDimsSize() / batchSplitDims.GetTotalDimsSize();
-        SizeType threadBatchNum = batchNum / actualThreadNum;
+        SizeType threadBatchNum = batchSplitDims[IDX_5 - numDims];
 
-        if (axisNum == (reorderedDims.GetNumDims() - IDX_1)) {
+        if (finalDimIdx == (reorderedDims.GetNumDims() - IDX_1)) {
             GNorm::EvaluteAbx<CompType>(threadBatchNum, eltPerGroup, src, mean, variance, diffDst,
                 scale, diffSrc, diffScale, diffShift, eps, normFlags, channelSize, channelPerGroup);
         } else {
@@ -313,7 +310,7 @@ Status GroupNormalizationLayerBWD::ValidateInput(const TensorInfo &srcInfo, cons
         srcInfo.GetLayout() != srcInfo.GetStandardAXBLayout()) {
         return Status::UNSUPPORTED;
     }
-    
+
     bool isUnsupported = ((static_cast<bool>(flags & NormalizationFlags::USE_SCALE)) ||
         (static_cast<bool>(flags & NormalizationFlags::USE_SHIFT))) &&
         (scaleShiftInfo.GetType() != Element::TypeT::F32) &&

@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
+ *
+ * KuDNN is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *        http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
+#include "kernels/pooling/kudnn_pooling_axb_bwd_def.hpp"
+
+namespace KuDNN {
+namespace Detail {
+namespace Pooling {
+
+template
+void EvaluateAxbBWD<POOL_TYPE, COMP_TYPE, SRC_TYPE, DST_TYPE, WS_TYPE>(
+    const Shape &start, const Shape &end, SRC_TYPE *typedSrc, const DST_TYPE *typedDst,
+    const WS_TYPE *typedWs, float *srcTmpBuf, const Shape &initialDims, const Shape &outputDims,
+    const Shape &stridesSrc, const Shape &stridesDst, const Shape &kernel,
+    const Shape &strides, const Shape &dilation, const Shape &paddingL, SizeType ndims) noexcept;
+
+} // Pooling
+} // Detail
+} // KuDNN

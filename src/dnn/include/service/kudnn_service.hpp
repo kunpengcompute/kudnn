@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_SERVICE_HPP
 #define KUDNN_SERVICE_HPP
@@ -28,11 +27,11 @@ namespace Service {
 
 constexpr SizeType ALIGNMENT = 128;
 
-KUDNN_API_PUBLIC SizeType GetIdxForUserLayout(Layout l, SizeType idx) noexcept(false);
+SizeType GetIdxForUserLayout(Layout l, SizeType idx) noexcept(false);
 
-KUDNN_API_PUBLIC Shape GetShapeAccordingToLayout(const Shape &sh, Layout parLayout) noexcept;
+Shape GetShapeAccordingToLayout(const Shape &sh, Layout parLayout) noexcept(false);
 
-KUDNN_API_PUBLIC Shape FlushStrides(const Shape &dims, const Shape &strides) noexcept(false);
+Shape FlushStrides(const Shape &dims, const Shape &strides) noexcept(false);
 
 template<typename...>
 struct IsAllSame : std::false_type {};
@@ -89,8 +88,9 @@ bool WillIntMultOverflow(ForwardIt begin, ForwardIt end) noexcept
 }
 
 // User may use allocation/deallocation functions directly or via allocator class
-KUDNN_API_PUBLIC void *AlignedAlloc(SizeType n, SizeType alignment = ALIGNMENT) noexcept(false);
-KUDNN_API_PUBLIC void Deallocate(void *p, SizeType n = 0) noexcept;
+void *AlignedAlloc(SizeType n, SizeType alignment = ALIGNMENT) noexcept(false);
+void Deallocate(void *p, SizeType n = 0) noexcept;
+void Deallocate(const void *p, SizeType n = 0) noexcept;
 
 // This class represents an allocator which user may use in order to obtain aligned memory
 // and pass it inside KuDNN functions. To be compatible with std::allocator all member names are in snake_case

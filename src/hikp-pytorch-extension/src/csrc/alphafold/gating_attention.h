@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
+ *
+ * KuDNN is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *        http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
+#pragma once
+#include <ATen/core/Tensor.h>
+#include <torch/extension.h>
+
+namespace alphafold {
+at::Tensor GatingAttentionFwd(at::Tensor &qdata, at::Tensor &mdata, at::Tensor &queryWeight,
+    at::Tensor &keyWeight, at::Tensor &valueWeight, at::Tensor &logitsBias,
+    at::Tensor &nonbatchedBias, at::Tensor &gatingWeight, at::Tensor &gatingBias,
+    at::Tensor &outputWeight, at::Tensor &outputBias, int64_t blockSize);
+}

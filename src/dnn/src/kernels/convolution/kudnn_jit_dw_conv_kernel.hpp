@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -14,55 +14,49 @@
 #define KUDNN_JIT_DW_CONV_KERNEL_HPP
 
 #include "cg_jit_generator.hpp"
+#include "kudnn_brgemm_conv_utils.hpp"
 #include "kudnn_primitive_conf.hpp"
 
 namespace KuDNN {
 using namespace ARMCG;
-
 template<CPUISAT isa>
-struct KudnnJitDwConvFwdKernel : public JitGenerator {
+struct KdnnJitDwConvFwdKernel : public JitGenerator {
 public:
-    explicit KudnnJitDwConvFwdKernel(const KudnnConvJitConfT &jcc) : jcp(jcc) {}
+    explicit KdnnJitDwConvFwdKernel(const KdnnConvJitConfT &jcc) : jcp(jcc) {}
 
     const char *Name() const override
     {
-        return "KudnnJitDwConvFwdKernel";
+        return "KdnnJitDwConvFwdKernel";
     }
     const char *SourceFile() const override
     {
         return __FILE__;
     }
 
-    KudnnConvJitConfT jcp;
+    KdnnConvJitConfT jcp;
 
 private:
-    inline ZRegS GetSrcRegS(int idx)
+    inline ZRegS GetSrcRegS(IntType idx)
     {
-        assert(idx + RINDEX1 <= RINDEX31);
         return ZRegS(idx + RINDEX1);
     }
-    inline ZRegS GetKerRegS(int idx)
+    inline ZRegS GetKerRegS(IntType idx)
     {
-        assert(idx <= RINDEX31);
         return ZRegS(idx);
     }
-    inline ZRegS GetAccRegS(int idx)
+    inline ZRegS GetAccRegS(IntType idx)
     {
-        assert(idx + RINDEX4 <= RINDEX31);
         return ZRegS(idx + RINDEX4);
     }
-
-    inline int DivUp(int a, int b)
+    IntType GetOWStart(IntType ki, IntType padL)
     {
-        return (a + b - 1) / b;
+        IntType midKval = Math::CeilDiv(padL - ki * (jcp.dilateW + 1), jcp.strideW);
+        return (midKval > 0 ? midKval : 0);
     }
-    int GetOWStart(int ki, int padL)
+    IntType GetOWEnd(IntType urW, IntType ki, IntType padR)
     {
-        return std::max(0, DivUp(padL - ki * (jcp.dilateW + 1), jcp.strideW));
-    }
-    int GetOWEnd(int urW, int ki, int padR)
-    {
-        return urW - std::max(0, DivUp(padR - (jcp.kw - 1 - ki) * (jcp.dilateW + 1), jcp.strideW));
+        IntType resOwEnd = Math::CeilDiv(padR - (jcp.kw - 1 - ki) * (jcp.dilateW + 1), jcp.strideW);
+        return urW - (resOwEnd > 0 ? resOwEnd : 0);
     }
     inline bool IsLayoutNXC(Layout tag)
     {
@@ -77,14 +71,14 @@ private:
         return IsLayoutNXC(jcp.dstTag);
     }
 
-    inline void LoadSrc(int urChBlock, int urW);
-    inline void ApplyFilterUnrolled(int urChBlock, int urW, int padL, int padR);
-    inline void StoreDst(int urChBlock, int urW);
-    inline void ComputeLoop(int urW, int urChBlock, int padL, int padR);
-    inline void OWLoop(int urChBlock);
+    inline void LoadSrc(IntType urChBlock, IntType urW);
+    inline void ApplyFilterUnrolled(IntType urChBlock, IntType urW, IntType padL, IntType padR);
+    inline void StoreDst(IntType urChBlock, IntType urW);
+    inline void ComputeLoop(IntType urW, IntType urChBlock, IntType padL, IntType padR);
+    inline void OWLoop(IntType urChBlock);
     void Generate() override;
 
-    const int vlen = CpuIsaTraits<isa>::VLEN;
+    const IntType vlen = CpuIsaTraits<isa>::VLEN;
     const XReg regInp = x1;
     const XReg regInpAux = x2;
     const XReg regKer = x3;

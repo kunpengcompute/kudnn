@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #include "kudnn.hpp"
-#include "kblas.h"
 
 #include "internal_funcs.hpp"
 #include "threading_impl.hpp"
@@ -41,7 +40,7 @@ static EnvMode g_modeType = EnvMode::KUDNN_THREAD_USE_ENV;
 static ThreadingControl g_useKUDNNThreading = ThreadingControl::KUDNN_DEFAULT;
 static bool g_fixedNumThreads = false;
 
-static CONSTRUCTOR void KudnnParallelParamInit() noexcept
+static CONSTRUCTOR void KdnnParallelParamInit() noexcept
 {
     g_availableCores = sysconf(_SC_NPROCESSORS_ONLN);
     int maxThreadFromCaller = std::min(g_availableCores, omp_get_max_threads());
@@ -53,7 +52,6 @@ static CONSTRUCTOR void KudnnParallelParamInit() noexcept
                 g_fixedNumThreads = true;
                 g_kdnnFixedNumThreads = std::min(g_kdnnFixedNumThreads, g_availableCores);
                 g_useKUDNNThreading = ThreadingControl::KUDNN_MANUAL;
-                BlasSetNumThreads(g_kdnnFixedNumThreads);
                 return;
             }
         }
@@ -64,8 +62,6 @@ static CONSTRUCTOR void KudnnParallelParamInit() noexcept
             g_kdnnMaxNumThreads = std::atol(pkdnnNumThreads);
             if (g_kdnnMaxNumThreads > 0) {
                 g_kdnnMaxNumThreads = std::min(g_kdnnMaxNumThreads, g_availableCores);
-                g_useKUDNNThreading = ThreadingControl::KUDNN_MANUAL;
-                BlasSetNumThreads(g_kdnnMaxNumThreads);
                 return;
             }
         }
@@ -73,7 +69,6 @@ static CONSTRUCTOR void KudnnParallelParamInit() noexcept
 
     g_useKUDNNThreading = ThreadingControl::KUDNN_DEFAULT;
     g_kdnnMaxNumThreads = maxThreadFromCaller;
-    BlasSetNumThreads(g_kdnnMaxNumThreads);
 }
 
 EnvMode SetEnvMode(EnvMode mode) noexcept
@@ -87,8 +82,6 @@ int SetMaxNumThreads(int nThreads) noexcept
     int oldkdnnMaxNumThreads = g_kdnnMaxNumThreads;
     if ((nThreads > 0) && (nThreads <= g_availableCores)) {
         g_kdnnMaxNumThreads = nThreads;
-        g_useKUDNNThreading = ThreadingControl::KUDNN_MANUAL;
-        BlasSetNumThreads(g_kdnnMaxNumThreads);
     }
     return oldkdnnMaxNumThreads;
 }
@@ -100,7 +93,6 @@ int SetFixedNumThreads(int nThreads) noexcept
         g_fixedNumThreads = true;
         g_kdnnFixedNumThreads = nThreads;
         g_useKUDNNThreading = ThreadingControl::KUDNN_MANUAL;
-        BlasSetNumThreads(g_kdnnFixedNumThreads);
     }
     return oldkdnnFixedNumThreads;
 }
@@ -179,7 +171,8 @@ std::vector<std::pair<Shape, Shape>> SplitDims(const Shape &batchedDims, SizeTyp
         numThreadsLastSplitDim = batchedDims[lastDimSplitIdx];
     }
 
-    splitDims[lastDimSplitIdx] = (batchedDims[lastDimSplitIdx] + numThreadsLastSplitDim - 1) / numThreadsLastSplitDim;
+    splitDims[lastDimSplitIdx] = Math::CeilDiv(batchedDims[lastDimSplitIdx], numThreadsLastSplitDim);
+    numThreadsLastSplitDim = Math::CeilDiv(batchedDims[lastDimSplitIdx], splitDims[lastDimSplitIdx]);
 
     // to avoid cases such as 7 threads over 17 numbers (we will actually have 5 threads for 3 and 1 thread for 2,
     // total 6 threads in use)

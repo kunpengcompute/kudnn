@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -49,7 +49,7 @@ enum class AdrKind {
     BASE_IMM = 1 << 1,     // immidiate offset: [Rn, #<offset_12>]
     BASE_REG = 1 << 2,     // scaled register offset: [Rn, Rm, <shift>#<offset_12>]
     BASE_EXT = 1 << 3,     // for use with load SIMD and FP Register: [Xn|SP, (Wm|Xm), extend {amount}]
-    PRE = 1 << 4,          // immediate pre-indexed: [Rn, #<offset_12>]!
+    PRE_IMM = 1 << 4,          // immediate pre-indexed: [Rn, #<offset_12>]!
     POST_IMM = 1 << 5,     // immediate post-indexed: [Rn], #<offset_12>
     POST_REG = 1 << 6,     // scaled register post-indexed: [Rn], Rm, <shift>#<offset_12>
     SC_SC = 1 << 7,        // scalar plus immediate index: [<Xn|SP>{, #<imm>, MUL VL}]
@@ -61,7 +61,7 @@ enum class AdrKind {
     VEC_IMM32E = 1 << 13,  // vector base plus immediate offset (32-bit element)
     VEC_SC32E = 1 << 14,   // vector base pulus 64-bit scalar offset (32-bit element)
     VEC_SC64E = 1 << 15,   // vector base pulus 64-bit scalar offset (32-bit element)
-    VEC_PACK = 1 << 16,    // vector (packed) // for VectorComputation address generator
+    VEC_PACK = 1 << 16,    // vector (packed) // for VC address generator
     VEC_UNPACK = 1 << 17,  // vector (unpacked)
 };
 
@@ -95,10 +95,10 @@ private:
     AdrKind kind_;
 };
 
-// pre-indexed
-class AdrPreImm : public Adr {
+// many addressing modes take the form [Xn, #<imm>] so we define an intermediate class to avoid code repetition
+class AdrScalarPlusImm : public Adr {
 public:
-    explicit AdrPreImm(const XReg &xn, int32_t imm) : Adr(AdrKind::PRE), xn_(xn), imm_(imm) {}
+    explicit AdrScalarPlusImm(AdrKind kind, const XReg &xn, int32_t imm) : Adr(kind), xn_(xn), imm_(imm) {}
 
     const XReg &GetXn() const
     {
@@ -109,34 +109,15 @@ public:
         return imm_;
     }
 
-private:
+protected:
     XReg xn_;
     int32_t imm_;
 };
 
-// pos-indexed (immediate offset)
-class AdrPostImm : public Adr {
+// many addressing modes take the form [Xn, Xm] so we define an intermediate class to avoid code repetition
+class AdrScalarPlusScalar : public Adr {
 public:
-    explicit AdrPostImm(const XReg &xn, int32_t imm) : Adr(AdrKind::POST_IMM), xn_(xn), imm_(imm) {}
-
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    int32_t GetImm() const
-    {
-        return imm_;
-    }
-
-private:
-    XReg xn_;
-    int32_t imm_;
-};
-
-// pos-indexed (register offset)
-class AdrPostReg : public Adr {
-public:
-    explicit AdrPostReg(const XReg &xn, const XReg &xm) : Adr(AdrKind::POST_REG), xn_(xn), xm_(xm) {}
+    explicit AdrScalarPlusScalar(AdrKind kind, const XReg &xn, const XReg &xm) : Adr(kind), xn_(xn), xm_(xm) {}
 
     const XReg &GetXn() const
     {
@@ -147,9 +128,27 @@ public:
         return xm_;
     }
 
-private:
+protected:
     XReg xn_;
     XReg xm_;
+};
+
+// pre-indexed (immediate offset)
+class AdrPreImm : public AdrScalarPlusImm {
+public:
+    explicit AdrPreImm(const XReg &xn, int32_t imm) : AdrScalarPlusImm(AdrKind::PRE_IMM, xn, imm) {}
+};
+
+// pos-indexed (immediate offset)
+class AdrPostImm : public AdrScalarPlusImm {
+public:
+    explicit AdrPostImm(const XReg &xn, int32_t imm) : AdrScalarPlusImm(AdrKind::POST_IMM, xn, imm) {}
+};
+
+// pos-indexed (register offset)
+class AdrPostReg : public AdrScalarPlusScalar {
+public:
+    explicit AdrPostReg(const XReg &xn, const XReg &xm) : AdrScalarPlusScalar(AdrKind::POST_REG, xn, xm) {}
 };
 
 // base only
@@ -166,23 +165,10 @@ private:
 };
 
 // base plus offset (signed immediate)
-class AdrImm : public Adr {
+class AdrImm : public AdrScalarPlusImm {
 public:
-    explicit AdrImm(const XReg &xn, int32_t imm) : Adr(AdrKind::BASE_IMM), xn_(xn), imm_(imm) {}
-    explicit AdrImm(const AdrNoOfs &a) : Adr(AdrKind::BASE_IMM), xn_(a.GetXn()), imm_(0) {}
-
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    int32_t GetImm() const
-    {
-        return imm_;
-    }
-
-private:
-    XReg xn_;
-    int32_t imm_;
+    explicit AdrImm(const XReg &xn, int32_t imm) : AdrScalarPlusImm(AdrKind::BASE_IMM, xn, imm) {}
+    explicit AdrImm(const AdrNoOfs &a) : AdrScalarPlusImm(AdrKind::BASE_IMM, a.GetXn(), 0) {}
 };
 
 // base plus offset (unsigned immediate)
@@ -207,49 +193,39 @@ private:
 };
 
 // base plus offset (register)
-class AdrReg : public Adr {
+class AdrReg : public AdrScalarPlusScalar {
 public:
     explicit AdrReg(const XReg &xn, const XReg &xm, ShMod mod, uint32_t sh)
-        : Adr(AdrKind::BASE_REG), xn_(xn), xm_(xm), mod_(mod), sh_(sh), init_(true) {}
+        : AdrScalarPlusScalar(AdrKind::BASE_REG, xn, xm), modReg_(mod), shReg_(sh), initReg_(true) {}
     explicit AdrReg(const XReg &xn, const XReg &xm, ShMod mod = ShMod::LSL)
-        : Adr(AdrKind::BASE_REG), xn_(xn), xm_(xm), mod_(mod), sh_(0), init_(false) {}
+        : AdrScalarPlusScalar(AdrKind::BASE_REG, xn, xm), modReg_(mod), shReg_(0), initReg_(false) {}
 
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    const XReg &GetXm() const
-    {
-        return xm_;
-    }
     ShMod GetMod() const
     {
-        return mod_;
+        return modReg_;
     }
     uint32_t GetSh() const
     {
-        return sh_;
+        return shReg_;
     }
     bool GetInitSh() const
     {
-        return init_;
+        return initReg_;
     }
 
 private:
-    XReg xn_;
-    XReg xm_;
-    ShMod mod_;
-    uint32_t sh_;
-    bool init_;
+    ShMod modReg_;
+    uint32_t shReg_;
+    bool initReg_;
 };
 
 // base plus offset (extended register)
 class AdrExt : public Adr {
 public:
     explicit AdrExt(const XReg &xn, const RReg &rm, ExtMod mod, uint32_t sh)
-        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), mod_(Trans(rm, mod)), sh_(sh), init_(true) {}
+        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), modExt_(Trans(rm, mod)), shExt_(sh), initExt_(true) {}
     explicit AdrExt(const XReg &xn, const RReg &rm, ExtMod mod)
-        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), mod_(Trans(rm, mod)), sh_(0), init_(false) {}
+        : Adr(AdrKind::BASE_EXT), xn_(xn), rm_(rm), modExt_(Trans(rm, mod)), shExt_(0), initExt_(false) {}
 
     const XReg &GetXn() const
     {
@@ -261,60 +237,49 @@ public:
     }
     ExtMod GetMod() const
     {
-        return mod_;
+        return modExt_;
     }
     uint32_t GetSh() const
     {
-        return sh_;
+        return shExt_;
     }
     bool GetInitSh() const
     {
-        return init_;
+        return initExt_;
     }
 
 private:
     XReg xn_;
     RReg rm_;
-    ExtMod mod_;
-    uint32_t sh_;
-    bool init_;
+    ExtMod modExt_;
+    uint32_t shExt_;
+    bool initExt_;
 };
 
 // scalar plus scalar
-class AdrScSc : public Adr {
+class AdrScSc : public AdrScalarPlusScalar {
 public:
     explicit AdrScSc(const XReg &xn, const XReg &xm, ShMod mod, uint32_t sh)
-        : Adr(AdrKind::SC_SC), xn_(xn), xm_(xm), mod_(mod), sh_(sh), init_(true) {}
+        : AdrScalarPlusScalar(AdrKind::SC_SC, xn, xm), modScSc_(mod), shScSc_(sh), initScSc_(true) {}
     explicit AdrScSc(const XReg &xn, const XReg &xm)
-        : Adr(AdrKind::SC_SC), xn_(xn), xm_(xm), mod_(ShMod::LSL), sh_(0), init_(false) {}
-
-    const XReg &GetXn() const
-    {
-        return xn_;
-    }
-    const XReg &GetXm() const
-    {
-        return xm_;
-    }
+        : AdrScalarPlusScalar(AdrKind::SC_SC, xn, xm), modScSc_(ShMod::LSL), shScSc_(0), initScSc_(false) {}
     uint32_t GetSh() const
     {
-        return sh_;
+        return shScSc_;
     }
     ShMod GetMod() const
     {
-        return mod_;
+        return modScSc_;
     }
     bool GetInitMod() const
     {
-        return init_;
+        return initScSc_;
     }
 
 private:
-    XReg xn_;
-    XReg xm_;
-    ShMod mod_;
-    uint32_t sh_;
-    bool init_;
+    ShMod modScSc_;
+    uint32_t shScSc_;
+    bool initScSc_;
 };
 
 // scalar plus immediate

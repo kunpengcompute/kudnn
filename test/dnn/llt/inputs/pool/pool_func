@@ -1,0 +1,30 @@
+# forward
+--dir=FWD_D,FWD_I
+--dt=f32,f16,bf16,s8,u8,s32
+--tag=abx,axb
+--alg=max,avg_np,avg_p
+--attr-post-ops=,mish,add:f32,exp_dst,logistic_dst,tanh_dst,clip_v2_dst,elu_dst
+--batch=pool_shapes_func
+
+# backward
+--dir=BWD_D
+--dt=f32,f16,bf16
+--tag=abx,axb
+--alg=max,avg_np,avg_p
+--attr-post-ops=
+--batch=pool_shapes_func
+
+# backward
+--dir=BWD_D
+--dt=f32,f16,bf16
+--tag=abx,axb
+--alg=max,avg_np,avg_p
+--attr-post-ops=
+mb4ic1_iw30_ow15_kw513_sw2_pw1pw1
+
+# forward
+--dir=FWD_D,FWD_I
+--dt=f32,f16,bf16,s8,u8,s32
+--tag=abx,axb
+--alg=max,avg_np,avg_p
+mb4ic1_iw30_ow15_kw513_sw2_pw1pw1

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -103,21 +103,25 @@ struct ReorderWrapper final : Wrapper<ReorderWrapper> {
             ((tensorInfo.GetLayout() != desiredInfo.GetLayout()) &&
                 (tensorInfo.GetStrides() != desiredInfo.GetStrides())));
     }
-    const void *Get(const void *data) const
+    const void *Get(const void *data, bool onlyUninitializedMemoryIsEnough = false) const
     {
         if ((p == nullptr) || (data == nullptr)) {
             return data;
         } else {
-            obj->Run(data, p);
+            if (!onlyUninitializedMemoryIsEnough) {
+                obj->Run(data, p);
+            }
             return p;
         }
     }
-    void *Get(void *data) const
+    void *Get(void *data, bool onlyUninitializedMemoryIsEnough = false) const
     {
         if ((p == nullptr) || (data == nullptr)) {
             return data;
         } else {
-            obj->Run(data, p);
+            if (!onlyUninitializedMemoryIsEnough) {
+                obj->Run(data, p);
+            }
             return p;
         }
     }
@@ -140,7 +144,11 @@ struct CodeGenWrapper final : Wrapper<CodeGenWrapper<CodeGenKind>> {
     {
         VERBOSE_PRINT;
     }
-    CodeGenWrapper& operator=(CodeGenWrapper &&other) = delete;
+    CodeGenWrapper& operator=(CodeGenWrapper &&other) noexcept
+    {
+        Wrapper<CodeGenWrapper>::operator=(std::move(other));
+        return *this;
+    };
     template <typename ...Args>
     void InitPostamble(Args&& ... args) const noexcept
     {
@@ -153,6 +161,16 @@ struct CodeGenWrapper final : Wrapper<CodeGenWrapper<CodeGenKind>> {
     {
         VERBOSE_PRINT;
         return this->obj->template GetCode<F>();
+    }
+    uint8_t* GetCode() const
+    {
+        VERBOSE_PRINT;
+        return this->obj-> GetCode();
+    }
+    size_t GetSize() const
+    {
+        VERBOSE_PRINT;
+        return this->obj-> GetSize();
     }
     ~CodeGenWrapper()
     {

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,51 +20,23 @@
 #include "kudnn.hpp"
 #include "vector_wrappers.hpp"
 #include "threading_impl.hpp"
-#include "parallel_for.h"
 
 namespace KuDNN {
 namespace Detail {
 
-template <typename T>
-struct Img2colNN final { // wei - ncdhw, src - ncdhw
-    static void Do(const T* dataIm, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T* dataCol, SizeType ndims, int numThreads) noexcept
-    {
-        bool is2d = (ndims >= DIM_4);
-        bool is3d = (ndims == DIM_5);
-
-        Shape shape(channels, ksizeD, ksizeH, ksizeW, outDept);
-        Threading::ParallelForND<NUM_5>::run(
-            [&](int c, int kd, int kh, int kw, int od) {
-                for (IntType oh = 0; oh < outHeight; ++oh) {
-                    for (IntType ow = 0; ow < outWidth; ++ow) {
-                        IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
-                        IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
-                        IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((c * ksizeD + kd) * ksizeH + kh) * ksizeW + kw)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((c * depth + id) * height + ih) * width + iw];
-                        }
-                    }
-                }
-            }, shape, numThreads);
-    }
+enum class ImgLayout {
+    NN,
+    NT,
+    TN,
+    TT
 };
 
-template <typename T>
-struct Img2colNT final { // wei - ncdhw, src - ndhwc
+template <typename T, ImgLayout layout>
+struct Img2col final { // wei - ncdhw, src - ncdhw
     static void Do(const T* dataIm, IntType channels,
         IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
+        IntType outDepth, IntType outHeight, IntType outWidth,
+        IntType kSizeD, IntType kSizeH, IntType kSizeW,
         IntType padD, IntType padH, IntType padW,
         IntType strideD, IntType strideH, IntType strideW,
         IntType dilateD, IntType dilateH, IntType dilateW,
@@ -73,91 +45,47 @@ struct Img2colNT final { // wei - ncdhw, src - ndhwc
         bool is2d = (ndims >= DIM_4);
         bool is3d = (ndims == DIM_5);
 
-        Shape shape(channels, ksizeD, ksizeH, ksizeW, outDept);
-        Threading::ParallelForND<NUM_5>::run(
-            [&](int c, int kd, int kh, int kw, int od) {
-                for (IntType oh = 0; oh < outHeight; ++oh) {
-                    for (IntType ow = 0; ow < outWidth; ++ow) {
-                        IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
-                        IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
-                        IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((c * ksizeD + kd) * ksizeH + kh) * ksizeW + kw)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((id * height + ih) * width + iw) * channels + c];
+#pragma omp parallel for num_threads(numThreads) collapse(NUM_5)
+        for (IntType c = 0; c < channels; ++c) {
+            for (IntType kd = 0; kd < kSizeD; ++kd) {
+                for (IntType kh = 0; kh < kSizeH; ++kh) {
+                    for (IntType kw = 0; kw < kSizeW; ++kw) {
+                        for (IntType od = 0; od < outDepth; ++od) {
+                            for (IntType oh = 0; oh < outHeight; ++oh) {
+                                for (IntType ow = 0; ow < outWidth; ++ow) {
+                                    IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
+                                    IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
+                                    IntType iw = ow * strideW - padW + kw * dilateW;
+                                    bool inside = (id >= 0) && (id < depth) && (ih >= 0) &&
+                                        (ih < height) && (iw >= 0) && (iw < width);
+                                    if (inside) {
+                                        if constexpr (layout == ImgLayout::NN) {
+                                            dataCol[(((((c * kSizeD + kd) * kSizeH + kh) * kSizeW + kw)
+                                                * outDepth + od) * outHeight + oh) * outWidth + ow] =
+                                                    dataIm[((c * depth + id) * height + ih) * width + iw];
+                                        } else if constexpr (layout == ImgLayout::NT) {
+                                            dataCol[(((((c * kSizeD + kd) * kSizeH + kh) * kSizeW + kw)
+                                                * outDepth + od) * outHeight + oh) * outWidth + ow] =
+                                                    dataIm[((id * height + ih) * width + iw) *
+                                                    channels + c];
+                                        } else if constexpr (layout == ImgLayout::TN) {
+                                            dataCol[(((((kd * kSizeH + kh) * kSizeW + kw) * channels + c)
+                                                * outDepth + od) * outHeight + oh) * outWidth + ow] =
+                                                    dataIm[((c * depth + id) * height + ih) * width + iw];
+                                        } else if constexpr (layout == ImgLayout::TT) {
+                                            dataCol[(((((kd * kSizeH + kh) * kSizeW + kw) * channels + c)
+                                                * outDepth + od) * outHeight + oh) * outWidth + ow] =
+                                                    dataIm[((id * height + ih) * width + iw) *
+                                                    channels + c];
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }, shape, numThreads);
-    }
-};
-
-template <typename T>
-struct Img2colTN final { // wei - ndhwc, src - ncdhw
-    static void Do(const T* dataIm, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T* dataCol, SizeType ndims, int numThreads) noexcept
-    {
-        bool is2d = (ndims >= DIM_4);
-        bool is3d = (ndims == DIM_5);
-
-        Shape shape(channels, ksizeD, ksizeH, ksizeW, outDept);
-        Threading::ParallelForND<NUM_5>::run(
-            [&](int c, int kd, int kh, int kw, int od) {
-                for (IntType oh = 0; oh < outHeight; ++oh) {
-                    for (IntType ow = 0; ow < outWidth; ++ow) {
-                        IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
-                        IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
-                        IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((kd * ksizeH + kh) * ksizeW + kw) * channels + c)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((c * depth + id) * height + ih) * width + iw];
-                        }
-                    }
-                }
-            }, shape, numThreads);
-    }
-};
-
-template <typename T>
-struct Img2colTT final { // wei - ndhwc, src - ndhwc
-    static void Do(const T* dataIm, IntType channels,
-        IntType depth, IntType height, IntType width,
-        IntType outDept, IntType outHeight, IntType outWidth,
-        IntType ksizeD, IntType ksizeH, IntType ksizeW,
-        IntType padD, IntType padH, IntType padW,
-        IntType strideD, IntType strideH, IntType strideW,
-        IntType dilateD, IntType dilateH, IntType dilateW,
-        T* dataCol, SizeType ndims, int numThreads) noexcept
-    {
-        bool is2d = (ndims >= DIM_4);
-        bool is3d = (ndims == DIM_5);
-
-        Shape shape(ksizeD, ksizeH, ksizeW, channels, outDept);
-        Threading::ParallelForND<NUM_5>::run(
-            [&](int kd, int kh, int kw, int c, int od) {
-                for (IntType oh = 0; oh < outHeight; ++oh) {
-                    for (IntType ow = 0; ow < outWidth; ++ow) {
-                        IntType id = is3d ? (od * strideD - padD + kd * dilateD) : 0;
-                        IntType ih = is2d ? (oh * strideH - padH + kh * dilateH) : 0;
-                        IntType iw = ow * strideW - padW + kw * dilateW;
-                        if ((id >= 0) && (id < depth) && (ih >= 0) && (ih < height) && (iw >= 0) &&
-                            (iw < width)) {
-                            dataCol[(((((kd * ksizeH + kh) * ksizeW + kw) * channels + c)
-                                * outDept + od) * outHeight + oh) * outWidth + ow] =
-                                    dataIm[((id * height + ih) * width + iw) * channels + c];
-                        }
-                    }
-                }
-            }, shape, numThreads);
+            }
+        }
     }
 };
 
@@ -177,6 +105,7 @@ struct Col2img final {
 
         IntType channelSize = depth * height * width;
         std::fill(dataIm, dataIm + channels * channelSize, Vector::Convert<float, T2>::Do(0.0f));
+#pragma omp parallel for collapse(NUM_1)
         for (IntType c = 0; c < channels; ++c) {
             for (IntType kd = 0; kd < ksizeD; ++kd) {
                 for (IntType kh = 0; kh < ksizeH; ++kh) {

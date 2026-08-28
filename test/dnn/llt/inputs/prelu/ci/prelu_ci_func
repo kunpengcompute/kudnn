@@ -1,0 +1,5 @@
+--dir=FWD_D,BWD_DW
+--sdt=f32:f32,bf16:bf16,f16:f16,s32:s32,u8:u8,s8:s8
+--stag=abx:abx,axb:axb,bxa:bxa,bax:bax,xab:xab,xba:xba
+16x16x16x16:16x16x16x16
+32x32x32x32:32x32x32x32

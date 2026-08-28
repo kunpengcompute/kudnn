@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -50,7 +50,7 @@ class SoftmaxLayerBWDImpl final : public Parallelizable {
 public:
 
     SoftmaxLayerBWDImpl(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo,
-        const TensorInfo &srcDiffInfo, SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept(false)
+        const TensorInfo &srcDiffInfo, SizeType axis, AlgorithmKind algorithm) noexcept(false)
         : compType(Element::TypeT::F32), dstT(dstInfo), dstDiffT(dstDiffInfo), srcDiffT(srcDiffInfo),
         /*  since all the arrays are broadcasted to 5D, we need to add extra dimensions which were broadcasted */
         axisNum(dstInfo.GetAxisNumAccordingToLayout(axis) + MAX_DIMS - dstInfo.GetNumDims()), algKind(algorithm)
@@ -140,8 +140,8 @@ public:
 
             ReorderLayer rr({dstT.GetDims(), compType, dstT.GetLayout()}, srcDiffT);
             rr.Run(srcDiffExec, srcDiff);
-            Service::Deallocate(const_cast<void *>(dstExec));
-            Service::Deallocate(const_cast<void *>(dstDiffExec));
+            Service::Deallocate(dstExec);
+            Service::Deallocate(dstDiffExec);
             Service::Deallocate(srcDiffExec);
         } else if ((srcDiffT.GetType() == dstT.GetType()) && (srcDiffT.GetLayout() != dstT.GetLayout())) {
             srcDiffExec = Service::AlignedAlloc(srcDiffT.GetDims().GetTotalDimsSize() * srcDiffT.GetType().GetSize());
@@ -162,7 +162,7 @@ private:
     TensorInfo dstDiffT;
     TensorInfo srcDiffT;
     SizeType axisNum;
-    SoftmaxAlgorithmKind algKind;
+    AlgorithmKind algKind;
     Shape reorderedDims;
     Shape reorderedStridesDst;
     Shape reorderedStridesDstDiff;
@@ -224,7 +224,7 @@ private:
 SoftmaxLayerBWD::~SoftmaxLayerBWD() noexcept {}
 
 SoftmaxLayerBWD::SoftmaxLayerBWD(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo,
-    const TensorInfo &srcDiffInfo, SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept(false)
+    const TensorInfo &srcDiffInfo, SizeType axis, AlgorithmKind algorithm) noexcept(false)
     : pImpl(new Detail::SoftmaxLayerBWDImpl(dstInfo, dstDiffInfo, srcDiffInfo, axis, algorithm)) {}
 
 SoftmaxLayerBWD::SoftmaxLayerBWD(const SoftmaxLayerBWD &other) noexcept(false)
@@ -255,10 +255,18 @@ void SoftmaxLayerBWD::Run(const void *dst, const void *dstDiff, void *srcDiff) c
 }
 
 Status SoftmaxLayerBWD::ValidateInput(const TensorInfo &dstInfo, const TensorInfo &dstDiffInfo,
-    const TensorInfo &srcDiffInfo, SizeType axis, SoftmaxAlgorithmKind algorithm) noexcept
+    const TensorInfo &srcDiffInfo, SizeType axis, AlgorithmKind algorithm) noexcept
 {
     Service::Unused(algorithm);
     if (dstInfo.GetType() != dstDiffInfo.GetType()) {
+        return Status::UNSUPPORTED;
+    }
+    if (dstInfo.GetType() == Element::TypeT::U8 || dstInfo.GetType() == Element::TypeT::S8 ||
+       dstInfo.GetType() == Element::TypeT::S32) {
+        return Status::UNSUPPORTED;
+    }
+    if (srcDiffInfo.GetType() == Element::TypeT::U8 || srcDiffInfo.GetType() == Element::TypeT::S8 ||
+       srcDiffInfo.GetType() == Element::TypeT::S32) {
         return Status::UNSUPPORTED;
     }
     if (dstDiffInfo.GetLayout() != dstInfo.GetLayout()) {

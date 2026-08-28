@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,15 +13,17 @@
 #ifndef KPL_COMMON_H
 #define KPL_COMMON_H
 
+#include <stdint.h>
+#include <arm_neon.h>
 #include "kernels/kernel_funcs.h"
 
 /* Optionally used extensions.  */
 #ifdef __GNUC__
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(x, 0)
+#define LIKELY(x) __builtin_expect(!!(x), 1)
+#define UNLIKELY(x) __builtin_expect(x, 0)
 #else
-#define likely(x) (x)
-#define unlikely(x) (x)
+#define LIKELY(x) (x)
+#define UNLIKELY(x) (x)
 #endif
 
 #define FLOAT_MANTISSA_BIT_LEN      23
@@ -43,12 +45,21 @@
 #define FLOAT_NEG_ONE               (-1.0f)
 #define FLOAT_HALF_BIT              0x3f000000
 
-#define F16_SHIFT                   (16)
+#define F16_SHIFT                   16
 #define F16_ABS_MASK                0x7fffU
+#define F16_SIGN_MASK               0x8000U
 #define F16_INF_BIT                 0x7c00U
 #define F16_NAN_BIT                 0x7e00U
 #define F16_NEG_INF_BIT             0xfc00U
 #define F16_SUBNORMAL_BIT           0x400U
+#define F16_SIGN_SHIFT              15
+
+#define BF16_SIGN_MASK              0x8000U
+#define BF16_ABS_MASK               0x7fffU
+#define BF16_NAN_BIT                0x7fc0U
+#define BF16_INF_BIT                0x7f80U
+#define BF16_NEG_INF_BIT            0xff80U
+#define BF16_ZERO_BIT               0x0000U
 
 #define LN2F                        (0x1.62e43p-1f)
 
@@ -81,6 +92,44 @@ inline float Frintaf(float x)
     y -= 0x1.8p23;
 #endif
     return y;
+}
+
+inline uint16_t Bf16Asuint(__bf16 f)
+{
+    union {
+        __bf16 f;
+        uint16_t i;
+    } u = {f};
+    return u.i;
+}
+
+inline uint32_t Asuint(float f)
+{
+    union {
+        float f;
+        uint32_t i;
+    } u = {f};
+    return u.i;
+}
+
+inline float Asfloat(uint32_t i)
+{
+    union {
+        uint32_t i;
+        float f;
+    } u = {i};
+    return u.f;
+}
+
+inline uint16_t FloatToBf16(float x)
+{
+    if (isnan(x)) {
+        return BF16_NAN_BIT;
+    }
+    if (isinf(x)) {
+        return x > FLOAT_ZERO ? BF16_INF_BIT : BF16_NEG_INF_BIT;
+    }
+    return Bf16Asuint(vcvth_bf16_f32(x));
 }
 
 #endif

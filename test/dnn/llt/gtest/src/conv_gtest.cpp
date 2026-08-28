@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,15 +10,11 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#include <cstdlib>
-#include <iostream>
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
+#include <iostream>
 #include <random>
-#include <map>
-#include <string>
-
-#include <arm_neon.h>
 
 #include "gtest/gtest.h"
 #include "kudnn.hpp"
@@ -26,9 +22,10 @@
 
 using SizeType = KuDNN::SizeType;
 using Shape = KuDNN::Shape;
-const int MAX_THS = 100;
-const float FACTOR_THS = 0.02;
-float errBoundConv = 1e-3;
+
+static const int MAX_THS = 100;
+static const float FACTOR_THS = 0.02;
+static float errBoundConv = 1e-3;
 
 template <typename T>
 struct typeMap;
@@ -58,7 +55,7 @@ static void conv2dRef(Shape &srcShape, Shape &weiShape, Shape &dstShape, Shape &
     OW = (IW + PW_L + PW_R - 1 - (KW - 1) * (DW + 1)) / SW + 1;
     int threadsUsed = (int)ceil((float)(N * OC * OH * OW) * FACTOR_THS);
     threadsUsed = threadsUsed > MAX_THS ? MAX_THS : threadsUsed;
-#pragma omp parallel for collapse(4) num_threads(threadsUsed)
+#pragma omp parallel for collapse(2) num_threads(threadsUsed)
     for (SizeType n = 0; n < N; ++n) {
         for (SizeType oc = 0; oc < OC; ++oc) {
             T biaVal = *(bia + oc);
@@ -68,10 +65,11 @@ static void conv2dRef(Shape &srcShape, Shape &weiShape, Shape &dstShape, Shape &
                     for (SizeType ic = 0; ic < IC; ++ic) {
                         for (SizeType kh = 0; kh < KH; ++kh) {
                             for (SizeType kw = 0; kw < KW; ++kw) {
+                                // unsigned wrap: out-of-range positions become huge values, excluded by <IH/<IW
                                 SizeType srcX = oh * SH + kh * (DH + 1) - PH_L;
                                 SizeType srcY = ow * SW + kw * (DW + 1) - PW_L;
                                 T srcVal = (T)0.0f;
-                                if (srcX >= 0 && srcX < IH && srcY >= 0 && srcY < IW) {
+                                if (srcX < IH && srcY < IW) {
                                     srcVal = *(src + n * IC * IH * IW + ic * IH * IW + srcX * IW + srcY);
                                 }
                                 T weiVal = *(wei + oc * IC * KH * KW + ic * KH * KW + kh * KW + kw);
@@ -102,7 +100,7 @@ static void conv3dRef(Shape &srcShape, Shape &weiShape, Shape &dstShape, Shape &
     OW = (IW + PW_L + PW_R - 1 - (KW - 1) * (DW + 1)) / SW + 1;
     int threadsUsed = (int)ceil((float)(N * OC * OD * OH * OW) * FACTOR_THS);
     threadsUsed = threadsUsed > MAX_THS ? MAX_THS : threadsUsed;
-#pragma omp parallel for collapse(5) num_threads(threadsUsed)
+#pragma omp parallel for collapse(2) num_threads(threadsUsed)
     for (SizeType n = 0; n < N; ++n) {
         for (SizeType oc = 0; oc < OC; ++oc) {
             T biaVal = *(bia + oc);
@@ -114,12 +112,12 @@ static void conv3dRef(Shape &srcShape, Shape &weiShape, Shape &dstShape, Shape &
                             for (SizeType kd = 0; kd < KD; ++kd) {
                                 for (SizeType kh = 0; kh < KH; ++kh) {
                                     for (SizeType kw = 0; kw < KW; ++kw) {
+                                        // unsigned wrap: out-of-range positions become huge values, excluded by <ID/<IH/<IW
                                         SizeType srcZ = od * SD + kd * (DD + 1) - PD_L;
                                         SizeType srcX = oh * SH + kh * (DH + 1) - PH_L;
                                         SizeType srcY = ow * SW + kw * (DW + 1) - PW_L;
                                         T srcVal = (T)0.0f;
-                                        if (srcZ >= 0 && srcZ < ID && srcX >= 0 && srcX < IH && srcY >= 0 &&
-                                            srcY < IW) {
+                                        if (srcZ < ID && srcX < IH && srcY < IW) {
                                             srcVal = *(src + n * IC * ID * IH * IW + ic * ID * IH * IW +
                                                        srcZ * IH * IW + srcX * IW + srcY);
                                         }
@@ -137,6 +135,7 @@ static void conv3dRef(Shape &srcShape, Shape &weiShape, Shape &dstShape, Shape &
         }
     }
 }
+
 template <typename T>
 static bool Conv2dBWDWeightFunc1(Shape &diffDstShape, Shape &srcShape, Shape &diffWeightsShape, Shape &diffBiasShape,
             Shape &strides, Shape &dilates, Shape &paddingL, Shape &paddingR, KuDNN::ConvolutionAlgorithm &alg)
@@ -144,7 +143,6 @@ static bool Conv2dBWDWeightFunc1(Shape &diffDstShape, Shape &srcShape, Shape &di
     SizeType N = srcShape[0], IC = srcShape[1], IH = srcShape[2], IW = srcShape[3];
     SizeType OC = diffDstShape[1], OH = diffDstShape[2], OW = diffDstShape[3];
     SizeType KH = diffWeightsShape[2], KW = diffWeightsShape[3];
-
 
     const KuDNN::TensorInfo diffDstTensor = {diffDstShape, typeMap<T>::val, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo srcTensor = {srcShape, typeMap<T>::val, KuDNN::Layout::ABCD};
@@ -162,9 +160,9 @@ static bool Conv2dBWDWeightFunc1(Shape &diffDstShape, Shape &srcShape, Shape &di
     T *diffBias = (T *)malloc(biaSize * sizeof(T));
     T *diffDst = (T *)malloc(dstSize * sizeof(T));
     T *src = (T *)malloc(srcSize * sizeof(T));
-    
+
     convBwdLayer1.Run(diffDst, src, diffWeights, diffBias);
-    
+
     return true;
 }
 
@@ -179,7 +177,7 @@ static bool Conv2dBWDDataFunc1(Shape &diffDstShape, Shape &weightsShape, Shape &
     const KuDNN::TensorInfo diffDstTensor = {diffDstShape, typeMap<T>::val, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo weightsTensor = {weightsShape, typeMap<T>::val, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo diffSrcTensor = {diffSrcShape, typeMap<T>::val, KuDNN::Layout::ABCD};
-    
+
     KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
 
     SizeType srcSize = N * IC * IH * IW;
@@ -256,7 +254,6 @@ static bool Conv2dFWDFunc1(Shape &srcShape, Shape &weiShape, Shape &dstShape, Sh
     return error < errBoundConv;
 }
 
-
 template <typename T>
 static bool Conv3dBWDWeightFunc1(Shape &diffDstShape, Shape &srcShape, Shape &diffWeightsShape, Shape &diffBiasShape,
             Shape &strides, Shape &dilates, Shape &paddingL, Shape &paddingR, KuDNN::ConvolutionAlgorithm &alg)
@@ -287,7 +284,6 @@ static bool Conv3dBWDWeightFunc1(Shape &diffDstShape, Shape &srcShape, Shape &di
     return true;
 }
 
-
 template <typename T>
 static bool Conv3dBWDDataFunc1(Shape &diffDstShape, Shape &weightsShape, Shape &diffSrcShape, Shape &strides, Shape &dilates,
     Shape &paddingL, Shape &paddingR, KuDNN::ConvolutionAlgorithm &alg)
@@ -299,7 +295,7 @@ static bool Conv3dBWDDataFunc1(Shape &diffDstShape, Shape &weightsShape, Shape &
     const KuDNN::TensorInfo diffDstTensor = {diffDstShape, typeMap<T>::val, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo weightsTensor = {weightsShape, typeMap<T>::val, KuDNN::Layout::ABCDE};
     const KuDNN::TensorInfo diffSrcTensor = {diffSrcShape, typeMap<T>::val, KuDNN::Layout::ABCDE};
-    
+
     KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
 
     SizeType srcSize = N * IC * IH * IW * ID;
@@ -315,7 +311,6 @@ static bool Conv3dBWDDataFunc1(Shape &diffDstShape, Shape &weightsShape, Shape &
     return true;
 
 }
-
 
 template <typename T>
 static bool Conv3dFWDFunc1(Shape &srcShape, Shape &weiShape, Shape &dstShape, Shape &strides, Shape &dilates,
@@ -407,6 +402,65 @@ static void FWDAlgSupported2()
         srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates, paddingL, paddingR, alg);
 }
 
+static void InputParamExcept_Conv2dF16()
+{
+    // 新版实现中 N 不参与构造校验，负 IC 会使 totalSize 超过内存上限而抛 LogicError
+    SizeType N = 2, IC = -24, IH = 360, IW = 640;
+    SizeType OC = 12, OH = 0, OW = 0;
+    SizeType KH = 1, KW = 1;
+    Shape strides(1, 1), dilates(0, 0), paddingL(0, 0), paddingR(0, 0);
+    OH = (IH + paddingL[0] + paddingR[0] - 1 - (KH - 1) * (dilates[0] + 1)) / strides[0] + 1;
+    OW = (IW + paddingL[1] + paddingR[1] - 1 - (KW - 1) * (dilates[1] + 1)) / strides[1] + 1;
+    Shape srcShape(N, IC, IH, IW), weiShape(OC, IC, KH, KW), dstShape(N, OC, OH, OW);
+    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::DIRECT);
+    Conv2dFWDFunc1<__fp16>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
+}
+
+static void InputParamExcept_Conv2dF32()
+{
+    // 负 IC 使 totalSize 超过内存上限而抛 LogicError
+    SizeType N = 4, IC = -4, IH = 128, IW = 100;
+    SizeType OC = 5, OH = 0, OW = 0;
+    SizeType KH = 3, KW = 3;
+    Shape strides(1, 1), dilates(1, 1), paddingL(1, 1), paddingR(1, 1);
+    OH = (IH + paddingL[0] + paddingR[0] - 1 - (KH - 1) * (dilates[0] + 1)) / strides[0] + 1;
+    OW = (IW + paddingL[1] + paddingR[1] - 1 - (KW - 1) * (dilates[1] + 1)) / strides[1] + 1;
+    Shape srcShape(N, IC, IH, IW), weiShape(OC, IC, KH, KW), dstShape(N, OC, OH, OW);
+    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
+    Conv2dFWDFunc1<float>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
+}
+
+static void InputParamExcept_Conv3dF16()
+{
+    // 负 ID 使 outputShape 的 OD 回绕为巨大值，totalSize 超过内存上限而抛 LogicError
+    SizeType N = 1, IC = 5, ID = -20, IH = 90, IW = 160;
+    SizeType OC = 10, OD = 0, OH = 0, OW = 0;
+    SizeType KD = 1, KH = 1, KW = 1;
+    Shape strides(1, 1, 1), dilates(0, 0, 0), paddingL(0, 0, 0), paddingR(0, 0, 0);
+    OD = (ID + paddingL[0] + paddingR[0] - 1 - (KD - 1) * (dilates[0] + 1)) / strides[0] + 1;
+    OH = (IH + paddingL[1] + paddingR[1] - 1 - (KH - 1) * (dilates[1] + 1)) / strides[1] + 1;
+    OW = (IW + paddingL[2] + paddingR[2] - 1 - (KW - 1) * (dilates[2] + 1)) / strides[2] + 1;
+    Shape srcShape(N, IC, ID, IH, IW), weiShape(OC, IC, KD, KH, KW), dstShape(N, OC, OD, OH, OW);
+    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
+    Conv3dFWDFunc1<__fp16>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
+}
+
+static void InputParamExcept_Conv3dF32()
+{
+    // 负 IW 使 OW 回绕为巨大值，totalSize 超过内存上限而抛 LogicError
+    SizeType N = 1, IC = 4, ID = 7, IH = 92, IW = -162;
+    SizeType OC = 16, OD = 0, OH = 0, OW = 0;
+    SizeType KD = 3, KH = 3, KW = 3;
+    Shape strides(1, 1, 1), dilates(1, 1, 1), paddingL(1, 1, 1), paddingR(1, 1, 1);
+    OD = (ID + paddingL[0] + paddingR[0] - 1 - (KD - 1) * (dilates[0] + 1)) / strides[0] + 1;
+    OH = (IH + paddingL[1] + paddingR[1] - 1 - (KH - 1) * (dilates[1] + 1)) / strides[1] + 1;
+    OW = (IW + paddingL[2] + paddingR[2] - 1 - (KW - 1) * (dilates[2] + 1)) / strides[2] + 1;
+    Shape srcShape(N, IC, ID, IH, IW), weiShape(OC, IC, KD, KH, KW), dstShape(N, OC, OD, OH, OW);
+    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
+    Conv3dFWDFunc1<float>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
+}
+
+// forward
 static void ForwardCopyConstructor1()
 {
     const KuDNN::TensorInfo srcTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
@@ -418,19 +472,12 @@ static void ForwardCopyConstructor1()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerFWD convFwdLayer1(
-        srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates,
+        paddingL, paddingR, alg);
     KuDNN::ConvolutionLayerFWD convFwdLayer2(convFwdLayer1);
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         KuDNN::ConvolutionLayerFWD convFwdLayer2(convFwdLayer1);
     }
 }
@@ -446,30 +493,16 @@ static void ForwardCopyConstructor2()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerFWD convFwdLayer1(
-        srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates, paddingL, paddingR, alg);
-    KuDNN::ConvolutionLayerFWD convFwdLayer2(
-        srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates,
+        paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerFWD convFwdLayer2(srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates,
+        paddingL, paddingR, alg);
     convFwdLayer2 = convFwdLayer1;
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
-        KuDNN::ConvolutionLayerFWD convFwdLayer2(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerFWD convFwdLayer2(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         convFwdLayer2 = convFwdLayer1;
     }
 }
@@ -485,19 +518,12 @@ static void ForwardMoveConstructor1()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerFWD convFwdLayer1(
-        srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates,
+        paddingL, paddingR, alg);
     KuDNN::ConvolutionLayerFWD convFwdLayer2(std::move(convFwdLayer1));
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         KuDNN::ConvolutionLayerFWD convFwdLayer2(std::move(convFwdLayer1));
     }
 }
@@ -513,34 +539,22 @@ static void ForwardMoveConstructor2()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerFWD convFwdLayer1(
-        srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates, paddingL, paddingR, alg);
-    KuDNN::ConvolutionLayerFWD convFwdLayer2(
-        srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates,
+        paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerFWD convFwdLayer2(srcTensor, weightsTensor, dstTensor, biasTensor, strides, dilates,
+        paddingL, paddingR, alg);
     convFwdLayer2 = convFwdLayer1;
+    KuDNN::ConvolutionLayerFWD convFwdLayer3(srcTensor, weightsTensor, dstTensor, biasTensor, strides,
+        paddingL, paddingR, alg);
+    convFwdLayer3 = std::move(convFwdLayer1);
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
-        KuDNN::ConvolutionLayerFWD convFwdLayer2(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerFWD convFwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerFWD convFwdLayer2(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         convFwdLayer2 = convFwdLayer1;
     }
 }
-
 
 // backward data
 static void BackwardDataCopyConstructor1()
@@ -553,12 +567,14 @@ static void BackwardDataCopyConstructor1()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-        diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates,
+        paddingL, paddingR, alg);
     KuDNN::ConvolutionLayerBWDData convBwdLayer2(convBwdLayer1);
+    KuDNN::ConvolutionLayerBWDData convBwdLayer3(diffDstTensor, weightsTensor, diffSrcTensor, strides,
+        paddingL, paddingR, alg);
     for (size_t i = 0; i < g_Tensor_data.size() / 3; i += 3) {
-        KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-            g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDData convBwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            strides, dilates, paddingL, paddingR, alg);
         KuDNN::ConvolutionLayerBWDData convBwdLayer2(convBwdLayer1);
     }
 }
@@ -573,16 +589,16 @@ static void BackwardDataCopyConstructor2()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-        diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
-    KuDNN::ConvolutionLayerBWDData convBwdLayer2(
-        diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates,
+        paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDData convBwdLayer2(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates,
+        paddingL, paddingR, alg);
     convBwdLayer2 = convBwdLayer1;
     for (size_t i = 0; i < g_Tensor_data.size() / 3; i += 3) {
-        KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-            g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2], strides, dilates, paddingL, paddingR, alg);
-        KuDNN::ConvolutionLayerBWDData convBwdLayer2(
-            g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDData convBwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDData convBwdLayer2(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            strides, dilates, paddingL, paddingR, alg);
         convBwdLayer2 = convBwdLayer1;
     }
 }
@@ -597,12 +613,12 @@ static void BackwardDataMoveConstructor1()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-        diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates,
+        paddingL, paddingR, alg);
     KuDNN::ConvolutionLayerBWDData convBwdLayer2(std::move(convBwdLayer1));
     for (size_t i = 0; i < g_Tensor_data.size() / 3; i += 3) {
-        KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-            g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDData convBwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            strides, dilates, paddingL, paddingR, alg);
         KuDNN::ConvolutionLayerBWDData convBwdLayer2(std::move(convBwdLayer1));
     }
 }
@@ -617,16 +633,16 @@ static void BackwardDataMoveConstructor2()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-        diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
-    KuDNN::ConvolutionLayerBWDData convBwdLayer2(
-        diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDData convBwdLayer1(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates,
+        paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDData convBwdLayer2(diffDstTensor, weightsTensor, diffSrcTensor, strides, dilates,
+        paddingL, paddingR, alg);
     convBwdLayer2 = std::move(convBwdLayer1);
     for (size_t i = 0; i < g_Tensor_data.size() / 3; i += 3) {
-        KuDNN::ConvolutionLayerBWDData convBwdLayer1(
-            g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2], strides, dilates, paddingL, paddingR, alg);
-        KuDNN::ConvolutionLayerBWDData convBwdLayer2(
-            g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDData convBwdLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDData convBwdLayer2(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            strides, dilates, paddingL, paddingR, alg);
         convBwdLayer2 = std::move(convBwdLayer1);
     }
 }
@@ -643,19 +659,14 @@ static void BackwardWeightsCopyConstructor1()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(
-        diffDstTensor, srcTensor, diffWeightsTensor, diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(diffDstTensor, srcTensor, diffWeightsTensor,
+        diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
     KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(convBwdWeightsLayer1);
+    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer3(diffDstTensor, srcTensor, diffWeightsTensor,
+        diffBiasTensor, strides, paddingL, paddingR, alg);
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(convBwdWeightsLayer1);
     }
 }
@@ -671,30 +682,16 @@ static void BackwardWeightsCopyConstructor2()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(
-        diffDstTensor, srcTensor, diffWeightsTensor, diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
-    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(
-        diffDstTensor, srcTensor, diffWeightsTensor, diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(diffDstTensor, srcTensor, diffWeightsTensor,
+        diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(diffDstTensor, srcTensor, diffWeightsTensor,
+        diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
     convBwdWeightsLayer2 = convBwdWeightsLayer1;
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
-        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         convBwdWeightsLayer2 = convBwdWeightsLayer1;
     }
 }
@@ -710,19 +707,12 @@ static void BackwardWeightsMoveConstructor1()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(
-        diffDstTensor, srcTensor, diffWeightsTensor, diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(diffDstTensor, srcTensor, diffWeightsTensor,
+        diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
     KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(std::move(convBwdWeightsLayer1));
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(std::move(convBwdWeightsLayer1));
     }
 }
@@ -738,152 +728,116 @@ static void BackwardWeightsMoveConstructor2()
     KuDNN::Shape paddingL(0, 0);
     KuDNN::Shape paddingR(0, 0);
     KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(
-        diffDstTensor, srcTensor, diffWeightsTensor, diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
-    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(
-        diffDstTensor, srcTensor, diffWeightsTensor, diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(diffDstTensor, srcTensor, diffWeightsTensor,
+        diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
+    KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(diffDstTensor, srcTensor, diffWeightsTensor,
+        diffBiasTensor, strides, dilates, paddingL, paddingR, alg);
     convBwdWeightsLayer2 = std::move(convBwdWeightsLayer1);
     for (size_t i = 0; i < g_Tensor_data.size() / 4; i += 4) {
-        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
-        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(g_Tensor_data[i],
-            g_Tensor_data[i + 1],
-            g_Tensor_data[i + 2],
-            g_Tensor_data[i + 3],
-            strides,
-            dilates,
-            paddingL,
-            paddingR,
-            alg);
+        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer1(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
+        KuDNN::ConvolutionLayerBWDWeights convBwdWeightsLayer2(g_Tensor_data[i], g_Tensor_data[i + 1], g_Tensor_data[i + 2],
+            g_Tensor_data[i + 3], strides, dilates, paddingL, paddingR, alg);
         convBwdWeightsLayer2 = std::move(convBwdWeightsLayer1);
     }
 }
 
-static void ForwardJITCopyConstructor1()
+// forward
+static void JitForwardCopyConstructor1()
 {
-    const KuDNN::TensorInfo srcTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo weightsTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo dstTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo biasTensor = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    KuDNN::Shape strides(1, 1);
-    KuDNN::Shape dilates(0, 0);
-    KuDNN::Shape paddingL(0, 0);
-    KuDNN::Shape paddingR(0, 0);
-
-    KuDNN::ConvolutionJITFWD convFwdLayer1(0x1f, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL, dilates,
-                                        KuDNN::Propagation::FORWARD_TRAINING, 1 ,false);
-    KuDNN::ConvolutionJITFWD convFwdLayer2(convFwdLayer1);
-}
-
-static void ForwardJITCopyConstructor2()
-{
-    const KuDNN::TensorInfo srcTensor = {{16, 16, 16, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo weightsTensor = {{16, 16, 16, 16, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCDE};
-    const KuDNN::TensorInfo dstTensor = {{16, 16, 16, 16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
+    const KuDNN::TensorInfo srcTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo weightsTensor = {{16, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo dstTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
     const KuDNN::TensorInfo biasTensor = {{16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
-    KuDNN::Shape strides(0, 0);
-    KuDNN::Shape dilates(0, 0);
-    KuDNN::Shape paddingL(0, 0);
-    KuDNN::Shape paddingR(0, 0);
-
-    KuDNN::ConvolutionJITFWD convFwdLayer1(0x1f, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL, dilates,
-                                        KuDNN::Propagation::FORWARD_TRAINING, 1 ,false);
-    KuDNN::ConvolutionJITFWD convFwdLayer2 = convFwdLayer1;
-}
-
-static void ForwardJITMoveConstructor1()
-{
-    const KuDNN::TensorInfo srcTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo weightsTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo dstTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo biasTensor = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
     KuDNN::Shape strides(1, 1);
     KuDNN::Shape dilates(0, 0);
     KuDNN::Shape paddingL(0, 0);
-    KuDNN::Shape paddingR(0, 0);
-
-    KuDNN::ConvolutionJITFWD convFwdLayer1(0x1f, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL, dilates, 
-                                        KuDNN::Propagation::FORWARD_INFERENCE, 1 ,false);
-    KuDNN::ConvolutionJITFWD convFwdLayer2(std::move(convFwdLayer1));
+    KuDNN::Propagation prop = KuDNN::Propagation::FORWARD_TRAINING;
+#ifdef KUDNNL_920F
+    int isa = 0x1f;
+#else
+    int isa = 0x07;
+#endif
+    int nthread = 1;
+    bool isblock = true;
+    bool bUseWino = false;
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(isa, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL,
+        dilates, prop, nthread, isblock, bUseWino);
+    KuDNN::ConvolutionLayerFWD convFwdLayer2(convFwdLayer1);
 }
 
-static void ForwardJITMoveConstructor2()
+static void JitForwardCopyConstructor2()
 {
-    const KuDNN::TensorInfo srcTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo weightsTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo dstTensor = {{1, 1, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    const KuDNN::TensorInfo biasTensor = {{1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    const KuDNN::TensorInfo srcTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo weightsTensor = {{16, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo dstTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo biasTensor = {{16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
     KuDNN::Shape strides(1, 1);
     KuDNN::Shape dilates(0, 0);
     KuDNN::Shape paddingL(0, 0);
-    KuDNN::Shape paddingR(0, 0);
-
-    KuDNN::ConvolutionJITFWD convFwdLayer1(0x1f, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL, dilates,
-                                        KuDNN::Propagation::FORWARD_INFERENCE, 2, true);
-    KuDNN::ConvolutionJITFWD convFwdLayer2(0x1f, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL, dilates,
-                                        KuDNN::Propagation::FORWARD_INFERENCE, 2, false);
-    convFwdLayer2 = std::move(convFwdLayer1);
+    KuDNN::Propagation prop = KuDNN::Propagation::FORWARD_TRAINING;
+#ifdef KUDNNL_920F
+    int isa = 0x1f;
+#else
+    int isa = 0x07;
+#endif
+    int nthread = 1;
+    bool isblock = true;
+    bool bUseWino = false;
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(isa, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL,
+        dilates, prop, nthread, isblock, bUseWino);
+    KuDNN::ConvolutionLayerFWD convFwdLayer2 = convFwdLayer1;
 }
 
-static void InputParamExcept_Conv2dF16()
+static void JitForwardMoveConstructor1()
 {
-    SizeType N = -2, IC = 24, IH = 360, IW = 640;
-    SizeType OC = 12, OH = 0, OW = 0;
-    SizeType KH = 1, KW = 1;
-    Shape strides(1, 1), dilates(0, 0), paddingL(0, 0), paddingR(0, 0);
-    OH = (IH + paddingL[0] + paddingR[0] - 1 - (KH - 1) * (dilates[0] + 1)) / strides[0] + 1;
-    OW = (IW + paddingL[1] + paddingR[1] - 1 - (KW - 1) * (dilates[1] + 1)) / strides[1] + 1;
-    Shape srcShape(N, IC, IH, IW), weiShape(OC, IC, KH, KW), dstShape(N, OC, OH, OW);
-    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::DIRECT);
-    Conv2dFWDFunc1<__fp16>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
+    const KuDNN::TensorInfo srcTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo weightsTensor = {{16, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo dstTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo biasTensor = {{16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    KuDNN::Shape strides(1, 1);
+    KuDNN::Shape dilates(0, 0);
+    KuDNN::Shape paddingL(0, 0);
+    KuDNN::Propagation prop = KuDNN::Propagation::FORWARD_TRAINING;
+#ifdef KUDNNL_920F
+    int isa = 0x1f;
+#else
+    int isa = 0x07;
+#endif
+    int nthread = 1;
+    bool isblock = true;
+    bool bUseWino = false;
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(isa, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL,
+        dilates, prop, nthread, isblock, bUseWino);
+    KuDNN::ConvolutionLayerFWD convFwdLayer2(std::move(convFwdLayer1));
 }
 
-static void InputParamExcept_Conv2dF32()
+static void JitForwardMoveConstructor2()
 {
-    SizeType N = 4, IC = -4, IH = 128, IW = 100;
-    SizeType OC = 5, OH = 0, OW = 0;
-    SizeType KH = 3, KW = 3;
-    Shape strides(1, 1), dilates(1, 1), paddingL(1, 1), paddingR(1, 1);
-    OH = (IH + paddingL[0] + paddingR[0] - 1 - (KH - 1) * (dilates[0] + 1)) / strides[0] + 1;
-    OW = (IW + paddingL[1] + paddingR[1] - 1 - (KW - 1) * (dilates[1] + 1)) / strides[1] + 1;
-    Shape srcShape(N, IC, IH, IW), weiShape(OC, IC, KH, KW), dstShape(N, OC, OH, OW);
-    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    Conv2dFWDFunc1<float>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
-}
-
-static void InputParamExcept_Conv3dF16()
-{
-    SizeType N = 1, IC = 5, ID = -20, IH = 90, IW = 160;
-    SizeType OC = 10, OD = 0, OH = 0, OW = 0;
-    SizeType KD = 1, KH = 1, KW = 1;
-    Shape strides(1, 1, 1), dilates(0, 0, 0), paddingL(0, 0, 0), paddingR(0, 0, 0);
-    OD = (ID + paddingL[0] + paddingR[0] - 1 - (KD - 1) * (dilates[0] + 1)) / strides[0] + 1;
-    OH = (IH + paddingL[1] + paddingR[1] - 1 - (KH - 1) * (dilates[1] + 1)) / strides[1] + 1;
-    OW = (IW + paddingL[2] + paddingR[2] - 1 - (KW - 1) * (dilates[2] + 1)) / strides[2] + 1;
-    Shape srcShape(N, IC, ID, IH, IW), weiShape(OC, IC, KD, KH, KW), dstShape(N, OC, OD, OH, OW);
-    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    Conv3dFWDFunc1<__fp16>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
-}
-
-static void InputParamExcept_Conv3dF32()
-{
-    SizeType N = 1, IC = 4, ID = 7, IH = 92, IW = -162;
-    SizeType OC = 16, OD = 0, OH = 0, OW = 0;
-    SizeType KD = 3, KH = 3, KW = 3;
-    Shape strides(1, 1, 1), dilates(1, 1, 1), paddingL(1, 1, 1), paddingR(1, 1, 1);
-    OD = (ID + paddingL[0] + paddingR[0] - 1 - (KD - 1) * (dilates[0] + 1)) / strides[0] + 1;
-    OH = (IH + paddingL[1] + paddingR[1] - 1 - (KH - 1) * (dilates[1] + 1)) / strides[1] + 1;
-    OW = (IW + paddingL[2] + paddingR[2] - 1 - (KW - 1) * (dilates[2] + 1)) / strides[2] + 1;
-    Shape srcShape(N, IC, ID, IH, IW), weiShape(OC, IC, KD, KH, KW), dstShape(N, OC, OD, OH, OW);
-    KuDNN::ConvolutionAlgorithm alg(KuDNN::ConvolutionAlgorithm::AUTO);
-    Conv3dFWDFunc1<float>(srcShape, weiShape, dstShape, strides, dilates, paddingL, paddingR, alg);
+    const KuDNN::TensorInfo srcTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo weightsTensor = {{16, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo dstTensor = {{1, 16, 1, 1}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ACDB};
+    const KuDNN::TensorInfo biasTensor = {{16}, KuDNN::Element::TypeT::F32, KuDNN::Layout::A};
+    KuDNN::Shape strides(1, 1);
+    KuDNN::Shape dilates(0, 0);
+    KuDNN::Shape paddingL(0, 0);
+    KuDNN::Propagation prop = KuDNN::Propagation::FORWARD_TRAINING;
+#ifdef KUDNNL_920F
+    int isa = 0x1f;
+#else
+    int isa = 0x07;
+#endif
+    int nthread = 1;
+    bool isblock = true;
+    bool bUseWino = false;
+    KuDNN::ConvolutionLayerFWD convFwdLayer1(isa, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL,
+        dilates, prop, nthread, isblock, bUseWino);
+    KuDNN::ConvolutionLayerFWD convFwdLayer2(isa, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL,
+        dilates, prop, nthread, isblock, bUseWino);
+    KuDNN::ConvolutionLayerFWD convFwdLayer3(isa, srcTensor, weightsTensor, dstTensor, biasTensor, strides, paddingL,
+        dilates, prop, nthread, isblock, bUseWino);
+    convFwdLayer2 = convFwdLayer1;
+    convFwdLayer3 = std::move(convFwdLayer1);
 }
 
 // test cases
@@ -985,6 +939,7 @@ TEST(ConvGTests, Conv2dBWDWeightsFunc1F32)
     bool res = Conv2dBWDWeightFunc1<float>(dstShape, srcShape, weiShape, diffBiasShape, strides, dilates, paddingL, paddingR, alg);
     GTEST_EXPECT_TRUE(res);
 }
+
 TEST(ConvGTests, Conv3dFWDFunc1F16_1)
 {
     SizeType N = 1, IC = 5, ID = 20, IH = 90, IW = 160;
@@ -1196,23 +1151,22 @@ TEST(ConvGTests, BackwardWeightsMoveConstructor2)
     EXPECT_NO_THROW(BackwardWeightsMoveConstructor2());
 }
 
-TEST(ConvGTests, ForwardJITCopyConstructor1)
+TEST(ConvGTests, JitForwardCopyConstructor1)
 {
-    EXPECT_NO_THROW(ForwardJITCopyConstructor1());
+    EXPECT_NO_THROW(JitForwardCopyConstructor1());
 }
 
-TEST(ConvGTests, ForwardJITCopyConstructor2)
+TEST(ConvGTests, JitForwardCopyConstructor2)
 {
-    ForwardJITCopyConstructor2();
+    EXPECT_NO_THROW(JitForwardCopyConstructor2());
 }
 
-TEST(ConvGTests, ForwardJITMoveConstructor1)
+TEST(ConvGTests, JitForwardMoveConstructor1)
 {
-    EXPECT_NO_THROW(ForwardJITMoveConstructor1());
+    EXPECT_NO_THROW(JitForwardMoveConstructor1());
 }
 
-TEST(ConvGTests, ForwardJITMoveConstructor2)
+TEST(ConvGTests, JitForwardMoveConstructor2)
 {
-    EXPECT_NO_THROW(ForwardJITMoveConstructor2());
+    EXPECT_NO_THROW(JitForwardMoveConstructor2());
 }
-

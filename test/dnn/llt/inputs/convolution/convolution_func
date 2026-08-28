@@ -1,0 +1,35 @@
+--batch=conv_fwd_flt_cases
+--reset
+
+--batch=conv_fwd_int_cases
+--reset
+
+--batch=conv_bwd_flt_cases
+--reset
+
+--batch=conv_bwd_mixed_cases
+--reset
+
+#depth-wise
+--batch=conv_dw_cases
+--reset
+
+# post-ops
+--batch=conv_post_op_cases
+--reset
+
+--batch=conv_dts_cases
+--reset
+
+--batch=conv_jit_f32_cases
+--reset
+
+--batch=conv_jit_f16_cases
+--reset
+
+--batch=conv_jit_bf16_cases
+--reset
+
+# SME
+--batch=conv_sme_cases
+--reset

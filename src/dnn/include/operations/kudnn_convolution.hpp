@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,12 +10,10 @@
  * See the Mulan PSL v2 for more details.
  */
 
-
 #ifndef KUDNN_CONVOLUTION_HPP
 #define KUDNN_CONVOLUTION_HPP
 
 #include <memory>
-
 #include "types/kudnn_tensor_info.hpp"
 #include "service/kudnn_err_codes.hpp"
 
@@ -29,22 +27,26 @@ enum class ConvolutionAlgorithm {
 };
 
 namespace Detail {
-
-class ConvolutionLayerFWDImpl;
+class ConvolutionFWDImplBase;
 class ConvolutionLayerBWDDataImpl;
 class ConvolutionLayerBWDWeightsImpl;
-class ConvolutionJITFWDImpl;
-
 } // Detail
 
-class KUDNN_API_PUBLIC ConvolutionLayerFWD final {
+class ConvolutionLayerFWD final {
 public:
-    using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &src, const TensorInfo &weights,
-        const TensorInfo &dst, const TensorInfo &bias,
-        const Shape &strides, const Shape &dilates,
-        const Shape &paddingL, const Shape &paddingR,
-        ConvolutionAlgorithm alg) noexcept;
+        const TensorInfo &dst, const TensorInfo &bias, const Shape &strides,
+        const Shape &dilates, const Shape &paddingL, int kCpuIsa,
+        bool isLayoutBlock, bool &isJitConv, bool bUseWino) noexcept;
+    static Status ValidateInput(const TensorInfo &src, const TensorInfo &weights,
+        const TensorInfo &dst, const TensorInfo &bias, const Shape &strides,
+        const Shape &dilates, const Shape &paddingL, int kCpuIsa,
+        bool isLayoutBlock, bool &isJitConv, bool bUseWino,
+        int &brgBlock, int nthreads) noexcept;
+    explicit ConvolutionLayerFWD(int isa, const TensorInfo &src, const TensorInfo &weights,
+        const TensorInfo &dst, const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL,
+        KuDNN::Shape dilates, KuDNN::Propagation prop, int nthreads, bool isLayoutBlock,
+        bool bUseWino) noexcept(false);
     ConvolutionLayerFWD(const TensorInfo &src, const TensorInfo &weights,
         const TensorInfo &dst, const TensorInfo &bias,
         const Shape &strides, const Shape &paddingL, const Shape &paddingR,
@@ -54,17 +56,18 @@ public:
         const Shape &strides, const Shape &dilates,
         const Shape &paddingL, const Shape &paddingR,
         ConvolutionAlgorithm alg) noexcept(false);
+    void Run(const void *src, const void *wei,
+        void *dst, const void *bias) noexcept(false);
     ConvolutionLayerFWD(const ConvolutionLayerFWD &other) noexcept(false);
     ConvolutionLayerFWD(ConvolutionLayerFWD &&other) noexcept;
     ConvolutionLayerFWD& operator=(const ConvolutionLayerFWD &other) noexcept(false);
     ConvolutionLayerFWD& operator=(ConvolutionLayerFWD &&other) noexcept;
-    void Run(const void *src, const void *wei, void *dst, const void *bia) const noexcept(false);
     ~ConvolutionLayerFWD() noexcept;
 private:
-    std::unique_ptr<Detail::ConvolutionLayerFWDImpl> pImpl;
+    std::unique_ptr<Detail::ConvolutionFWDImplBase> pImpl;
 };
 
-class KUDNN_API_PUBLIC ConvolutionLayerBWDData final {
+class ConvolutionLayerBWDData final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &diffDst, const TensorInfo &weights,
@@ -91,7 +94,7 @@ private:
     std::unique_ptr<Detail::ConvolutionLayerBWDDataImpl> pImpl;
 };
 
-class KUDNN_API_PUBLIC ConvolutionLayerBWDWeights final {
+class ConvolutionLayerBWDWeights final {
 public:
     using SizeType = ::KuDNN::SizeType;
     static Status ValidateInput(const TensorInfo &diffDst, const TensorInfo &src,
@@ -117,26 +120,6 @@ public:
 private:
     std::unique_ptr<Detail::ConvolutionLayerBWDWeightsImpl> pImpl;
 };
-
-class KUDNN_API_PUBLIC ConvolutionJITFWD final {
-public:
-    static Status ValidateInput(const TensorInfo &src, const TensorInfo &weights,
-        const TensorInfo &dst, const TensorInfo &bias,
-        const Shape &strides, const Shape &dilates, const Shape &paddingL, int kCpuIsa) noexcept;
-    explicit ConvolutionJITFWD(int isa, const TensorInfo &src, const TensorInfo &weights,
-        const TensorInfo &dst, const TensorInfo &bias, KuDNN::Shape strides, KuDNN::Shape paddingL,
-        KuDNN::Shape dilates, KuDNN::Propagation prop, int nthreads, bool isDataLayoutNxc) noexcept(false);
-    void ExecuteForward(const void *src, const void *wei,
-        void *dst, const void *bias) noexcept;
-    ConvolutionJITFWD(const ConvolutionJITFWD &other) noexcept(false);
-    ConvolutionJITFWD(ConvolutionJITFWD &&other) noexcept;
-    ConvolutionJITFWD& operator=(const ConvolutionJITFWD &other) noexcept(false);
-    ConvolutionJITFWD& operator=(ConvolutionJITFWD &&other) noexcept;
-    ~ConvolutionJITFWD() noexcept;
-private:
-    std::unique_ptr<Detail::ConvolutionJITFWDImpl> pImpl;
-};
-
 } // KuDNN
 
 #endif // KUDNN_CONVOLUTION_HPP

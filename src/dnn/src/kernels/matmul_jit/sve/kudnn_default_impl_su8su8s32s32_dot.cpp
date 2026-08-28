@@ -1,0 +1,863 @@
+/*
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
+ *
+ * KuDNN is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *        http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
+#include "kernels/matmul_jit/sve/kudnn_default_impl_su8su8s32s32_dot.hpp"
+#include "kernels/matmul_jit/kudnn_gemm_threading_helpers.hpp"
+
+#include <arm_sve.h>
+
+namespace KuDNN {
+namespace Detail {
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+using VCSU8DotGenBase = MatMulKernelCodeGenBase<ARCH::VC, SrcType, WeiType, DstType, BiaType>;
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::MatMulKernelDefaultCodeGen(
+    IntType m, IntType n, IntType k,
+    bool wereSrcWeiSwappedArg, const Attributes &attributesArg)
+    : VCSU8DotGenBase<SrcType, WeiType, DstType, BiaType>(attributesArg),
+    wereSrcWeiSwapped(wereSrcWeiSwappedArg), vectorLengthByte(svcntb())
+{
+    if ((m > 0) && (n > 0) && (k > 0)) {
+        if (this->attributes.GetPostOps().Len() > 0) {
+            // set reserved dst registers
+            for (std::uint32_t mIdx = 0; mIdx < KERNEL_M_SIZE; ++mIdx) {
+                for (std::uint32_t nIdx = 0; nIdx < KERNEL_N_SIZE; ++nIdx) {
+                    KUDNN_JIT_Generator_With_Attributes::TakeVectorRegister(GetDstZRegIdx(mIdx, nIdx));
+                }
+            }
+            // set reserved predicate register
+            KUDNN_JIT_Generator_With_Attributes::TakePredicateRegister(NUM_5);
+
+            // set reserved scalar registers
+            for (std::uint32_t idx = 0; idx < NUM_27; ++idx) {
+                KUDNN_JIT_Generator_With_Attributes::TakeScalarRegister(idx);
+            }
+        }
+        Ldp(srcOffset, weiOffset, PostPtr(sp, NUM_16));
+        Ldp(dstOffset, biaOffset, PostPtr(sp, NUM_0));
+        Sub(sp, sp, NUM_16);
+        Preamble();
+
+        Sub(sp, sp, NUM_16);
+        Str(alpha, ARMCG::AdrUimm(Ptr(sp)));
+        Sub(sp, sp, NUM_16);
+        Str(beta, ARMCG::AdrUimm(Ptr(sp)));
+
+        Ptrue(ARMCG::PRegB(NUM_5), ARMCG::Pattern::ALL); // p5 is true (byte) for this impl
+
+        std::uint32_t mResid = m % KERNEL_M_SIZE;
+        if (mResid == 0) {
+            mResid = KERNEL_M_SIZE;
+        }
+        Mov(mLoopCtr, mVal);
+        Sub(tmpMMinusMLoopCtr, mVal, mLoopCtr);
+        if (m > KERNEL_M_SIZE) {
+            ARMCG::Label mLoopHead;
+            L(mLoopHead);
+            {
+                GenerateMLoopBody(KERNEL_M_SIZE, n, k);
+                Sub(mLoopCtr, mLoopCtr, KERNEL_M_SIZE);
+                Cmp(mLoopCtr, KERNEL_M_SIZE);
+                Sub(tmpMMinusMLoopCtr, mVal, mLoopCtr);
+            }
+            B(ARMCG::Cond::GT, mLoopHead);
+        }
+        GenerateMLoopBody(mResid, n, k);
+
+        Add(sp, sp, NUM_32);
+
+        Postamble();
+    }
+    Ret();
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::CvtAndAdd(bool applyConvert, int regIdx1, int regIdx2)
+{
+    ARMCG::Label noConv;
+    if (applyConvert) {
+        Tbz(flags, 12, noConv); // 12-bit correspond to FIRST_K_ITER
+        Scvtf(ARMCG::ZRegS(GetSrcZRegIdx(regIdx1)),
+            p5, ARMCG::ZRegS(GetSrcZRegIdx(regIdx1)));
+        L(noConv);
+        Fadd(ARMCG::ZRegS(GetDstZRegIdx(regIdx2, regIdx1)),
+            p5, ARMCG::ZRegS(GetSrcZRegIdx(regIdx1)));
+    } else {
+        Add(ARMCG::ZRegS(GetDstZRegIdx(regIdx2, regIdx1)),
+            ARMCG::ZRegS(GetDstZRegIdx(regIdx2, regIdx1)),
+            ARMCG::ZRegS(GetSrcZRegIdx(regIdx1)));
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::CvtAndStore(bool applyConvert,
+    std::uint32_t mLim, std::uint32_t nLim)
+{
+    ARMCG::Label su8VCloadC;
+    ARMCG::Label su8VCmullC;
+    ARMCG::Label su8VCloadBias1;
+    ARMCG::Label su8VCloadBiasM;
+    ARMCG::Label su8VCloadBiasN;
+    ARMCG::Label su8VCloadBiasMN;
+    ARMCG::Label su8VCaddBias1;
+    ARMCG::Label su8VCaddBiasM;
+    ARMCG::Label su8VCaddBiasN;
+    ARMCG::Label su8VCaddBiasMN;
+    ARMCG::Label su8VCaddinitDone;
+    ARMCG::Label su8VCfillZeros;
+    ARMCG::Label skipPO;
+
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Saddv(ARMCG::DReg(GetDstZRegIdx(mIdx, nIdx)),
+                p5, ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)));
+        }
+    }
+    if (applyConvert) {
+        for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+            for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+                Scvtf(ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)),
+                    p5, ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)));
+            }
+        }
+        // Load alpha
+        Ld1r(ARMCG::ZRegS(NUM_7), p5, Ptr(sp, static_cast<std::int32_t>(NUM_16)));
+        Mov(tmpW, ARMCG::VReg4S(NUM_7)[0]);
+        Mov(ARMCG::WReg(GetTmpXRegIdx(0)), 0x3f800000); // 0x3f800000 is a bit representation of 1.0f
+        Cmp(tmp, ARMCG::XReg(GetTmpXRegIdx(0)));
+        Beq(su8VCfillZeros);
+        for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+            for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+                Fmul(
+                    ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)),
+                    ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)),
+                    ARMCG::ZRegS(NUM_7)
+                );
+            }
+        }
+    }
+    L(su8VCfillZeros);
+    Tbz(flags, 0, su8VCloadBias1); // 0-bit correspond to FILL_C_WITH_ZEROS
+    L(su8VCloadBias1);
+    Tbz(flags, 3, su8VCloadBiasN); // 3-bit correspond to LOAD_BIAS_1
+    Ldr(ARMCG::WReg(GetTmpXRegIdx(0)), ARMCG::AdrUimm(ARMCG::Ptr(biaPtr)));
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(0)));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCloadBiasN);
+    Tbz(flags, 5, su8VCloadBiasM); // 5-bit correspond to LOAD_BIAS_N
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Add(tmp, biaPtr, tmpNMinusNLoopCtr, ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+            Ldr(ARMCG::WReg(GetTmpXRegIdx(nIdx)), ARMCG::Ptr(tmp,
+                static_cast<std::uint32_t>(nIdx * sizeof(BiaType))));
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(nIdx)));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCloadBiasM);
+    Tbz(flags, 4, su8VCloadBiasMN); // 4-bit correspond to LOAD_BIAS_M
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        Add(tmp, biaPtr, tmpMMinusMLoopCtr, ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+        Ldr(ARMCG::WReg(GetTmpXRegIdx(0)), ARMCG::Ptr(tmp, static_cast<std::uint32_t>(sizeof(BiaType)) * mIdx));
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(0)));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCloadBiasMN);
+    Tbz(flags, 6, su8VCloadC); // 6-bit correspond to LOAD_BIAS_MN
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Mov(ARMCG::XReg(GetTmpXRegIdx(nIdx)), mIdx);
+            Add(tmp, tmpMMinusMLoopCtr, ARMCG::XReg(GetTmpXRegIdx(nIdx)));
+            Mul(ARMCG::XReg(GetTmpXRegIdx(nIdx)), tmp, biaOffset);
+            Add(tmp, biaPtr, ARMCG::XReg(GetTmpXRegIdx(nIdx)), ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+            Add(tmp, tmp, tmpNMinusNLoopCtr, ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+            Ldr(ARMCG::WReg(GetTmpXRegIdx(nIdx)), ARMCG::Ptr(tmp, static_cast<std::uint32_t>(sizeof(BiaType)) * nIdx));
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(nIdx)));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCloadC);
+    Tbz(flags, 1, su8VCmullC); // 1-bit correspond to LOAD_C
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Ldr(ARMCG::WReg(GetTmpXRegIdx(nIdx)), ARMCG::Ptr(ARMCG::XReg(GetDstXRegIdx(mIdx)),
+                static_cast<std::uint32_t>(nIdx * sizeof(DstType))));
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(nIdx)));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCmullC);
+    Tbz(flags, 2, su8VCaddBias1); // 2-bit correspond to MULL_C
+    KUDNN_JIT_Generator::Ld1r(ARMCG::ZRegS(NUM_0), p5, Ptr(sp));
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Ldr(ARMCG::WReg(GetTmpXRegIdx(nIdx)), ARMCG::Ptr(ARMCG::XReg(GetDstXRegIdx(mIdx)),
+                static_cast<std::uint32_t>(nIdx * sizeof(DstType))));
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(nIdx)));
+            Scvtf(ARMCG::ZRegS(GetSrcZRegIdx(nIdx)),
+                p5, ARMCG::ZRegS(GetSrcZRegIdx(nIdx)));
+            Fmul(
+                ARMCG::ZRegS(GetSrcZRegIdx(nIdx)),
+                ARMCG::ZRegS(GetSrcZRegIdx(nIdx)),
+                ARMCG::ZRegS(NUM_0)
+            );
+            Fadd(ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)), p5,
+                ARMCG::ZRegS(GetSrcZRegIdx(nIdx)));
+        }
+    }
+    L(su8VCaddBias1);
+    Tbz(flags, 7, su8VCaddBiasN); // 7-bit correspond to Add_BIAS_1
+    Ldr(ARMCG::WReg(TMP_REG_NUM), ARMCG::AdrUimm(ARMCG::Ptr(biaPtr)));
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(TMP_REG_NUM));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCaddBiasN);
+    Tbz(flags, 9, su8VCaddBiasM); // 9-bit correspond to Add_BIAS_N
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Add(tmp, biaPtr, tmpNMinusNLoopCtr, ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+            Ldr(ARMCG::WReg(GetTmpXRegIdx(nIdx)), ARMCG::Ptr(tmp,
+                static_cast<std::uint32_t>(nIdx * sizeof(DstType))));
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(nIdx)));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCaddBiasM);
+    Tbz(flags, 8, su8VCaddBiasMN); // 8-bit correspond to ADD_BIAS_M
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        Add(tmp, biaPtr, tmpMMinusMLoopCtr, ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+        Ldr(ARMCG::WReg(TMP_REG_NUM), ARMCG::Ptr(tmp, static_cast<std::uint32_t>(sizeof(BiaType)) * mIdx));
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(TMP_REG_NUM));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCaddBiasMN);
+    Tbz(flags, 10, su8VCaddinitDone); // 10-bit correspond to ADD_BIAS_MN
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Mov(ARMCG::XReg(GetTmpXRegIdx(nIdx)), mIdx);
+            Add(tmp, tmpMMinusMLoopCtr, ARMCG::XReg(GetTmpXRegIdx(nIdx)));
+            Mul(ARMCG::XReg(GetTmpXRegIdx(nIdx)), tmp, biaOffset);
+            Add(tmp, biaPtr, ARMCG::XReg(GetTmpXRegIdx(nIdx)), ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+            Add(tmp, tmp, tmpNMinusNLoopCtr, ARMCG::ShMod::LSL, Math::Log2(sizeof(BiaType)));
+            Ldr(ARMCG::WReg(GetTmpXRegIdx(nIdx)), ARMCG::Ptr(tmp, static_cast<std::uint32_t>(sizeof(BiaType)) * nIdx));
+            Fmov(ARMCG::SReg(GetSrcZRegIdx(nIdx)), ARMCG::WReg(GetTmpXRegIdx(nIdx)));
+            CvtAndAdd(applyConvert, nIdx, mIdx);
+        }
+    }
+    L(su8VCaddinitDone);
+    Tbz(flags, 11, skipPO); // 11-bit correspond to APPLY_POST_OPS
+    std::vector<SizeType> dstRegsIDs(mLim * nLim);
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            dstRegsIDs[mIdx * nLim + nIdx] = GetDstZRegIdx(mIdx, nIdx);
+        }
+    }
+    if (applyConvert) {
+        this->ApplyPostOps(dstRegsIDs, Element::MatchType<float>());
+    } else {
+        this->ApplyPostOps(dstRegsIDs, Element::MatchType<DstType>());
+    }
+    // Apply convert on last K iter
+    if (applyConvert) {
+        for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+            for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+                Frinti(ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)),
+                    p5, ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)));
+                Fcvtzs(ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)),
+                    p5, ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)));
+            }
+        }
+    }
+    L(skipPO);
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+            Str(ARMCG::SReg(GetDstZRegIdx(mIdx, nIdx)), ARMCG::Ptr(ARMCG::XReg(GetDstXRegIdx(mIdx)),
+                static_cast<std::uint32_t>(nIdx * sizeof(DstType))));
+        }
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::StoreToDst(std::uint32_t mLim, std::uint32_t nLim)
+{
+    ARMCG::Label applyf32Conv;
+    ARMCG::Label nof32Conv;
+    ARMCG::Label ret;
+
+    Mov(ARMCG::XReg(GetTmpXRegIdx(0)), 0x3f800000); // 0x3f800000 is a bit representation of 1.0f
+
+    // alpha
+    // 1.0f no convert
+    Ldr(tmpW, Ptr(sp, static_cast<std::int32_t>(NUM_16)));
+    Cmp(tmpW, ARMCG::WReg(GetTmpXRegIdx(0)));
+    Bne(applyf32Conv);
+
+    // beta
+    // 1.0f, 0.0f no convert to f32
+    Ldr(tmp, Ptr(sp));
+    Cmp(tmp, 0);
+    Beq(nof32Conv);
+
+    Cmp(tmp, ARMCG::XReg(GetTmpXRegIdx(0)));
+    Beq(nof32Conv);
+
+    L(applyf32Conv);
+    CvtAndStore(true, mLim, nLim);
+    B(ret);
+
+    L(nof32Conv);
+    CvtAndStore(false, mLim, nLim);
+    L(ret);
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::GenerateMLoopBody(std::uint32_t mLim,
+    std::uint32_t nLim, std::uint32_t k)
+{
+    std::uint32_t nResid = nLim % KERNEL_N_SIZE;
+    if (nResid == 0) {
+        nResid = KERNEL_N_SIZE;
+    }
+    Mov(nLoopCtr, nVal);
+    Sub(tmpNMinusNLoopCtr, nVal, nLoopCtr);
+    if (nLim > KERNEL_N_SIZE) {
+        ARMCG::Label nLoopHead;
+        L(nLoopHead);
+        {
+            GenerateNLoopBody(mLim, KERNEL_N_SIZE, k);
+            Sub(nLoopCtr, nLoopCtr, KERNEL_N_SIZE);
+            Cmp(nLoopCtr, KERNEL_N_SIZE);
+            Sub(tmpNMinusNLoopCtr, nVal, nLoopCtr);
+        }
+        B(ARMCG::Cond::GT, nLoopHead);
+    }
+    GenerateNLoopBody(mLim, nResid, k);
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::GenerateNLoopBody(std::uint32_t mLim,
+    std::uint32_t nLim, std::uint32_t k)
+{
+    for (std::uint32_t mIdx = 0; mIdx < KERNEL_M_SIZE; ++mIdx) {
+        for (std::uint32_t nIdx = 0; nIdx < KERNEL_N_SIZE; ++nIdx) {
+            Mov(ARMCG::ZRegB(GetDstZRegIdx(mIdx, nIdx)), 0);
+        }
+    }
+    // Initialize src pointers
+    Mul(tmp, tmpMMinusMLoopCtr, srcOffset);
+    Mov(ARMCG::XReg(GetSrcXRegIdx(0)), 0);
+    Add(ARMCG::XReg(GetSrcXRegIdx(0)), srcPtr, tmp);
+    for (std::uint32_t mIdx = 1; mIdx < mLim; ++mIdx) {
+        Addvl(ARMCG::XReg(GetSrcXRegIdx(mIdx)), ARMCG::XReg(GetSrcXRegIdx(0)), mIdx);
+    }
+    // Initialize wei pointers
+    Mul(tmp, tmpNMinusNLoopCtr, weiOffset);
+    Mov(ARMCG::XReg(GetWeiXRegIdx(0)), 0);
+    Add(ARMCG::XReg(GetWeiXRegIdx(0)), weiPtr, tmp);
+    for (std::uint32_t nIdx = 1; nIdx < nLim; ++nIdx) {
+        Addvl(ARMCG::XReg(GetWeiXRegIdx(nIdx)), ARMCG::XReg(GetWeiXRegIdx(0)), nIdx);
+    }
+    // Main k loop
+    Mov(kLoopCtr, kVal);
+    if (k > vectorLengthByte) {
+        ARMCG::Label kLoopHead;
+        L(kLoopHead);
+        {
+            Sub(kLoopCtr, kLoopCtr, vectorLengthByte);
+            Cmp(kLoopCtr, vectorLengthByte);
+            GenerateAccumulation(mLim, nLim);
+        }
+        B(ARMCG::Cond::GT, kLoopHead);
+    }
+
+    GenerateAccumulation(mLim, nLim);
+
+    // Initialize dst pointers
+    Mul(tmp, tmpMMinusMLoopCtr, dstOffset);
+    // Row-major format of dst
+    Add(ARMCG::XReg(GetDstXRegIdx(0)), dstPtr, tmp,
+        ARMCG::ShMod::LSL, 2); // Add stride for M, lsl 2 - mul by sizeof(int32_t)
+    Add(ARMCG::XReg(GetDstXRegIdx(0)),
+        ARMCG::XReg(GetDstXRegIdx(0)),
+        tmpNMinusNLoopCtr, ARMCG::ShMod::LSL, 2); // Add stride for N, lsl 2 - mul by sizeof(int32_t)
+    for (std::uint32_t mIdx = 1; mIdx < mLim; ++mIdx) {
+        Add(ARMCG::XReg(GetDstXRegIdx(mIdx)),
+            ARMCG::XReg(GetDstXRegIdx(mIdx - 1)),
+            dstOffset, ARMCG::ShMod::LSL, 2); // lsl 2 - mul by sizeof(int32_t)
+    }
+
+    // Store data to dst
+    StoreToDst(mLim, nLim);
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::Dot8(const ARMCG::ZRegB &zsource,
+    const ARMCG::ZRegB &zweight, const ARMCG::ZRegS &zdest)
+{
+    if constexpr (std::is_same_v<SrcType, WeiType>) {
+        if constexpr (std::is_same_v<SrcType, std::int8_t>) {
+            Sdot(zdest, zsource, zweight);
+        } else {
+            Udot(zdest, zsource, zweight);
+        }
+    } else {
+        if (std::is_same_v<SrcType, std::int8_t> == wereSrcWeiSwapped) {
+            Usdot(zdest, zsource, zweight);
+        } else {
+            Usdot(zdest, zweight, zsource);
+        }
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::GenerateAccumulation(std::uint32_t mLim, std::uint32_t nLim)
+{
+    Ld1b(ARMCG::ZRegB(GetWeiZRegIdx(0)), p5, Ptr(ARMCG::XReg(GetWeiXRegIdx(0))));
+    Addvl(ARMCG::XReg(GetWeiXRegIdx(0)), ARMCG::XReg(GetWeiXRegIdx(0)), nLim);
+    if (nLim > 1) {
+        Ld1b(ARMCG::ZRegB(GetWeiZRegIdx(1)), p5, Ptr(ARMCG::XReg(GetWeiXRegIdx(1))));
+        Addvl(ARMCG::XReg(GetWeiXRegIdx(1)), ARMCG::XReg(GetWeiXRegIdx(1)), nLim);
+    }
+    for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+        Ld1b(ARMCG::ZRegB(GetSrcZRegIdx(mIdx)), p5, Ptr(ARMCG::XReg(GetSrcXRegIdx(mIdx))));
+        Addvl(ARMCG::XReg(GetSrcXRegIdx(mIdx)), ARMCG::XReg(GetSrcXRegIdx(mIdx)), mLim);
+        // propogate ptr forward by (vlb x mLim int8) bytes
+    }
+
+    for (std::uint32_t nIdx = 0; nIdx < nLim; ++nIdx) {
+        // propogate ptr forward by (vlb x nLim) bytes
+        if (nIdx > 1) {
+            Ld1b(ARMCG::ZRegB(GetWeiZRegIdx(nIdx)), p5, Ptr(ARMCG::XReg(GetWeiXRegIdx(nIdx))));
+            Addvl(ARMCG::XReg(GetWeiXRegIdx(nIdx)), ARMCG::XReg(GetWeiXRegIdx(nIdx)), nLim);
+        }
+        for (std::uint32_t mIdx = 0; mIdx < mLim; ++mIdx) {
+            Dot8(ARMCG::ZRegB(GetSrcZRegIdx(mIdx)),
+                 ARMCG::ZRegB(GetWeiZRegIdx(nIdx)),
+                 ARMCG::ZRegS(GetDstZRegIdx(mIdx, nIdx)));
+        }
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::DefaultImpl(
+    const GemmInfo &task, IntType nThreads) : MatMulImplBase(task, nThreads)
+{
+    UpdateExecParams();
+    Initialize();
+}
+
+
+template <typename SrcTy, typename WeiTy, typename DstTy, typename BiaTy>
+constexpr std::uint32_t MatMulImplGenerator<VCSU8DotGen<SrcTy, WeiTy, DstTy, BiaTy>>::DefaultImpl::GetKernelMSize()
+    noexcept
+{
+    return VCSU8DotGen<SrcTy, WeiTy, DstTy, BiaTy>::KERNEL_M_SIZE;
+}
+
+template <typename SrcTy, typename WeiTy, typename DstTy, typename BiaTy>
+constexpr std::uint32_t MatMulImplGenerator<VCSU8DotGen<SrcTy, WeiTy, DstTy, BiaTy>>::DefaultImpl::GetKernelNSize()
+    noexcept
+{
+    return VCSU8DotGen<SrcTy, WeiTy, DstTy, BiaTy>::KERNEL_N_SIZE;
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+std::uint32_t MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::GetKernelKSize()
+    noexcept
+{
+    return svcntb();
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+IntType  MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::GetMBlockSize()
+    const noexcept
+{
+    return 3072; // is experimentally measured constant to obtain better perf
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+IntType  MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::GetNBlockSize()
+    const noexcept
+{
+    return 128; // is experimentally measured constant to obtain better perf
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+IntType  MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::GetKBlockSize()
+    const noexcept
+{
+    return 4096; // is experimentally measured constant to obtain better perf
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::InitializePackingPolicy()
+{
+    packingPolicy = PackingPolicy::NO_SYNC;
+    InitializePackingPolicyFromEnv();
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::InitializeKernelK(
+    IntType k, IntType kBlockSize,
+    IntType &kBlockExecFull, IntType &kBlockExecResid) const noexcept
+{
+    IntType vlb = svcntb();
+    kBlockExecFull = kBlockSize;
+    kBlockExecResid = k % kBlockExecFull;
+    kBlockExecResid = Math::CeilDiv(kBlockExecResid, vlb) * vlb;
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::InitializeSingleCodegen(
+    IntType id, IntType m, IntType n, IntType k,
+    IntType currentM, IntType currentN, IntType currentK,
+    SizeType offsetSrc, SizeType offsetWei, SizeType offsetDst, SizeType offsetBia,
+    bool wereSrcWeiSwapped, const Attributes &attributes, bool hasAlpha)
+{
+    Service::Unused(offsetSrc, offsetWei, offsetDst, offsetBia, hasAlpha);
+    if ((currentM == 0) || (currentN == 0) || (currentK == 0)) {
+        return;
+    }
+    IntType vlb = svcntb();
+    if ((currentM <= m) && (currentN <= n) && (currentK <= (Math::CeilDiv(k, vlb) * vlb))) {
+        CodeGenParams<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>> currTask{
+            currentM, currentN, currentK, wereSrcWeiSwapped, attributes};
+        if (codegens.find(currTask) == codegens.end()) {
+            codegens.insert({currTask, std::make_shared<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>(
+                currentM, currentN, currentK, wereSrcWeiSwapped, attributes)});
+        }
+        codegens[currTask]->Ready();
+        matmulCodegenKernels[id] =
+            codegens[currTask]->template GetCode<VCSU8DotCodegenFuncPtr<SrcType, WeiType, DstType, BiaType>>();
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::InitializeThreadsCountImpl()
+{
+    IntType threadNumber;
+    IntType size = GetRequiredMemSize();
+    if (size < 6144) { // 6144 is practically measured number
+        threadNumber = NUM_1;
+    } else if (size < 38400) { // 38400 is practically measured number
+        threadNumber = NUM_8;
+    } else if (size < 104544) { // 104544 is practically measured number
+        threadNumber = NUM_16;
+    } else if (size < 269664) { // 269664 is practically measured number
+        threadNumber = NUM_40;
+    } else {
+        threadNumber = InitThreadNum();
+    }
+    nThreadsExec = std::min(threadNumber, implNThreads);
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+IntType MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::GetThreadBufSize(
+    IntType m, IntType n, IntType k, MatrixKind mKind) const noexcept
+{
+    // since vlw passed here, we should adjust
+    IntType vlb = svcntb();
+    if (mKind == MatrixKind::SRC) {
+        return static_cast<IntType>(sizeof(SrcType) * vlb *
+            Math::CeilDiv(std::min<IntType>(GetKBlockSize(), k), vlb) *
+            std::min<IntType>(GetMBlockSize(), m));
+    } else {
+        return static_cast<IntType>(sizeof(WeiType) *
+            Math::CeilDiv(std::min<IntType>(GetKBlockSize(), k), vlb) *
+            vlb * std::min<IntType>(GetNBlockSize(), n));
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::ReserveImplSpecificParams()
+{}
+
+using vepa = std::vector<std::pair<Shape, Shape>>;
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+vepa MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::SplitWork()
+{
+    return CalculateWorkOnThread<DefaultImpl>(taskExec.dstInfo.GetDims(), nThreadsExec, dstLayout2D == Layout::BA);
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+template <IntType PACK_ROWS>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::PackSimilar(
+    IntType rowBlock, IntType colBlock, IntType kBlockExec, const void *src, IntType offset, void *buffer)
+{
+    IntType vlb = svcntb();
+    svbool_t ptrue = svptrue_b8();
+    std::int8_t* to = static_cast<std::int8_t*>(buffer);
+    const std::int8_t* from = static_cast<const std::int8_t*>(src);
+    IntType row = 0;
+
+    for (; row + PACK_ROWS < rowBlock; row += PACK_ROWS) {
+        for (IntType col = 0; col < colBlock; col += vlb) {
+            svbool_t p0 = svwhilelt_b8(col, colBlock);
+            for (IntType packRow = 0; packRow < PACK_ROWS; packRow++) {
+                svint8_t values = svld1_s8(p0, from + (row + packRow) * offset + col);
+                svst1_s8(ptrue, to + packRow * vlb + row * kBlockExec + PACK_ROWS * col, values);
+            }
+        }
+    }
+    
+    IntType remainingRows = rowBlock % PACK_ROWS;
+    remainingRows = (remainingRows == 0) ? PACK_ROWS : remainingRows;
+
+    to += row * kBlockExec;
+
+    for (IntType col = 0; col < colBlock; col += vlb) {
+        svbool_t p0 = svwhilelt_b8(col, colBlock);
+        for (IntType packRow = 0; packRow < remainingRows; packRow++) {
+            svint8_t values = svld1_s8(p0, from + (row + packRow) * offset + col);
+            svst1_s8(ptrue, to + packRow * vlb + col * remainingRows, values);
+        }
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+template <IntType PACK_COLS>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::PackDifferent(
+    IntType rowBlock, IntType colBlock, IntType kBlockExec, const void *src, IntType offset, void *buffer)
+{
+    IntType vlb = svcntb();
+    IntType col = 0;
+    int8_t* to = static_cast<int8_t*>(buffer);
+    const int8_t* from  = static_cast<const int8_t*>(src);
+
+    for (IntType row = 0; row < rowBlock; row+=vlb) {
+        for (col = 0; col + PACK_COLS < colBlock; col += PACK_COLS) {
+            for (IntType packRow = 0; packRow < vlb; packRow++) {
+                for (IntType packCol = 0; packCol < PACK_COLS; packCol++) {
+                    to[packCol * vlb + packRow + PACK_COLS * row + col * kBlockExec] =
+                        (row + packRow < rowBlock) ?
+                         from[(row + packRow) * offset + col + packCol] : 0;
+                }
+            }
+        }
+    }
+
+    IntType remainingCols = colBlock % PACK_COLS;
+    remainingCols = remainingCols == 0 ? PACK_COLS : remainingCols;
+
+    to += (colBlock - remainingCols) * kBlockExec;
+
+    for (IntType row = 0; row < rowBlock; row+=vlb) {
+        for (IntType packRow = 0; packRow < vlb; packRow++) {
+            for (IntType packCol = 0; packCol < remainingCols; packCol++) {
+                to[packCol * vlb + packRow] = (row + packRow < rowBlock) ?
+                from[(row + packRow) * offset + col + packCol] : 0;
+            }
+        }
+        to += remainingCols * vlb;
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::Pack(
+    const void *originalMatrix, void *buffer, IntType threadID, IntType dstDim, IntType accumDim, IntType dstDimOffset,
+    IntType accumDimOffset, IntType bufferOffset, IntType bufferStride, float alpha, MatrixKind mKind) const
+{
+    Layout layout;
+    IntType offset2D;
+    auto initParams = [&] (Layout &layouttmp, IntType &offset2Dtmp) {
+        if (mKind == MatrixKind::SRC) {
+            layouttmp = perThreadParams[threadID].srcLayout2D;
+            offset2Dtmp = perThreadParams[threadID].srcOffset2D;
+        } else {
+            layouttmp = perThreadParams[threadID].weiLayout2D;
+            offset2Dtmp = perThreadParams[threadID].weiOffset2D;
+        }
+    };
+    initParams(layout, offset2D);
+
+    Service::Unused(alpha);
+
+    if (mKind == MatrixKind::SRC) {
+        const SrcType *srcExec = static_cast<const SrcType *>(originalMatrix);
+        if (perThreadParams[threadID].srcLayout2D == Layout::COL_MAJOR) {
+            srcExec += dstDimOffset + accumDimOffset * offset2D;
+            PackDifferent<GetKernelMSize()>(accumDim, dstDim, bufferStride, srcExec,
+                perThreadParams[threadID].srcOffset2D,
+                static_cast<SrcType *>(buffer) + bufferOffset);
+        } else {
+            srcExec += dstDimOffset * offset2D + accumDimOffset;
+            PackSimilar<GetKernelMSize()>(dstDim, accumDim, bufferStride, srcExec,
+                perThreadParams[threadID].srcOffset2D,
+                static_cast<SrcType *>(buffer) + bufferOffset);
+        }
+    } else {
+        const WeiType *weiExec = static_cast<const WeiType *>(originalMatrix);
+        if (perThreadParams[threadID].weiLayout2D == Layout::ROW_MAJOR) {
+            weiExec += dstDimOffset + accumDimOffset * offset2D;
+            PackDifferent<GetKernelNSize()>(accumDim, dstDim, bufferStride, weiExec,
+                perThreadParams[threadID].weiOffset2D,
+                static_cast<WeiType *>(buffer) + bufferOffset);
+        } else {
+            weiExec += dstDimOffset * offset2D + accumDimOffset;
+            PackSimilar<GetKernelNSize()>(dstDim, accumDim, bufferStride, weiExec,
+                perThreadParams[threadID].weiOffset2D,
+                static_cast<WeiType *>(buffer) + bufferOffset);
+        }
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::RunSequential2D(
+    IntType threadID, const void *src, const void *wei, void *dst, const void *bia,
+    std::unique_ptr<PackStrategy> &srcPackStrategy, std::unique_ptr<PackStrategy> &weiPackStrategy,
+    float alpha, float beta, const PostOpsDataPtrs &shiftedByBatchPOPtrs) const noexcept(false)
+{
+    Service::Unused(shiftedByBatchPOPtrs);
+    VERBOSE_PRINT;
+    IntType m = perThreadParams[threadID].m;
+    IntType n = perThreadParams[threadID].n;
+    IntType k = perThreadParams[threadID].k;
+
+    IntType tIDbatch;
+    IntType tIDm;
+    IntType tIDn;
+    InitThreadIDs(threadID, tIDbatch, tIDm, tIDn);
+    
+    SrcType* srcBuffer = static_cast<SrcType *>(srcPackStrategy->GetPtr(tIDbatch * threadsM  + tIDm, tIDn, threadsN));
+    WeiType* weiBuffer = static_cast<WeiType *>(weiPackStrategy->GetPtr(tIDbatch * threadsN  + tIDn, tIDm, threadsM));
+
+    for (IntType mBlock = 0; mBlock < mFullBlockSizePerThread; mBlock += GetMBlockSize()) {
+        auto mBlockExec = std::min(GetMBlockSize(),  m - mBlock);
+        // mIdx, nIdx, kIdx -- stands for cache
+        IntType mIdx = (mBlockExec == GetMBlockSize()) ? 0 : 1;
+        IntType mIdxKernel = mIdx * (perThreadParams[threadID].isResidByM + 1);
+        
+        for (IntType kBlock = 0; kBlock < k; kBlock += GetKBlockSize()) {
+            auto kBlockExec = std::min(GetKBlockSize(), k - kBlock);
+            IntType kIdxKernel = (kBlockExec == GetKBlockSize()) ? 0 : 1;
+            bool lastKIter = (k - kBlock) <= GetKBlockSize();
+            MatMulDstFlags biaFlagsExec = SetBiaFlagsExec(biaFlags, beta, kBlock, lastKIter, alpha);
+            IntType kBlockExecRoundedUp = Math::CeilDiv(kBlockExec, svcntb()) * svcntb();
+            if (mBlock < m) {
+                srcPackStrategy->Pack(*this, src, srcBuffer,
+                    {mBlock, mBlockExec, GetKernelMSize()}, {kBlock, kBlockExec, GetKernelKSize()},
+                    threadsN, tIDn, threadID, alpha);
+            }
+            srcPackStrategy->Barrier(tIDbatch * threadsM + tIDm, tIDn, threadsN);
+
+            for (IntType nBlock = 0; nBlock < nFullBlockSizePerThread; nBlock += GetNBlockSize()) {
+                if ((nBlock < n) && (mBlock < m)) {
+                    auto nBlockExec = std::min(GetNBlockSize(), n - nBlock);
+                    int nIdx = (nBlockExec == GetNBlockSize()) ? 0 : 1;
+                    IntType nIdxKernel = nIdx * (perThreadParams[threadID].isResidByN + 1);
+                    weiPackStrategy->Pack(*this, wei, weiBuffer,
+                        {nBlock, nBlockExec, GetKernelNSize()}, {kBlock, kBlockExec, GetKernelKSize()},
+                        threadsM, tIDm, threadID, alpha);
+                    weiPackStrategy->Barrier(tIDbatch * threadsN + tIDn, tIDm, threadsM);
+                    DstType *dstExec = static_cast<DstType *>(dst) + nBlock +
+                        mBlock * perThreadParams[threadID].dstOffset2D;
+                    const BiaType *biaExec = static_cast<const BiaType *>(bia) + nBlock * biaNOffset +
+                        mBlock * perThreadParams[threadID].biaOffset2D;
+                    auto kernel = matmulCodegenKernels[kIdxKernel * NUM_9 +
+                        nIdxKernel * NUM_3 + mIdxKernel];
+                    kernel(srcBuffer, weiBuffer, dstExec, biaExec, biaFlagsExec,
+                        alpha, beta, mBlockExec, nBlockExec, kBlockExec, kBlockExecRoundedUp, kBlockExecRoundedUp,
+                        perThreadParams[threadID].dstOffset2D, perThreadParams[threadID].biaOffset2D);
+                    weiPackStrategy->Barrier(tIDbatch * threadsN + tIDn, tIDm, threadsM);
+                }
+            }
+            srcPackStrategy->Barrier(tIDbatch * threadsM + tIDm, tIDn, threadsN);
+        }
+    }
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+void MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::UpdateExecParams() noexcept
+{
+    Layout desiredSrcLayout = implTask.srcInfo.GetLayout();
+    Layout desiredWeiLayout = implTask.weiInfo.GetLayout();
+    Layout desiredDstLayout = implTask.dstInfo.GetLayout();
+    Layout desiredBiaLayout = implTask.biaInfo.GetLayout();
+    if (!IsLayoutAlikeAB(desiredSrcLayout) && !IsLayoutAlikeBA(desiredSrcLayout)) {
+        desiredSrcLayout = GetPlaneLayoutAB(desiredSrcLayout);
+    }
+    if (!IsLayoutAlikeAB(desiredWeiLayout) && !IsLayoutAlikeBA(desiredWeiLayout)) {
+        desiredWeiLayout = GetPlaneLayoutBA(desiredWeiLayout);
+    }
+    if (!IsLayoutAlikeAB(desiredDstLayout) && !IsLayoutAlikeBA(desiredDstLayout)) {
+        desiredDstLayout = GetPlaneLayoutAB(desiredDstLayout);
+    }
+    if (implTask.biaInfo.GetTotalTensorSize() != 0) {
+        desiredBiaLayout = desiredDstLayout;
+    }
+    InitializeTaskExec(desiredSrcLayout, desiredWeiLayout, desiredDstLayout, desiredBiaLayout,
+        VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::GetSrcType(),
+        VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::GetWeiType(),
+        VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::GetDstType(),
+        (implTask.biaInfo.GetTotalTensorSize() != 0) ? VCSU8DotGen<SrcType, WeiType, DstType, BiaType>::GetBiaType() :
+            static_cast<Element::TypeT>(implTask.biaInfo.GetType()));
+}
+
+template <typename SrcType, typename WeiType, typename DstType, typename BiaType>
+MatMulDstFlags MatMulImplGenerator<VCSU8DotGen<SrcType, WeiType, DstType, BiaType>>::DefaultImpl::SetBiaFlagsExec(
+    MatMulDstFlags biaF, float beta, bool notFirstKIter,
+    bool lastKIter, float alpha) const noexcept
+{
+    Service::Unused(alpha);
+    MatMulDstFlags ret;
+    if (notFirstKIter) {
+        ret = MatMulDstFlags::LOAD_C;
+    } else { // first K iter, need to process bias and beta
+        if (biaF == MatMulDstFlags::FILL_C_WITH_ZEROZ) { // No Bias
+            if (beta == 0) {
+                ret = MatMulDstFlags::FILL_C_WITH_ZEROZ;
+            } else if (beta == 1) {
+                ret = MatMulDstFlags::LOAD_C;
+            } else {
+                ret = MatMulDstFlags::MULL_C;
+            }
+        } else { // bias
+            if (beta == 0) {
+                ret = biaF;
+            } else if (beta == 1) {
+                ret = MatMulDstFlags::LOAD_C | (biaF << NUM_4);
+            } else {
+                ret = MatMulDstFlags::MULL_C | (biaF << NUM_4);
+            }
+        }
+        ret = ret | MatMulDstFlags::FIRST_K_ITER;
+    }
+    if (lastKIter) {
+        ret = ret | MatMulDstFlags::APPLY_POST_OPS;
+    }
+    return ret;
+}
+
+template struct MatMulImplGenerator<MatMulKernelDefaultCodeGen
+    <ARCH::VC, std::int8_t, std::int8_t, std::int32_t, std::int32_t, MatMulImplKinds::SU8SU8S32S32_VC>>;
+template struct MatMulImplGenerator<MatMulKernelDefaultCodeGen
+    <ARCH::VC, std::int8_t, std::uint8_t, std::int32_t, std::int32_t, MatMulImplKinds::SU8SU8S32S32_VC>>;
+template struct MatMulImplGenerator<MatMulKernelDefaultCodeGen
+    <ARCH::VC, std::uint8_t, std::int8_t, std::int32_t, std::int32_t, MatMulImplKinds::SU8SU8S32S32_VC>>;
+template struct MatMulImplGenerator<MatMulKernelDefaultCodeGen
+    <ARCH::VC, std::uint8_t, std::uint8_t, std::int32_t, std::int32_t, MatMulImplKinds::SU8SU8S32S32_VC>>;
+
+} // Detail
+} // KuDNN

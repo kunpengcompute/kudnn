@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,23 +16,23 @@
 static void LinearMainKernelF32(svfloat32_t a, const float *src, svfloat32_t b, float *dst, int step)
 {
     svbool_t pg = svptrue_b32();
-    VML_VectorComputation_DECLARE(svfloat32_t, x);
-    VML_VectorComputation_LD_STEP(x, svld1_f32, pg, src, step);
+    VML_VC_DECLARE(svfloat32_t, x);
+    VML_VC_LD_STEP(x, svld1_f32, pg, src, step);
 
-    VML_VectorComputation_DECLARE(svfloat32_t, res);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(res, svmad_f32_x, pg, a, x, b);
+    VML_VC_DECLARE(svfloat32_t, res);
+    VML_VC_FUNC_PG_N13_3PARA(res, svmad_f32_x, pg, a, x, b);
 
-    VML_VectorComputation_ST_STEP(svst1_f32, pg, dst, step, res);
+    VML_VC_ST_STEP(svst1_f32, pg, dst, step, res);
 }
 
-void LinearSveF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst)
+void LinearVCF32(const int64_t len, const float alpha, const float beta, const float *src, float *dst)
 {
     int64_t i;
     int64_t loopLinearf = svcntw();
     svfloat32_t va = svdup_n_f32(alpha);
     svfloat32_t vb = svdup_n_f32(beta);
 
-    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N; i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopLinearf * VML_VC_UNFOLD_N; i += loopLinearf * VML_VC_UNFOLD_N) {
         LinearMainKernelF32(va, src + i, vb, dst + i, loopLinearf);
     }
     for (; i < len; i += loopLinearf) {
@@ -48,28 +48,28 @@ static void LinearMainKernelF16(svfloat32_t a, const __fp16 *src, svfloat32_t b,
     svbool_t pgB16 = svptrue_b16();
     svbool_t pgB32 = svptrue_b32();
 
-    VML_VectorComputation_DECLARE(svfloat32_t, xEven);
-    VML_VectorComputation_DECLARE(svfloat32_t, xOdd);
+    VML_VC_DECLARE(svfloat32_t, xEven);
+    VML_VC_DECLARE(svfloat32_t, xOdd);
 
     LOAD_CONVERT_FP16_TO_FP32_1(src, pgB16, xEven, xOdd, step);
 
     // mul + add
-    VML_VectorComputation_DECLARE(svfloat32_t, resEven);
-    VML_VectorComputation_DECLARE(svfloat32_t, resOdd);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(resEven, svmad_f32_x, pgB32, a, xEven, b);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(resOdd, svmad_f32_x, pgB32, a, xOdd, b);
+    VML_VC_DECLARE(svfloat32_t, resEven);
+    VML_VC_DECLARE(svfloat32_t, resOdd);
+    VML_VC_FUNC_PG_N13_3PARA(resEven, svmad_f32_x, pgB32, a, xEven, b);
+    VML_VC_FUNC_PG_N13_3PARA(resOdd, svmad_f32_x, pgB32, a, xOdd, b);
 
     CONVERT_STORE_FP32_TO_FP16(dst, pgB16, resEven, resOdd, step);
 }
 
-void LinearSveF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, __fp16 *dst)
+void LinearVCF16(const int64_t len, const float alpha, const float beta, const __fp16 *src, __fp16 *dst)
 {
     int64_t i;
     int64_t loopLinearf = svcnth();
     svfloat32_t va = svdup_n_f32(alpha);
     svfloat32_t vb = svdup_n_f32(beta);
 
-    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N; i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopLinearf * VML_VC_UNFOLD_N; i += loopLinearf * VML_VC_UNFOLD_N) {
         LinearMainKernelF16(va, src + i, vb, dst + i, loopLinearf);
     }
     for (; i < len; i += loopLinearf) {
@@ -98,31 +98,28 @@ static void LinearMainKernelBF16(svfloat32_t a, const __bf16 *src, svfloat32_t b
     svbool_t pgB16 = svptrue_b16();
     svbool_t pgB32 = svptrue_b32();
 
-    VML_VectorComputation_DECLARE(svfloat32_t, xBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, xTop);
+    VML_VC_DECLARE(svfloat32_t, xBot);
+    VML_VC_DECLARE(svfloat32_t, xTop);
 
     LOAD_CONVERT_BF16_TO_FP32_1(src, pgB16, xBot, xTop, step);
 
     // linear compute
-    VML_VectorComputation_DECLARE(svfloat32_t, resBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, resTop);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(resBot, svmad_f32_x, pgB32, a, xBot, b);
-    VML_VectorComputation_FUNC_PG_N13_3PARA(resTop, svmad_f32_x, pgB32, a, xTop, b);
+    VML_VC_DECLARE(svfloat32_t, resBot);
+    VML_VC_DECLARE(svfloat32_t, resTop);
+    VML_VC_FUNC_PG_N13_3PARA(resBot, svmad_f32_x, pgB32, a, xBot, b);
+    VML_VC_FUNC_PG_N13_3PARA(resTop, svmad_f32_x, pgB32, a, xTop, b);
 
-    VML_VectorComputation_FUNC_PG_1PARA(resBot, SvF32CvtBf16InfSpecial, pgB32, resBot);
-    VML_VectorComputation_FUNC_PG_1PARA(resTop, SvF32CvtBf16InfSpecial, pgB32, resTop);
-
-    CONVERT_STORE_FP32_TO_BF16(dst, pgB16, resBot, resTop, step);
+    CONVERT_STORE_FP32_TO_BF16(dst, pgB32, pgB16, resBot, resTop, step);
 }
 
-void LinearSveBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst)
+void LinearVCBF16(const int64_t len, const float alpha, const float beta, const __bf16 *src, __bf16 *dst)
 {
     int64_t i;
     int64_t loopLinearf = svcnth();
     svfloat32_t va = svdup_n_f32(alpha);
     svfloat32_t vb = svdup_n_f32(beta);
 
-    for (i = 0; i <= len - loopLinearf * VML_VectorComputation_UNFOLD_N; i += loopLinearf * VML_VectorComputation_UNFOLD_N) {
+    for (i = 0; i <= len - loopLinearf * VML_VC_UNFOLD_N; i += loopLinearf * VML_VC_UNFOLD_N) {
         LinearMainKernelBF16(va, src + i, vb, dst + i, loopLinearf);
     }
 
@@ -146,5 +143,45 @@ void LinearSveBF16(const int64_t len, const float alpha, const float beta, const
         // convert back to bf16
         svbfloat16_t res = SvCvtBF16F32FullX(resBot, resTop);
         svst1_bf16(pgB16, dst + i, res);
+    }
+}
+
+void LinearVCFWDS32(const int64_t len, const float alpha, const float beta, const int32_t *src, int32_t *dst)
+{
+    int64_t i;
+    int64_t loopCnt = svcntw();
+    svfloat32_t va = svdup_n_f32(alpha);
+    svfloat32_t vb = svdup_n_f32(beta);
+
+    for (i = 0; i < len; i += loopCnt) {
+        svbool_t pg = svwhilelt_b32_s64(i, len);
+        svint32_t x = svld1_s32(pg, src + i);
+
+        svfloat32_t xF32 = svcvt_f32_s32_x(pg, x);
+        svfloat32_t res = svmad_f32_x(pg, va, xF32, vb);
+
+        res = svadd_f32_x(pg, res, VC_FLOAT_HALF);
+        res = svrintm_f32_x(pg, res);
+        svint32_t resS32 = svcvt_s32_f32_x(pg, res);
+
+        svst1_s32(pg, dst + i, resS32);
+    }
+}
+
+void LinearVCFWDS8(const int64_t len, const float alpha, const float beta, const int8_t *src, int8_t *dst)
+{
+    for (int64_t i = 0; i < len; i++) {
+        float val = (float)src[i];
+        val = val * alpha + beta;
+        dst[i] = Float2Int8(val);
+    }
+}
+
+void LinearVCFWDU8(const int64_t len, const float alpha, const float beta, const uint8_t *src, uint8_t *dst)
+{
+    for (int64_t i = 0; i < len; i++) {
+        float val = (float)src[i];
+        val = val * alpha + beta;
+        dst[i] = Float2Uint8(val);
     }
 }

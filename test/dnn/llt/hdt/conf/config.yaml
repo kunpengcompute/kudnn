@@ -1,0 +1,55 @@
+---
+version: 1.0.0
+ 
+project:
+  name: "dnn"
+  desc: "dnn hdt project"
+  prod: null
+  team: null
+ 
+pipeline:
+  build:
+    - task: "build"
+      exec: cd ../../../../../ && sh build/build.sh
+      args: false
+      default: true
+    - task: "enable_gcov"
+      exec: cd ../../../../../ && sh build/build.sh --enable_gcov=on
+      args: false
+      default: false
+    - task: "nezha_build"
+      exec: cd ../../../../../ && sh build/build.sh --target_platform=KP920F --enable_hbm=on --compiler=clang
+      args: false
+      default: false
+    - task: "nezha_gcov"
+      exec: cd ../../../../../ && sh build/build.sh --target_platform=KP920F --enable_hbm=on --compiler=clang --enable_gcov=on
+      args: false
+      default: false
+    - task: "nezha_build_no_hbm"
+      exec: cd ../../../../../ && sh build/build.sh --target_platform=KP920F --enable_hbm=off --compiler=clang
+      args: false
+      default: false
+    - task: "nezha_gcov_no_hbm"
+      exec: cd ../../../../../ && sh build/build.sh --target_platform=KP920F --enable_hbm=off --compiler=clang --enable_gcov=on
+      args: false
+      default: false
+  run:
+    - task: "ut"
+      exec: cd ../../../../../ && sh out/test/dnn/llt/scripts/test_dnn.sh --test_type=ut --gen_report=off --output_dir=${PWD}/out
+      args: null
+    - task: "st"
+      exec: cd ../../../../../ && sh out/test/dnn/llt/scripts/test_dnn.sh --test_type=st --gen_report=off --output_dir=${PWD}/out
+      args: null
+    - task: "fuzz"
+      exec: cd ../../../../../ && sh out/test/dnn/llt/scripts/test_dnn.sh --test_type=fuzz --gen_report=off --output_dir=${PWD}/out
+      args: null
+  report:
+    - task: "ut"
+      exec: cd ../../../../../ && sh out/test/dnn/llt/scripts/test_dnn.sh --test_type=ut --gen_report=on --output_dir=${PWD}/out
+      args: null
+    - task: "st"
+      exec: cd ../../../../../ && sh out/test/dnn/llt/scripts/test_dnn.sh --test_type=st --gen_report=on --output_dir=${PWD}/out
+      args: null
+    - task: "fuzz"
+      exec: cd ../../../../../ && sh out/test/dnn/llt/scripts/test_dnn.sh --test_type=fuzz --gen_report=on --output_dir=${PWD}/out
+      args: null

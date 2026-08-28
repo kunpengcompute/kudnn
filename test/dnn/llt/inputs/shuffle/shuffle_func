@@ -1,0 +1,39 @@
+# 5D
+--dir=FWD_D,BWD_D
+--dt=f32,f16,bf16,s32,s8,u8
+--tag=abcde,abced,abdec,acbde,acdeb,adecb,bacde,bcdea,cdeab,cdeba,decab
+--group=1,2,4
+--axis=0,1,2,3,4
+8x4x12x4x16
+
+# 4D
+--dir=FWD_D,BWD_D
+--dt=f32,f16,bf16,s32,s8,u8
+--tag=abcd,abdc,acbd,acdb,adbc,adcb,bacd,bcda,cdab,cdba,dcab
+--group=1,2,4
+--axis=0,1,2,3
+8x4x12x4
+
+# 3D
+--dir=FWD_D,BWD_D
+--dt=f32,f16,bf16,s32,s8,u8
+--tag=abc,acb,bac,bca,cab,cba
+--group=1,2,4
+--axis=0,1,2
+8x4x12
+
+# 2D
+--dir=FWD_D,BWD_D
+--dt=f32,f16,bf16,s32,s8,u8
+--tag=ab,ba
+--group=1,2,4
+--axis=0,1
+8x4
+
+# 1D
+--dir=FWD_D,BWD_D
+--dt=f32,f16,bf16,s32,s8,u8
+--tag=a
+--group=1,2,4
+--axis=0
+8

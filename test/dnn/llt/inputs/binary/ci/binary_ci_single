@@ -1,0 +1,11 @@
+--alg=ADD,MUL,MAX,MIN,DIV,SUB,GE,GT,LE,LT,EQ,NE
+--ddt=f32 --sdt=f32:f32
+--batch=shapes_single_f32
+
+--alg=ADD,MUL,MAX,MIN,DIV,SUB,GE,GT,LE,LT,EQ,NE
+--ddt=f16 --sdt=f16:f16
+--batch=shapes_single_f16bf16
+
+--alg=ADD,MUL,MAX,MIN,DIV,SUB,GE,GT,LE,LT,EQ,NE
+--ddt=bf16 --sdt=bf16:bf16
+--batch=shapes_single_f16bf16

@@ -1,0 +1,9 @@
+# FWD
+--dir=FWD_D --alg=nearest,linear --tag=abx,axb --ddt=f32 --sdt=f32 --batch=resampling_fwd_numa_shapes
+--dir=FWD_D --alg=nearest,linear --tag=abx,axb --ddt=f16 --sdt=f16 --batch=resampling_fwd_numa_shapes
+--dir=FWD_D --alg=nearest,linear --tag=abx,axb --ddt=bf16 --sdt=bf16 --batch=resampling_fwd_numa_shapes
+
+# BWD
+--dir=BWD_D --alg=nearest,linear --tag=abx,axb --ddt=f32 --sdt=f32 --batch=resampling_bwd_numa_shapes
+--dir=BWD_D --alg=nearest,linear --tag=abx,axb --ddt=f16 --sdt=f16 --batch=resampling_bwd_numa_shapes
+--dir=BWD_D --alg=nearest,linear --tag=abx,axb --ddt=bf16 --sdt=bf16 --batch=resampling_bwd_numa_shapes

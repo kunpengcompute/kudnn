@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -13,7 +13,7 @@
 #include "vml_pow.h"
 
 // -log2(1 + i/32), i in [0, 31]
-__attribute__((aligned(0x20))) const float G_VML_VSPOW_LOG2_TAB_VectorComputation[POWF_LOG2_N * 2] = {
+__attribute__((aligned(0x20))) const float G_VML_VSPOW_LOG2_TAB_VC[POWF_LOG2_N * 2] = {
     0x0p+0f, -0x1.6bbp-5f, -0x1.664p-4f, -0x1.08c8p-3f,
     -0x1.5cp-3f, -0x1.acf8p-3f, -0x1.fbcp-3f, -0x1.244p-2f,
     -0x1.49a8p-2f, -0x1.6e2p-2f, -0x1.91b8p-2f, -0x1.b48p-2f,
@@ -24,7 +24,7 @@ __attribute__((aligned(0x20))) const float G_VML_VSPOW_LOG2_TAB_VectorComputatio
     -0x1.d05p-1f, -0x1.dc88p-1f, -0x1.e89p-1f, -0x1.f46p-1f,
 };
 
-__attribute__((aligned(0x20))) const float G_VML_VSPOW_LOG2_POLY_LOW_TAB_VectorComputation[POWF_LOG2_POLY_N * 2] =  {
+__attribute__((aligned(0x20))) const float G_VML_VSPOW_LOG2_POLY_LOW_TAB_VC[POWF_LOG2_POLY_N * 2] =  {
     0x0p+0f, 0x1.645388p-20f, 0x1.20a6dep-21f, 0x1.3b992cp-18f,
     -0x1.a39fbep-19f, 0x1.0e9258p-18f, -0x1.6b9026p-19f, -0x1.eac382p-20f,
     0x1.ed0cbap-20f, -0x1.0e6ce8p-17f, -0x1.d448f8p-17f, 0x1.408c78p-18f,

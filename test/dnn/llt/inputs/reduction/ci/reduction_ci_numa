@@ -1,0 +1,6 @@
+--sdt=f32 --ddt=f32 
+--batch=alg
+--sdt=f16 --ddt=f16 
+--batch=alg
+--sdt=bf16 --ddt=bf16
+--batch=alg

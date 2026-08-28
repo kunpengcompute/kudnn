@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,8 +10,8 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef KUDNN_RMSNORM_FWD_LAST_DEF_HPP
-#define KUDNN_RMSNORM_FWD_LAST_DEF_HPP
+#ifndef KuDNN_RMSNORM_FWD_LAST_DEF_HPP
+#define KuDNN_RMSNORM_FWD_LAST_DEF_HPP
 
 #include "kudnn.hpp"
 
@@ -191,4 +191,4 @@ void EvaluateLastAxis(SizeType execAcrossAxis, const InType *src, OutType *dst, 
 } // Detail
 } // KuDNN
 
-#endif //  KUDNN_RMSNORM_FWD_LAST_DEF_HPP
+#endif //  KuDNN_RMSNORM_FWD_LAST_DEF_HPP

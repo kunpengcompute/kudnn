@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -73,31 +73,31 @@ enum class CacheType {
     UCACHE = 2
 };
 
-enum class SveLen {
-    VectorComputation_NONE = 0,
-    VectorComputation_128 = 16 * 1,
-    VectorComputation_256 = 16 * 2,
-    VectorComputation_384 = 16 * 3,
-    VectorComputation_512 = 16 * 4,
-    VectorComputation_640 = 16 * 5,
-    VectorComputation_768 = 16 * 6,
-    VectorComputation_896 = 16 * 7,
-    VectorComputation_1024 = 16 * 8,
-    VectorComputation_1152 = 16 * 9,
-    VectorComputation_1280 = 16 * 10,
-    VectorComputation_1408 = 16 * 11,
-    VectorComputation_1536 = 16 * 12,
-    VectorComputation_1664 = 16 * 13,
-    VectorComputation_1792 = 16 * 14,
-    VectorComputation_1920 = 16 * 15,
-    VectorComputation_2048 = 16 * 16,
+enum class VCLen {
+    VC_NONE = 0,
+    VC_128 = 16 * 1,
+    VC_256 = 16 * 2,
+    VC_384 = 16 * 3,
+    VC_512 = 16 * 4,
+    VC_640 = 16 * 5,
+    VC_768 = 16 * 6,
+    VC_896 = 16 * 7,
+    VC_1024 = 16 * 8,
+    VC_1152 = 16 * 9,
+    VC_1280 = 16 * 10,
+    VC_1408 = 16 * 11,
+    VC_1536 = 16 * 12,
+    VC_1664 = 16 * 13,
+    VC_1792 = 16 * 14,
+    VC_1920 = 16 * 15,
+    VC_2048 = 16 * 16,
 };
 
 enum class HwCap {
     CG_HWCAP_NONE = 0,
     CG_HWCAP_ADVSIMD = 1 << 1,
     CG_HWCAP_FP = 1 << 2,
-    CG_HWCAP_VectorComputation = 1 << 3,
+    CG_HWCAP_VC = 1 << 3,
     CG_HWCAP_ATOMIC = 1 << 4,
     CG_HWCAP_BF16 = 1 << 5,
 };
@@ -126,64 +126,42 @@ struct CacheInfoV2 {
     LevelCacheInfo levelCache[MAX_CACHE_LEVEL];
 };
 
-const struct Implementer IMPLEMENTERS[] = {
-    {0x00, "Reserved for software use"},
-    {0xC0, "Ampere Computing"},
-    {0x41, "Arm Limited"},
-    {0x42, "Broadcom Corporation"},
-    {0x43, "Cavium Inc."},
-    {0x44, "Digital Equipment Corporation"},
-    {0x46, "Fujitsu Ltd."},
-    {0x49, "Infineon Technologies AG"},
-    {0x4D, "Motorola or Freescale Semiconductor Inc."},
-    {0x4E, "NVIDIA Corporation"},
-    {0x50, "Applied Micro Circuits Corporation"},
-    {0x51, "Qualcomm Inc."},
-    {0x56, "Marvell International Ltd."},
-    {0x69, "Intel Corporation"},
-    {0xFE, "Apple Inc."},
-    {0xFF, "Cannot identified"},
-};
-
 // CPU detection class
 class CpuInfo {
 public:
     CpuInfo() {}
-
+    virtual ~CpuInfo() {}
     void DumpCacheInfo() const;
     int GetCacheSize(CacheType type, uint32_t level) const;
     Arm64CacheType GetCacheType(int level) const;
     int GetCodeCacheSize(int level) const;
-    const char *GetImplementer() const;
     int GetLastDataCacheLevel() const;
     int GetNumCores(Arm64CpuTopologyLevel level = Arm64CpuTopologyLevel::CORE) const;
-    uint64_t GetSveLen() const;
+    uint64_t GetVCLen() const;
     Type GetType() const;
     uint32_t GetUnifiedCacheSize(int level) const;
     void Put() const;
 
 protected:
     void Init();
-    void SetImplementer();
 
     int numCores_[2] = {}; // [0]:SmtLevel, [1], CoreLevel
     CacheInfoV2 cacheInfo_ = {};
     uint32_t lastDataCacheLevel_ = 0;
     Type type_ = 0;
     uint64_t sveLen_ = 0;
-    const char *implementer_ = nullptr;
 };
 
 class Cpu {
 public:
     Cpu();
+    ~Cpu();
     void DumpCacheInfo() const;
     Arm64CacheType GetCacheType(const Arm64CacheLevel i) const;
-    const char *GetImplementer() const;
     uint32_t GetLastDataCacheLevel() const;
     uint32_t GetNumCores(Arm64CpuTopologyLevel level) const;
     Type GetType() const;
-    SveLen GetSveLen() const;
+    VCLen GetVCLen() const;
     bool Has(HwCap type) const;
     bool IsAtomicSupported() const;
     bool IsBf16Supported() const;
@@ -203,10 +181,6 @@ private:
 template <typename T, typename U>
 inline T BitCast(const U &u)
 {
-    static_assert(sizeof(T) == sizeof(U), "Bit-casting must preserve size.");
-    static_assert(std::is_trivial<T>::value, "T must be trivially copyable.");
-    static_assert(std::is_trivial<U>::value, "U must be trivially copyable.");
-
     T t;
     // Since bit_cast is used in SYCL kernels it cannot use std::memcpy as it
     // can be implemented as @llvm.objectsize.* + __memcpy_chk for Release

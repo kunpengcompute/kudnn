@@ -1,0 +1,225 @@
+#用于看护代码功能，为减少门禁时长，默认注释
+#case 1
+#ow=5  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=5  pw=(kw-1)x(dw+1)-1
+ic1oc13_iw14ow5kw7pw5sw3_n"conv_1d_corner"
+
+#case 2
+#ow=6  ow=(iw+pw-DKW)/sw+2
+#pw=5  pw=(kw-1)x(dw+1)-1
+ic1oc13_iw14ow6kw7pw5sw3_n"conv_1d_corner"
+
+#case 3
+#ow=5  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=6  pw=(kw-1)x(dw+1)
+ic1oc13_iw14ow5kw7pw6sw3_n"conv_1d_corner"
+
+#case 4
+#ow=6  ow=(iw+pw-DKW)/sw+2
+#pw=6  pw=(kw-1)x(dw+1)
+ic1oc13_iw14ow6kw7pw6sw3_n"conv_1d_corner"
+
+#case 5
+#ow=5  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=7  pw=(kw-1)x(dw+1)+1
+ic1oc13_iw14ow5kw7pw7sw3_n"conv_1d_corner"
+
+#case 6
+#ow=6  ow=(iw+pw-DKW)/sw+2
+#pw=7  pw=(kw-1)x(dw+1)+1
+ic1oc13_iw14ow6kw7pw7sw3_n"conv_1d_corner"
+
+
+
+#case 7
+#ow=15  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=8  pw=(kw-1)x(dw+1)-1
+ic13oc12_iw16ow15kw10pw8_n"conv_1d_corner"
+
+#case 8
+#ow=16  ow=(iw+pw-DKW)/sw+2
+#pw=8  pw=(kw-1)x(dw+1)-1
+ic13oc12_iw16ow16kw10pw8_n"conv_1d_corner"
+
+#case 9
+#ow=16  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=9  pw=(kw-1)x(dw+1)
+ic13oc12_iw16ow16kw10pw9_n"conv_1d_corner"
+
+#case 10
+#ow=17  ow=(iw+pw-DKW)/sw+2
+#pw=9  pw=(kw-1)x(dw+1)
+ic13oc12_iw16ow17kw10pw9_n"conv_1d_corner"
+
+#case 11
+#ow=17  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=10  pw=(kw-1)x(dw+1)+1
+ic13oc12_iw16ow17kw10pw10_n"conv_1d_corner"
+
+#case 12
+#ow=18  ow=(iw+pw-DKW)/sw+2
+#pw=10  pw=(kw-1)x(dw+1)+1
+ic13oc12_iw16ow18kw10pw10_n"conv_1d_corner"
+
+
+
+#case 13
+#ow=1  ow=(iw+pw-DKW)/sw+2  (DKW=1+(kw-1)×(dw+1) 向下取整)边界值计算得0，这里取1
+#pw=4  pw=(kw-1)x(dw+1)-1
+ic3oc4_iw1ow1kw6pw4_n"conv_1d_corner"
+
+#case 14
+#ow=1  ow=(iw+pw-DKW)/sw+2
+#pw=4  pw=(kw-1)x(dw+1)-1
+ic3oc4_iw1ow1kw6pw4_n"conv_1d_corner"
+
+#case 15
+#ow=1  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=5  pw=(kw-1)x(dw+1)
+ic3oc4_iw1ow1kw6pw5_n"conv_1d_corner"
+
+#case 16
+#ow=2  ow=(iw+pw-DKW)/sw+2  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=5  pw=(kw-1)x(dw+1)
+ic3oc4_iw1ow2kw6pw5_n"conv_1d_corner"
+
+#case 17
+#ow=2  ow=(iw+pw-DKW)/sw+1  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=6  pw=(kw-1)x(dw+1)+1
+ic3oc4_iw1ow2kw6pw6_n"conv_1d_corner"
+
+#case 18
+#ow=3  ow=(iw+pw-DKW)/sw+2  (DKW=1+(kw-1)×(dw+1) 向下取整)
+#pw=6  pw=(kw-1)x(dw+1)+1
+ic3oc4_iw1ow3kw6pw6_n"conv_1d_corner"
+
+
+
+#case 19
+#ow=5  ow=(iw + pw - DKW)/sw + 1  (DKW = 1 + (kw-1)×(dw+1) 向下取整)
+#pw=2  pw=(kw - 1)x(dw + 1)
+mb1_ic1iw13_oc1ow5_kw2_sw3_pw2_dw1_n"conv_1d_corner"
+
+#case 20
+#ow=6  ow>(iw + pw - DKW)/sw + 1  (DKW = 1 + (kw-1)×(dw+1) 向下取整)
+#pw=2  pw=(kw - 1)x(dw + 1)
+mb1_ic1iw13_oc1ow6_kw2_sw3_pw2_dw1_n"conv_1d_corner"
+
+#case 21
+#ow=12 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=4  pw=(kw - 1)x(dw + 1)
+mb1ic16oc16_kw5_iw11_ow12_sw1_pw4_dw0n"conv_1d_corner" 
+
+#case 22
+#ow=11 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=4  pw=(kw - 1)x(dw + 1)
+mb1ic16oc16_kw5_iw11_ow11_sw1_pw4_dw0n"conv_1d_corner"
+
+#case 23
+#ow=4 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+ic16oc16_kw5_iw7_ow4_sw2_pw3_dw0n"conv_1d_corner"
+
+#case 24
+#ow=3 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+ic16oc16_kw5_iw7_ow3_sw2_pw3_dw0n"conv_1d_corner"
+
+#case 25
+#ow=201 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+ic16oc16_kw3_iw202_ow201_sw1_pw0_dw0n"conv_1d_corner"
+
+#case 26
+#ow=200 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+ic16oc16_kw3_iw202_ow200_sw1_pw0_dw0n"conv_1d_corner"
+
+#case 27
+#ow=57 ow> (iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1) 向下取整)
+ic16oc16_kw5_iw111_ow57_sw2_pw5_dw0n"conv_1d_corner"
+
+#case 28
+#ow=56 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+ic16oc16_kw5_iw111_ow56_sw2_pw5_dw0n"conv_1d_corner"
+
+#case 29
+#ow=57 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=4  pw<(kw-1)(dw+1)
+ic16oc16_kw5_iw111_ow57_sw2_pw4_dw0n"conv_1d_corner"
+
+#case 30
+#ow=56 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=4  pw<(kw-1)(dw+1)
+ic16oc16_kw5_iw111_ow56_sw2_pw4_dw0n"conv_1d_corner"
+
+#case 31
+#ow=56 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=0  pw=(kw-1)(dw+1)
+ic16oc16_kw5_iw111_ow56_sw2_pw0_dw0n"conv_1d_corner"
+
+#case 32
+#ow=9 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=0  pw=(kw-1)(dw+1)
+ic1oc1_mb1_kw5_iw31_ow9_sw2_pw0_dw3n"conv_1d_corner"
+
+#case 33
+#ow=8 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=0  pw=(kw-1)(dw+1)
+ic1oc1_mb1_kw5_iw31_ow8_sw2_pw0_dw3n"conv_1d_corner"
+
+#case 34
+#ow=9 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=5  pw=(kw-1)(dw+1)
+mb1ic3oc3_kw5_iw7_ow9_sw1_pw5_dw0n"conv_1d_corner"
+
+#case 35
+#ow=8 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=5  pw<=(kw-1)(dw+1)
+mb1ic3oc3_kw5_iw7_ow8_sw1_pw5_dw0n"conv_1d_corner"
+
+#case 36
+#ow=9 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=4  pw<(kw-1)(dw+1)
+mb1ic3oc3_kw5_iw7_ow9_sw1_pw4_dw0n"conv_1d_corner"
+
+#case 37
+#ow=8 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=2  pw<(kw-1)(dw+1)
+mb1ic3oc3_kw5_iw7_ow8_sw1_pw2_dw0n"conv_1d_corner"
+
+#case 38
+#ow=5 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=3  pw<(kw-1)(dw+1)
+mb1ic16oc16_kw5_iw23_ow5_sw5_pw3_dw0n"conv_1d_corner"
+
+#case 39
+#ow=6 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=4  pw=(kw-1)(dw+1)
+mb1ic16oc16_kw5_iw23_ow6_sw5_pw4_dw0n"conv_1d_corner"
+
+#case 40
+#ow=17 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=5  pw=(kw-1)(dw+1)
+mb1ic16oc16_kw5_iw32_ow17_sw2_pw5_dw0n"conv_1d_corner"
+
+#case 41
+#ow=18 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=5  pw=(kw-1)(dw+1)
+mb1ic16oc16_kw5_iw32_ow18_sw2_pw5_dw0n"conv_1d_corner"
+
+#case 42
+#ow=18 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=3  pw<(kw-1)(dw+1)
+mb1ic16oc16_kw5_iw32_ow18_sw2_pw3_dw0n"conv_1d_corner"
+
+#case 43
+#ow=102 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=5  pw=(kw-1)(dw+1)                                          
+mb1ic16oc16_kw5_iw202_ow102_sw2_pw5_dw0n"conv_1d_corner"
+
+#case 44
+#ow=103 ow>(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=5  pw=(kw-1)(dw+1)
+mb1ic16oc16_kw5_iw202_ow103_sw2_pw5_dw0n"conv_1d_corner"
+
+#case 45
+#ow=102 ow=(iw + pw - DKW)/sw + 1 (DKW = 1 + (kw-1)×(dw+1)  (向下取整)
+#pw=1  pw<(kw-1)(dw+1)
+mb1ic16oc16_kw5_iw202_ow102_sw2_pw1_dw0n"conv_1d_corner"

@@ -1,0 +1,123 @@
+# float type matmul
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f32 1x1:1x1
+--skip-impl=jit,acl,ref --dt=f16:f16:f16 --stag=ba --wtag=ba --dtag=ab --bia_dt=f16 1x1:1x1
+--skip-impl=jit,acl,ref --dt=bf16:bf16:f32 --stag=ba --wtag=ba --dtag=ba --bia_dt=f32 4x1:1x14
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=acb --wtag=acb --dtag=abc --bia_dt=bf16 2x1x2:2x2x1
+--skip-impl=jit,acl,ref --dt=bf16:bf16:f32 --stag=ab --wtag=ba --dtag=ab --bia_dt=bf16,f32 4x21:21x14
+--skip-impl=jit,acl,ref --dt=bf16:bf16:f32 --stag=ba --wtag=ba --dtag=ba --bia_dt=bf16,f32 4x21:21x14
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=ab --wtag=ba --dtag=ab --bia_dt=bf16 11x11:11x11
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=ba --wtag=ba --dtag=ab --bia_dt=bf16 11x11:11x11
+
+
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=abx --wtag=abx --dtag=abx --bia_dt=f32 1x111x99:1x99x11
+--skip-impl=jit,acl,ref --dt=f16:f16:f16 --stag=abx --wtag=abx --dtag=abx --bia_dt=f16 1x111x99:1x99x11
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=abx --wtag=abx --dtag=abx --bia_dt=bf16 1x111x99:1x99x11
+--skip-impl=jit,acl,ref --dt=f16:f16:f32 --stag=abx --wtag=abx --dtag=abx --bia_dt=f16 1x111x99:1x99x11
+--skip-impl=jit,acl,ref --dt=bf16:bf16:f32 --stag=abx --wtag=abx --dtag=abx --bia_dt=bf16 1x111x99:1x99x11
+
+--skip-impl=jit,acl,ref --dt=f32:f32:f32 --stag=abc --wtag=acb --dtag=abc --bia_dt=f32 1x111x200:1x200x111
+--skip-impl=jit,acl,ref --dt=f16:f16:f16 --stag=abc --wtag=acb --dtag=abc --bia_dt=f16 1x111x200:1x200x111
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=acb --wtag=abc --dtag=abc --bia_dt=bf16 1x111x201:1x201x111
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=acb --wtag=acb --dtag=abc --bia_dt=bf16 1x111x201:1x201x111
+--skip-impl=jit,acl,ref --dt=f16:f16:f32 --stag=acb --wtag=acb --dtag=acb --bia_dt=f32 1x111x116:1x116x11
+
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=abc --wtag=abc --dtag=abc --bia_dt=bf16 2x111x201:2x201x111
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=acb --wtag=acb --dtag=acb --bia_dt=bf16 2x111x201:2x201x111
+--skip-impl=jit,acl,ref --dt=f16:f16:f16 --stag=abced --wtag=abcde --dtag=abcde --bia_dt=undef 1x1x1x45x13:1x1x1x13x47
+
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=abc,acb --wtag=abc,acb --dtag=abc --bia_dt=bf16 --bia_mask=4,6 2x1x1:2x1x1
+
+# int8 matmul
+--skip-impl=jit,acl,ref --dt=u8:s8:s32 --stag=ab --wtag=ab --dtag=ba --bia_dt=s32 1x1:1x1
+--skip-impl=jit,acl,ref --dt=s8:s8:s32 --stag=ba --wtag=ba --dtag=ab --bia_dt=s32 1x1:1x1
+--skip-impl=jit,acl,ref --dt=u8:s8:s32 --stag=ba --wtag=ba --dtag=ba --bia_dt=s8 4x1:1x14
+--skip-impl=jit,acl,ref --dt=u8:s8:s32 --stag=abx --wtag=abx --dtag=abx --bia_dt=s32 1x111x99:1x99x11
+--skip-impl=jit,acl,ref --dt=s8:s8:s32 --stag=acb --wtag=acb --dtag=abc --bia_dt=s8 1x111x201:1x201x111
+
+# DTS2024052322679
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=acb --wtag=abc --dtag=abc --bia_dt=bf16 31x127x31:31x31x15
+
+# DTS2024091803232
+--dt=bf16 --stag=ab --wtag=ab --dtag=ab --bia_dt=bf16 3x7:7x127
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f16 7x15:15x127
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=undef 113x27:27x43
+--dt=f16:f16:f32 --stag=abced --wtag=abcde --dtag=abcde --bia_dt=f16 11x7x13x40x28:11x7x13x28x29
+--dt=f16:f16:f32 --stag=abcde --wtag=abcde --dtag=abced --bia_dt=undef 7x12x6x18x8:7x12x6x8x40
+--dt=bf16 --stag=ba --wtag=ab --dtag=ab --bia_dt=bf16 1x63:63x15
+--dt=bf16:bf16:f32 --stag=ba --wtag=ba --dtag=ab --bia_dt=bf16 31x63:63x3
+--dt=bf16 --stag=acb --wtag=abc --dtag=abc --bia_dt=bf16 63x1x63:63x63x1
+--dt=f16:f16:f32 --stag=acb --wtag=abc --dtag=acb --bia_dt=f16 3x15x63:3x63x31
+--dt=f16:f16:f32 --stag=abc --wtag=abc --dtag=acb --bia_dt=f16 127x7x31:127x31x127
+--dt=bf16:bf16:f32 --stag=abc --wtag=abc --dtag=abc --bia_dt=bf16 31x15x3:31x3x63
+--dt=bf16:bf16:bf16 --stag=ba --wtag=ab --dtag=ba --bia_dt=bf16 1x127:127x15
+--dt=f16:f16:f32 --stag=ba --wtag=ba --dtag=ba --bia_dt=f32 20x4:4x134
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f16 6x15:15x163
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f16 12x8:8x127
+--dt=f16:f16:f32 --stag=ba --wtag=ba --dtag=ba --bia_dt=f32 19x8:8x183
+--dt=f16:f16:f32 --stag=ba --wtag=ab --dtag=ba --bia_dt=undef 8x16:16x150
+--dt=f16:f16:f32 --stag=ab --wtag=ba --dtag=ba --bia_dt=f16 13x1:1x187
+--dt=f16:f16:f32 --stag=ba --wtag=ab --dtag=ba --bia_dt=f16 4x13:13x184
+--dt=bf16:bf16:bf16 --stag=ab --wtag=ab --dtag=ab --bia_dt=bf16 4x19:19x140
+
+--skip-impl=jit,acl,ref --dt=bf16:bf16:bf16 --stag=ab --wtag=ba --dtag=ab 8x8:8x8
+--skip-impl=jit,acl,ref --dt=u8:s8:s32 --stag=ab --wtag=ab --dtag=ba --bia_dt=u8 1x1:1x1
+--skip-impl=jit,acl,ref --dt=u8:s8:u8 --stag=ba --wtag=ba --dtag=ba --bia_dt=s8 4x1:1x14
+--skip-impl=jit,acl,ref --dt=u8:s8:s8 --stag=abx --wtag=abx --dtag=abx --bia_dt=s32 1x111x99:1x99x11
+
+# DTS2025051337111
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f32 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ab 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f32 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+--dt=f16:f16:f32 --stag=ab --wtag=ab --dtag=ba 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+--dt=f16:f16:f32 --stag=ab --wtag=ba --dtag=ab --bia_dt=f32 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+--dt=f16:f16:f32 --stag=ab --wtag=ba --dtag=ab 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+--dt=f16:f16:f32 --stag=ab --wtag=ba --dtag=ba --bia_dt=f32 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+--dt=f16:f16:f32 --stag=ab --wtag=ba --dtag=ba 128x2048:2048x1_n"NCF_train:BWD_W,3*1"
+
+# post-ops
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f32 --bia_mask=0 --attr-post-ops=sum 77x133:133x117
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f16 --bia_mask=0 --attr-post-ops=sum 1x300:300x1
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=s8  --bia_mask=0 --attr-post-ops=sum 1x1:1x200
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f32 --bia_mask=1 --attr-post-ops=sum 10x30:30x20
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f16 --bia_mask=1 --attr-post-ops=sum 2x30:30x47
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=s8  --bia_mask=1 --attr-post-ops=sum 100x1:1x1
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f32 --bia_mask=0 --attr-post-ops=relu 77x133:133x117
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f16 --bia_mask=0 --attr-post-ops=relu 1x300:300x1
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=s8  --bia_mask=0 --attr-post-ops=relu 1x1:1x200
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f32 --bia_mask=1 --attr-post-ops=relu 10x30:30x20
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=f16 --bia_mask=1 --attr-post-ops=relu 2x30:30x47
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ab --bia_dt=s8  --bia_mask=1 --attr-post-ops=relu 100x1:1x1
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f32 --bia_mask=2 --attr-post-ops=sum 77x133:133x117
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f16 --bia_mask=2 --attr-post-ops=sum 1x300:300x1
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=s8  --bia_mask=3 --attr-post-ops=sum 1x1:1x200
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f32 --bia_mask=3 --attr-post-ops=sum 10x30:30x20
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f32 --bia_mask=0 --attr-post-ops=relu 2x30:30x47
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f16 --bia_mask=1 --attr-post-ops=relu 100x1:1x1
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f32 --bia_mask=2 --attr-post-ops=relu 77x133:133x117
+--dt=f32:f32:f32 --stag=ab --wtag=ab --dtag=ba --bia_dt=f16 --bia_mask=3 --attr-post-ops=relu 10x30:30x20
+
+# DTS2026012850449
+--fast-ref=false --dt=bf16:bf16:f32 --stag=abcde --wtag=abced --dtag=abced --attr-scales=src:common:1.927 --attr-post-ops=sqrt_dst 1x43x1x15x7:39x43x15x7x15
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=ba --wtag=ab --dtag=ab --attr-scales=src:common:1.142 --attr-post-ops=sqrt_dst 134x30:30x40
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=abced --wtag=abced --dtag=abced --bia_dt=undef --attr-post-ops=elu:0x1p60 --attr-scales=wei:common:2.637 26x48x29x29x9:26x48x29x9x5
+--fast-ref=false --dt=u8:s8:f32 --stag=abcd --wtag=abcd --dtag=abdc --bia_dt=u8 --attr-scales=src:common:2.363 --attr-post-ops=log 36x1x3x15:1x15x15x15
+--fast-ref=false --dt=u8:s8:bf16 --stag=abcde --wtag=abced --dtag=abced --bia_dt=s8 --attr-scales=src:common:0.795 --attr-post-ops=sqrt 1x31x1x15x31:34x1x3x31x3
+--fast-ref=false --dt=s8:s8:bf16 --stag=acb --wtag=abc --dtag=acb --bia_dt=bf16 --attr-scales=src:common:2.486 --attr-post-ops=sqrt_dst 38x193x106:38x106x188
+--fast-ref=false --dt=bf16:bf16:f32 --stag=ba --wtag=ab --dtag=ba --bia_dt=f32 --attr-scales=wei:common:2.89 --attr-post-ops=elu:0x1p60 171x67:67x90
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=abcde --wtag=abcde --dtag=abcde --attr-scales=src:common:0.507 --attr-post-ops=log 35x40x3x15x15:35x40x3x15x7
+--fast-ref=false --dt=s8:s8:bf16 --stag=abced --wtag=abced --dtag=abcde --bia_dt=s8 --attr-scales=src:common:2.78 --attr-post-ops=log 4x33x15x1x31:4x33x15x31x3
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=ba --wtag=ba --dtag=ab --bia_dt=bf16 --attr-scales=wei:common:2.027 --attr-post-ops=pow:0.325:0x1p60 118x57:57x191
+--fast-ref=false --dt=bf16:bf16:f32 --stag=abcde --wtag=abced --dtag=abced --attr-scales=src:common:1.927 --attr-post-ops=sqrt_dst 1x43x1x15x7:39x43x15x7x15
+--fast-ref=false --dt=u8:s8:s8 --stag=abdc --wtag=abcd --dtag=abdc --bia_dt=u8 --attr-scales=wei:common:1.94 --attr-post-ops=log 16x15x1x15:1x15x15x15
+--fast-ref=false --dt=u8:s8:s8 --stag=abdc --wtag=abcd --dtag=abdc --bia_dt=u8 --attr-scales=wei:common:1.94 --attr-post-ops=log 16x15x1x15:1x15x15x15
+--fast-ref=false --dt=u8:s8:s8 --stag=abdc --wtag=abcd --dtag=abdc --bia_dt=u8 --attr-scales=wei:common:1.94 --attr-post-ops=log 16x15x1x15:1x15x15x15
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=ba --wtag=ab --dtag=ab --attr-scales=src:common:1.142 --attr-post-ops=sqrt_dst 134x30:30x40
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=abced --wtag=abced --dtag=abced --attr-scales=wei:common:2.637 --attr-post-ops=elu:0x1p60 26x48x29x29x9:26x48x29x9x5
+--fast-ref=false --dt=s8:s8:f32 --stag=abc --wtag=abc --dtag=abc --bia_dt=s8 --attr-scales=src:common:0.56 --attr-post-ops=pow:2.445:1.64 20x57x192:20x192x161
+--fast-ref=false --dt=u8:s8:f32 --stag=abcd --wtag=abcd --dtag=abdc --bia_dt=u8 --attr-scales=src:common:2.363 --attr-post-ops=log 36x1x3x15:1x15x15x15
+--fast-ref=false --dt=u8:s8:bf16 --stag=abcde --wtag=abced --dtag=abced --bia_dt=s8 --attr-scales=src:common:0.795 --attr-post-ops=sqrt 1x31x1x15x31:34x1x3x31x3
+--fast-ref=false --dt=s8:s8:bf16 --stag=acb --wtag=abc --dtag=acb --bia_dt=bf16 --attr-scales=src:common:2.486 --attr-post-ops=sqrt_dst 38x193x106:38x106x188
+--fast-ref=false --dt=bf16:bf16:f32 --stag=ba --wtag=ab --dtag=ba --bia_dt=f32 --attr-scales=wei:common:2.89 --attr-post-ops=elu:0x1p60 171x67:67x90
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=abcde --wtag=abcde --dtag=abcde --attr-scales=src:common:0.507 --attr-post-ops=log 35x40x3x15x15:35x40x3x15x7
+--fast-ref=false --dt=s8:s8:bf16 --stag=abced --wtag=abced --dtag=abcde --bia_dt=s8 --attr-scales=src:common:2.78 --attr-post-ops=log 4x33x15x1x31:4x33x15x31x3
+--fast-ref=false --dt=bf16:bf16:bf16 --stag=ba --wtag=ba --dtag=ab --bia_dt=bf16 --attr-scales=wei:common:2.027 --attr-post-ops=pow:0.325:0x1p60 118x57:57x191

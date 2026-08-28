@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -12,13 +12,13 @@
 
 #include "vml_sve_la_ln.h"
 
-const float G_VML_VectorComputation_VSLOG_POLY3578[VectorComputation_FLOAT_LD_POLY_SIZE] = {
+const float G_VML_VC_VSLOG_POLY3578[VC_FLOAT_LD_POLY_SIZE] = {
     0x1.555d7cp-2f, 0x1.961348p-3f, 0x1.5a9aa2p-3f, -0x1.3e737cp-3f, // C3 C5 C7 C8
     0x1.555d7cp-2f, 0x1.961348p-3f, 0x1.5a9aa2p-3f, -0x1.3e737cp-3f,
     0x1.555d7cp-2f, 0x1.961348p-3f, 0x1.5a9aa2p-3f, -0x1.3e737cp-3f,
     0x1.555d7cp-2f, 0x1.961348p-3f, 0x1.5a9aa2p-3f, -0x1.3e737cp-3f,
 };
 
-const float G_VML_VectorComputation_VSLN_POLY[0x3] = {
+const float G_VML_VC_VSLN_POLY[0x3] = {
     -0x1.ffffc8p-2f, -0x1.00187cp-2f, -0x1.4f9934p-3f, // C2 C4 C6
 };

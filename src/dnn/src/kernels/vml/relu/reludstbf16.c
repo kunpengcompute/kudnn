@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -11,7 +11,7 @@
  */
 
 #include "kernels/vml/vml_sve_base.h"
-#define VML_VectorComputation_UNFOLD_N 4
+#define VML_VC_UNFOLD_N 4
 #include "kernels/vml/common_macro.h"
 
 static void ReluMainKernelBwdBF16(svfloat32_t a, const __bf16 *src, const __bf16 *dd, __bf16 *ds, int step)
@@ -19,42 +19,45 @@ static void ReluMainKernelBwdBF16(svfloat32_t a, const __bf16 *src, const __bf16
     svbool_t pgB16 = svptrue_b16();
     svbool_t pgB32 = svptrue_b32();
 
-    VML_VectorComputation_DECLARE(svfloat32_t, xBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, xTop);
-    VML_VectorComputation_DECLARE(svfloat32_t, ddBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, ddTop);
+    VML_VC_DECLARE(svfloat32_t, xBot);
+    VML_VC_DECLARE(svfloat32_t, xTop);
+    VML_VC_DECLARE(svfloat32_t, ddBot);
+    VML_VC_DECLARE(svfloat32_t, ddTop);
 
     LOAD_CONVERT_BF16_TO_FP32_2(src, dd, pgB16, xBot, xTop, ddBot, ddTop, step);
 
     // relu_dst bf16 compute
-    VML_VectorComputation_DECLARE(svbool_t, pgBot);
-    VML_VectorComputation_DECLARE(svbool_t, pgTop);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgBot, svcmple_n_f32, pgB32, xBot, FLOAT_ZERO);
-    VML_VectorComputation_FUNC_PG_N2_2PARA(pgTop, svcmple_n_f32, pgB32, xTop, FLOAT_ZERO);
+    VML_VC_DECLARE(svbool_t, pgBot);
+    VML_VC_DECLARE(svbool_t, pgTop);
+    VML_VC_FUNC_PG_N2_2PARA(pgBot, svcmple_n_f32, pgB32, xBot, FLOAT_ZERO);
+    VML_VC_FUNC_PG_N2_2PARA(pgTop, svcmple_n_f32, pgB32, xTop, FLOAT_ZERO);
 
-    VML_VectorComputation_DECLARE(svfloat32_t, resBot);
-    VML_VectorComputation_DECLARE(svfloat32_t, resTop);
-    VML_VectorComputation_FUNC_UPG_N2_2PARA(resBot, svmul_f32_m, pgBot, ddBot, a);
-    VML_VectorComputation_FUNC_UPG_N2_2PARA(resTop, svmul_f32_m, pgTop, ddTop, a);
+    VML_VC_DECLARE(svfloat32_t, resBot);
+    VML_VC_DECLARE(svfloat32_t, resTop);
+    VML_VC_FUNC_UPG_N2_2PARA(resBot, svmul_f32_m, pgBot, ddBot, a);
+    VML_VC_FUNC_UPG_N2_2PARA(resTop, svmul_f32_m, pgTop, ddTop, a);
 
-    VML_VectorComputation_FUNC_PG_1PARA(resBot, SvF32CvtBf16InfSpecial, pgB32, resBot);
-    VML_VectorComputation_FUNC_PG_1PARA(resTop, SvF32CvtBf16InfSpecial, pgB32, resTop);
+    VML_VC_FUNC_PG_1PARA(resBot, SvF32CvtBf16InfSpecial, pgB32, resBot);
+    VML_VC_FUNC_PG_1PARA(resTop, SvF32CvtBf16InfSpecial, pgB32, resTop);
 
-    CONVERT_STORE_FP32_TO_BF16(ds, pgB16, resBot, resTop, step);
+    CONVERT_STORE_FP32_TO_BF16(ds, pgB32, pgB16, resBot, resTop, step);
 }
 
-void ReluDstSveBWDBF16(const int64_t len, const float alpha, const __bf16 *src, const __bf16 *dd, __bf16 *ds)
+void ReluDstVCBWDBF16(const int64_t len, const float alpha, const __bf16 *src, const __bf16 *dd, __bf16 *ds)
 {
     int64_t i = 0;
     int64_t loopReluDsth = svcnth();
+    int numF32 = svcntw();
     svfloat32_t va = svdup_n_f32(alpha);
 
-    for (; i <= len - loopReluDsth * VML_VectorComputation_UNFOLD_N; i += loopReluDsth * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopReluDsth * VML_VC_UNFOLD_N; i += loopReluDsth * VML_VC_UNFOLD_N) {
         ReluMainKernelBwdBF16(va, src + i, dd + i, ds + i, loopReluDsth);
     }
     for (; i < len; i += loopReluDsth) {
         svbool_t pgB16 = svwhilelt_b16_s64(i, len);
         svbool_t pgB32 = svwhilelt_b32_s64(i, len);
+        svbool_t pgF32Bot = pgB32;
+        svbool_t pgF32Top = svwhilelt_b32_s64(i + numF32, len);
 
         svbfloat16_t srcX = svld1_bf16(pgB16, src + i);
         svbfloat16_t ddX = svld1_bf16(pgB16, dd + i);
@@ -76,7 +79,7 @@ void ReluDstSveBWDBF16(const int64_t len, const float alpha, const __bf16 *src, 
         resTop = SvF32CvtBf16InfSpecial(pgB32, resTop);
 
         // convert back to bf16
-        svbfloat16_t res = SvCvtBF16F32FullX(resBot, resTop);
+        svbfloat16_t res = SvCvtBF16F32X(pgF32Bot, resBot, pgF32Top, resTop);
         svst1_bf16(pgB16, ds + i, res);
     }
 }

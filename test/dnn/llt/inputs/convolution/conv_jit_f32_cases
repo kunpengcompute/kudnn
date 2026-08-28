@@ -1,0 +1,65 @@
+# F32 jit
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any --batch=conv_jit_shapes_func
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any --batch=conv_jit_shapes_func
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1_ic256oc3_ih200oh200kh1sh1dh0ph0_iw304ow304kw1sw1dw0pw0
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb64_ic96oc4_ih1oh1kh1sh1dh0ph0_iw1ow1kw1sw1dw0pw0
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb10_ic32oc4_ih352oh352kh3sh1dh0ph1_iw352ow352kw3sw1dw0pw1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb4_ic64oc64_ih640oh640kh3sh1dh0ph1_iw959ow959kw3sw1dw0pw1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb20_ic8oc4_ih64oh64kh3sh1dh0ph1_iw64ow64kw3sw1dw0pw1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb32_ic1024oc255_ih12oh12kh1sh1dh0ph0_iw16ow16kw1sw1dw0pw0
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb256_ic512oc1_ih4oh1kh4sh1dh0ph0_iw4ow1kw4sw1dw0pw0
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic4iw189oc10ow26kw7sw7pw13dw9
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic16iw20oc16ow30kw3sw2pw14
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic3iw3oc5ow5kw3sw2pw3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic7iw3oc2ow7kw3sw2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic7iw3oc2ow7kw5sw1pw5
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic5ih5oc5oh5kh3sh2ph3dh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic15ih7oc5oh23kh3sh2ph3dh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic15ih7oc5oh43kh7sh2ph3dh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic13ih17oc5oh73kh17sh1ph13dh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic13ih17oc25oh103kh17sh1ph23dh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic13ih17oc25oh103kh17sh1dh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic23ih107oc25oh103kh107sh1dh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g9mb144ic144iw125oc144ow55kw12sw2pw29dw3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic144iw125oc144ow55kw12sw2pw29dw3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic16iw125oc16ow55kw12sw2pw29dw3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic13iw125oc11ow135kw12sw2pw29dw3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic16iw80oc16ow49kw12sw2pw29dw3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic9iw126oc9000ow9000kw1sw8pw5dw5
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic9iw126oc6000ow6000kw1sw7pw2dw5
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic11iw126oc602ow3011kw1sw1pw128dw3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb2ic17ih13oc23oh12kh3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb2ic21ih13oc16oh12kh3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb2ic23ih13oc19oh12kh3
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb2ic17ih13oc23oh13kh1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb2ic21ih13oc16oh13kh1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb2ic23ih13oc19oh13kh1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any ic81id22ih62iw135oc33od1oh1ow11kd66kh61kw48sd1sh1sw4pd1ph1pw2dd1dh1dw1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic128id22ih62iw135oc128od1oh1ow11kd66kh61kw48sd4sh5sw4pd458ph282pw2dd8dh5dw1
+
+# jit_convolution_func
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb50ic256iw56oc512ow28kw1sw2pw0n"conv1d:3"
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb22ic192ih17iw17oc192oh17ow17kh7kw1ph3pw0n"googlenet_v3:mixed_7_tower_conv_2_conv2d*4"
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic64id6ih4iw4oc64od4oh2ow2kd3kh3kw3pd0ph0pw0n"3d_unet:conv_3"
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g2ic32iw27oc32ow26kw2pw0n"1d_gconv_channel-block-16"
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g1mb1ic256iw56oc512ow28kw1sw2pw0n"conv1d:3"
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic32iw121oc32ow122kw6pw3n"conv1d:18"
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic512ih7oc2048oh7kh1ph0n"resnet_50:res5a_branch2c*3"
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic16iw20oc16ow20kw3sw2pw14
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any g2ic72ih56oc80oh56kh1ph0n
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g2ic72ih56oc80oh56kh1ph0n
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g2ic24ih56oc40oh56kh1ph0n
+# 920B
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic16id10oc16od10kd3sd4pd15
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g2ic8ih56oc40oh56kh1ph0n
+--dir=FWD_D --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=axb mb1ic16ih16iw16oc16oh15ow15kh3kw3ph1pw0
+--dir=FWD_D --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=axb mb1ic16ih16iw16oc16oh16ow15kh3kw3ph1pw1
+# 920B wino
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic128ih28oc128oh28kh3sh1ph1
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic128ih30oc128oh28kh3sh1ph0
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic2ih25oc2oh23kh3sh1ph0
+--dir=FWD_B --dt=f32:f32:f32 --stag=axb --dtag=axb --wtag=any mb1ic3ih13oc3oh11kh3sh1ph0
+
+
+
+

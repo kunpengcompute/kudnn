@@ -1,0 +1,9 @@
+--sdt=f32 --ddt=f32
+--axis=4
+--batch=sizes
+--sdt=f16 --ddt=f16
+--axis=4
+--batch=sizes
+--sdt=bf16 --ddt=bf16
+--axis=4
+--batch=sizes

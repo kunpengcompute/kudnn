@@ -1,4 +1,5 @@
-/* 
+
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -37,11 +38,14 @@ namespace KuDNN {
     constexpr IntType KERNEL_C_LEN24 = 24;
     constexpr IntType KERNEL_C_LEN32 = 32;
     constexpr IntType IC_LEN1 = 1;
+    constexpr IntType IC_LEN2 = 2;
+    constexpr IntType IC_LEN4 = 4;
     constexpr IntType IC_LEN8 = 8;
     constexpr IntType IC_LEN16 = 16;
     constexpr IntType IC_LEN32 = 32;
     constexpr IntType KERNEL_H_LEN1 = 1;
     constexpr IntType KERNEL_H_LEN2 = 2;
+    constexpr IntType KERNEL_H_LEN3 = 3;
     constexpr IntType KERNEL_H_LEN8 = 8;
     constexpr IntType KERNEL_UR_W_LEN1 = 1;
     constexpr IntType KERNEL_UR_W_LEN2 = 2;
@@ -134,6 +138,73 @@ namespace KuDNN {
     constexpr IntType GEMM_OFFSET2 = 2;
     constexpr IntType GEMM_OFFSET3 = 3;
     constexpr IntType GEMM_OFFSET4 = 4;
+    constexpr SizeType CONV_THREAD_THREADS = 200000;
+    constexpr IntType CACHE_ALIAS_1024 = 1024;
+    constexpr IntType LIMIT_4 = 4;
+    constexpr IntType LIMIT_7 = 7;
+    constexpr IntType NB_CH_BLKING_2 = 2;
+    constexpr IntType NB_CH_BLKING_3 = 3;
+    constexpr IntType NB_CH_BLKING_4 = 4;
+    constexpr IntType UR_W_3 = 3;
+    constexpr IntType UR_W_4 = 4;
+    constexpr IntType UR_W_6 = 6;
+    constexpr IntType WINO_TRANS_MIN_MATRIX = 36;
+    constexpr IntType WINO_MIN_MATRIX_WID = 6;
+    constexpr IntType WINO_MIN_MATRIX_HEI = 6;
+    constexpr IntType WINO_OUT_MIN_MATRIX_WEI = 4;
+    constexpr IntType WINO_OUT_MIN_MATRIX_HEI = 4;
+    constexpr IntType WEI_ENLARGE_NUM = 4;
+    constexpr IntType VLEN_NEON_F32 = 4;
+    constexpr float F_NUM_1 = 1.0f;
+    constexpr float F_NUM_2 = 2.0f;
+    constexpr float F_NUM_4 = 4.0f;
+    constexpr float F_NUM_5 = 5.0f;
+    constexpr float F_NUM_6 = 6.0f;
+    constexpr float F_NUM_7 = 7.0f;
+    constexpr float F_NUM_8 = 8.0f;
+    constexpr float F_NUM_24 = 24.0f;
+    constexpr float F_NUM_576 = 576.0f;
+    constexpr IntType BRGEMM_UTILS_NUM_1200 = 1200;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_2 = 2;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_4 = 4;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_5 = 5;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_16 = 16;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_32 = 32;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_64 = 64;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_400 = 400;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_1001 = 1001;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_1024 = 1024;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_2048 = 2048;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_4096 = 4096;
+    constexpr IntType BRGEMM_CONV_UTILS_NUM_1000000 = 1000000;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_2 = 2;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_3 = 3;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_4 = 4;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_5 = 5;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_16 = 16;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_28 = 28;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_56 = 56;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_256 = 256;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_300 = 300;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_384 = 384;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_512 = 512;
+    constexpr IntType BRGEMM_1X1_CONV_NUM_1024 = 1024;
+    constexpr IntType S8_MAX_VAL = 127;
+    constexpr IntType S8_MIN_VAL = -128;
+    constexpr IntType U8_MAX_VAL = 255;
+    constexpr IntType REG_STACK_OFFSET = 64;
+    constexpr IntType VC_LEN_64 = 64;
+    constexpr IntType VC_LEN_32 = 32;
+    constexpr IntType VC_LEN_16 = 16;
+    constexpr IntType VC_LEN_8 = 8;
+    constexpr IntType NB_OW_STEP_1 = 1;
+    constexpr IntType NB_OW_STEP_2 = 2;
+    constexpr IntType OSCALE_LEN_8 = 8;
+    constexpr IntType OSCALE_LEN_16 = 16;
+    constexpr IntType REG_OFFSET_2 = 2;
+    constexpr IntType REG_OFFSET_3 = 3;
+    constexpr IntType REG_OFFSET_4 = 4;
+    constexpr IntType REG_OFFSET_5 = 5;
 } // KuDNN
 
 #endif // KUDNN_CONV_CONST_HPP

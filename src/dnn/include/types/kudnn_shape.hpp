@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 
 #ifndef KUDNN_SHAPE_HPP
 #define KUDNN_SHAPE_HPP
@@ -55,7 +54,6 @@ struct Shape final {
     Shape(Ts... dims) noexcept(false) : dimsArray{{static_cast<SizeType>(dims)...}}, numDims{sizeof...(dims)}
     {
         CheckNumDims(numDims);
-        CheckMemoryLimit();
     }
     Shape(const std::initializer_list<SizeType>& list) noexcept(false)
     {
@@ -112,8 +110,8 @@ struct Shape final {
         }
         return *this;
     }
-    
-    Shape operator+(const Shape &adder) noexcept(false)
+
+    Shape operator+(const Shape &adder) const noexcept(false)
     {
         if (adder.GetNumDims() != this->GetNumDims()) {
             throw Service::LogicError("Shape: different size of base and adder shapes");
@@ -163,14 +161,6 @@ private:
     {
         if (nDims > NUM_MAX_DIMENSIONS) {
             throw Service::LogicError("Shape: dims is greater than NUM_MAX_DIMENSIONS");
-        }
-    }
-    void CheckMemoryLimit() const noexcept(false)
-    {
-        long long totalSize = GetTotalDimsSize();
-        long long limit = 3 * 1024 * 1024 * 1024ULL;  // 4GB memory for a single matrix
-        if (totalSize * 4 > limit) {
-            throw Service::LogicError("Shape: exceeded available memory limit ");
         }
     }
     std::array<SizeType, NUM_MAX_DIMENSIONS> dimsArray;

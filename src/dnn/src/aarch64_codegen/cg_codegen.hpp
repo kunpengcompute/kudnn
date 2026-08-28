@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -20,14 +20,9 @@
 #include <unordered_set>
 #include <vector>
 
-#ifdef __GNUC__
-#ifndef CG_USE_MMAP_ALLOCATOR
-#define CG_USE_MMAP_ALLOCATOR
-#endif
-#endif
-
 #include "src/cg_adr_sve.hpp"
 #include "src/cg_label.hpp"
+#include "tools/cg_util.hpp"
 
 namespace ARMCG {
 
@@ -85,39 +80,39 @@ enum class Cond {
 };
 
 enum class Prfop {
-    PLDL1KEEP = (0x0 << 3) + (0x0 << 1) + 0x0,
-    PLDL1STRM = (0x0 << 3) + (0x0 << 1) + 0x1,
-    PLDL2KEEP = (0x0 << 3) + (0x1 << 1) + 0x0,
-    PLDL2STRM = (0x0 << 3) + (0x1 << 1) + 0x1,
-    PLDL3KEEP = (0x0 << 3) + (0x2 << 1) + 0x0,
-    PLDL3STRM = (0x0 << 3) + (0x2 << 1) + 0x1,
-    PLIL1KEEP = (0x1 << 3) + (0x0 << 1) + 0x0,
-    PLIL1STRM = (0x1 << 3) + (0x0 << 1) + 0x1,
-    PLIL2KEEP = (0x1 << 3) + (0x1 << 1) + 0x0,
-    PLIL2STRM = (0x1 << 3) + (0x1 << 1) + 0x1,
-    PLIL3KEEP = (0x1 << 3) + (0x2 << 1) + 0x0,
-    PLIL3STRM = (0x1 << 3) + (0x2 << 1) + 0x1,
-    PSTL1KEEP = (0x2 << 3) + (0x0 << 1) + 0x0,
-    PSTL1STRM = (0x2 << 3) + (0x0 << 1) + 0x1,
-    PSTL2KEEP = (0x2 << 3) + (0x1 << 1) + 0x0,
-    PSTL2STRM = (0x2 << 3) + (0x1 << 1) + 0x1,
-    PSTL3KEEP = (0x2 << 3) + (0x2 << 1) + 0x0,
-    PSTL3STRM = (0x2 << 3) + (0x2 << 1) + 0x1
+    PLDL1_KEEP = (0x0 << 3) + (0x0 << 1) + 0x0,
+    PLDL1_STRM = (0x0 << 3) + (0x0 << 1) + 0x1,
+    PLDL2_KEEP = (0x0 << 3) + (0x1 << 1) + 0x0,
+    PLDL2_STRM = (0x0 << 3) + (0x1 << 1) + 0x1,
+    PLDL3_KEEP = (0x0 << 3) + (0x2 << 1) + 0x0,
+    PLDL3_STRM = (0x0 << 3) + (0x2 << 1) + 0x1,
+    PLIL1_KEEP = (0x1 << 3) + (0x0 << 1) + 0x0,
+    PLIL1_STRM = (0x1 << 3) + (0x0 << 1) + 0x1,
+    PLIL2_KEEP = (0x1 << 3) + (0x1 << 1) + 0x0,
+    PLIL2_STRM = (0x1 << 3) + (0x1 << 1) + 0x1,
+    PLIL3_KEEP = (0x1 << 3) + (0x2 << 1) + 0x0,
+    PLIL3_STRM = (0x1 << 3) + (0x2 << 1) + 0x1,
+    PSTL1_KEEP = (0x2 << 3) + (0x0 << 1) + 0x0,
+    PSTL1_STRM = (0x2 << 3) + (0x0 << 1) + 0x1,
+    PSTL2_KEEP = (0x2 << 3) + (0x1 << 1) + 0x0,
+    PSTL2_STRM = (0x2 << 3) + (0x1 << 1) + 0x1,
+    PSTL3_KEEP = (0x2 << 3) + (0x2 << 1) + 0x0,
+    PSTL3_STRM = (0x2 << 3) + (0x2 << 1) + 0x1
 };
 
-enum class PrfopSve {
-    PLDL1KEEP_VectorComputation = 0x0,
-    PLDL1STRM_VectorComputation = 0x1,
-    PLDL2KEEP_VectorComputation = 0x2,
-    PLDL2STRM_VectorComputation = 0x3,
-    PLDL3KEEP_VectorComputation = 0x4,
-    PLDL3STRM_VectorComputation = 0x5,
-    PSTL1KEEP_VectorComputation = 0x8,
-    PSTL1STRM_VectorComputation = 0x9,
-    PSTL2KEEP_VectorComputation = 0xa,
-    PSTL2STRM_VectorComputation = 0xb,
-    PSTL3KEEP_VectorComputation = 0xc,
-    PSTL3STRM_VectorComputation = 0xd
+enum class PrfopVC {
+    PLDL1KEEP_VC = 0x0,
+    PLDL1STRM_VC = 0x1,
+    PLDL2KEEP_VC = 0x2,
+    PLDL2STRM_VC = 0x3,
+    PLDL3KEEP_VC = 0x4,
+    PLDL3STRM_VC = 0x5,
+    PSTL1KEEP_VC = 0x8,
+    PSTL1STRM_VC = 0x9,
+    PSTL2KEEP_VC = 0xa,
+    PSTL2STRM_VC = 0xb,
+    PSTL3KEEP_VC = 0xc,
+    PSTL3STRM_VC = 0xd
 };
 
 enum class Pattern {
@@ -259,7 +254,8 @@ enum class TlbiOp {
 class CodeGenerator : public CodeArray {
 public:
     explicit CodeGenerator(size_t maxSize = static_cast<size_t>(MaxCodeSize::DEFAULT),
-        void *userPtr = DONT_SET_PROTECT_RWE, Allocator *allocator = nullptr) : CodeArray(maxSize, userPtr, allocator),
+        void *userPtr = DONT_SET_PROTECT_RWE, MmapAllocator *allocator = nullptr) : CodeArray(maxSize, userPtr,
+        allocator),
         w0(RINDEX0), w1(RINDEX1), w2(RINDEX2), w3(RINDEX3), w4(RINDEX4), w5(RINDEX5), w6(RINDEX6), w7(RINDEX7),
         w8(RINDEX8), w9(RINDEX9), w10(RINDEX10), w11(RINDEX11), w12(RINDEX12), w13(RINDEX13), w14(RINDEX14),
         w15(RINDEX15), w16(RINDEX16), w17(RINDEX17), w18(RINDEX18), w19(RINDEX19), w20(RINDEX20), w21(RINDEX21),
@@ -316,38 +312,38 @@ public:
         labelMgr_.Set(this);
     }
 
-    const WReg w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12;
-    const WReg w13, w14, w15, w16, w17, w18, w19, w20, w21, w22, w23;
-    const WReg w24, w25, w26, w27, w28, w29, w30, wzr, wsp;
-    const XReg x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12;
-    const XReg x13, x14, x15, x16, x17, x18, x19, x20, x21, x22, x23;
-    const XReg x24, x25, x26, x27, x28, x29, x30, xzr, sp;
-    const BReg b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12;
-    const BReg b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23;
-    const BReg b24, b25, b26, b27, b28, b29, b30, b31;
-    const HReg h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12;
-    const HReg h13, h14, h15, h16, h17, h18, h19, h20, h21, h22, h23;
-    const HReg h24, h25, h26, h27, h28, h29, h30, h31;
-    const SReg s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12;
-    const SReg s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23;
-    const SReg s24, s25, s26, s27, s28, s29, s30, s31;
-    const DReg d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12;
-    const DReg d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23;
-    const DReg d24, d25, d26, d27, d28, d29, d30, d31;
-    const QReg q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12;
-    const QReg q13, q14, q15, q16, q17, q18, q19, q20, q21, q22, q23;
-    const QReg q24, q25, q26, q27, q28, q29, q30, q31;
-    const VReg v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12;
-    const VReg v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23;
-    const VReg v24, v25, v26, v27, v28, v29, v30, v31;
-    const ZReg z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12;
-    const ZReg z13, z14, z15, z16, z17, z18, z19, z20, z21, z22, z23;
-    const ZReg z24, z25, z26, z27, z28, z29, z30, z31;
-    const PReg p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12;
-    const PReg p13, p14, p15;
+    const WReg w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11;
+    const WReg w12, w13, w14, w15, w16, w17, w18, w19, w20, w21;
+    const WReg w22, w23, w24, w25, w26, w27, w28, w29, w30, wzr, wsp;
+    const XReg x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11;
+    const XReg x12, x13, x14, x15, x16, x17, x18, x19, x20, x21;
+    const XReg x22, x23, x24, x25, x26, x27, x28, x29, x30, xzr, sp;
+    const BReg b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11;
+    const BReg b12, b13, b14, b15, b16, b17, b18, b19, b20, b21;
+    const BReg b22, b23, b24, b25, b26, b27, b28, b29, b30, b31;
+    const HReg h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11;
+    const HReg h12, h13, h14, h15, h16, h17, h18, h19, h20, h21;
+    const HReg h22, h23, h24, h25, h26, h27, h28, h29, h30, h31;
+    const SReg s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
+    const SReg s12, s13, s14, s15, s16, s17, s18, s19, s20, s21;
+    const SReg s22, s23, s24, s25, s26, s27, s28, s29, s30, s31;
+    const DReg d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11;
+    const DReg d12, d13, d14, d15, d16, d17, d18, d19, d20, d21;
+    const DReg d22, d23, d24, d25, d26, d27, d28, d29, d30, d31;
+    const QReg q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11;
+    const QReg q12, q13, q14, q15, q16, q17, q18, q19, q20, q21;
+    const QReg q22, q23, q24, q25, q26, q27, q28, q29, q30, q31;
+    const VReg v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11;
+    const VReg v12, v13, v14, v15, v16, v17, v18, v19, v20, v21;
+    const VReg v22, v23, v24, v25, v26, v27, v28, v29, v30, v31;
+    const ZReg z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11;
+    const ZReg z12, z13, z14, z15, z16, z17, z18, z19, z20, z21;
+    const ZReg z22, z23, z24, z25, z26, z27, z28, z29, z30, z31;
+    const PReg p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11;
+    const PReg p12, p13, p14, p15;
     const ZAReg za0, za1, za2, za3, za4, za5, za6, za7;
-    const ZARegH za0h, za1h, za2h, za3h, za4h, za5h, za6h, za7h;
-    const ZARegV za0v, za1v, za2v, za3v, za4v, za5v, za6v, za7v;
+    const ZARegHX za0h, za1h, za2h, za3h, za4h, za5h, za6h, za7h;
+    const ZARegVX za0v, za1v, za2v, za3v, za4v, za5v, za6v, za7v;
 
     // engine funtionality
     void L(Label &label)
@@ -433,7 +429,8 @@ public:
         if (IsAutoGrow() && x > Inner::GetPageSize()) {
             fprintf(stderr, "waring:AutoGrow mode does not support %d align\n", static_cast<int>(x));
         }
-        size_t remain = reinterpret_cast<size_t>(GetCurr());
+        uintptr_t curVal = (uintptr_t)(GetCurr());
+        size_t remain = static_cast<size_t>(curVal);
         if (remain % INSTRUCTIONS_SIZE_4_BYTES) {
             throw Error(Err::BAD_ALIGN);
         }
@@ -446,6 +443,7 @@ public:
 
 // A64 instructions that clients can use
 #include "src/cg_mnemonic.hpp"
+#include "src/cg_mnemonic_sve.hpp"
 
 protected:
     LabelManager labelMgr_;

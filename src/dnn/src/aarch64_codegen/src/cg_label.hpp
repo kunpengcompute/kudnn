@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 #ifndef CG_LABEL_HPP
 #define CG_LABEL_HPP
 
@@ -31,43 +30,45 @@ struct JmpLabel {
 class LabelManager;
 
 class Label {
-    mutable LabelManager *mgr;
+    mutable LabelManager *mg;
     mutable int id;
     friend class LabelManager;
 
 public:
-    Label() : mgr(nullptr), id(0) {}
+    Label() : mg(nullptr), id(0) {}
     Label(const Label &rhs);
     Label &operator=(const Label &rhs);
     ~Label();
 
     void Clear()
     {
-        mgr = nullptr;
+        mg = nullptr;
         id = 0;
     }
+
     int GetId() const
     {
         return id;
     }
+
     const uint8_t *GetAddress() const;
 };
 
 class LabelManager {
     // for Label class
-    struct ClabelVal {
-        explicit ClabelVal(size_t offsetIn = 0) : offset(offsetIn), refCount(1) {}
+    struct LabelVal {
+        explicit LabelVal(size_t offsetIn = 0) : offset(offsetIn), refCount(1) {}
         size_t offset;
         int refCount;
     };
-    using ClabelDefList = std::unordered_map<int, ClabelVal>;
-    using ClabelUndefList = std::unordered_multimap<int, const JmpLabel>;
+    using LabelDefList = std::unordered_map<int, LabelVal>;
+    using LabelUndefList = std::unordered_multimap<int, const JmpLabel>;
     using LabelPtrList = std::unordered_set<Label *>;
     CodeArray *base_;
     // global : stateList_.front(), local : stateList_.back()
     mutable int labelId_;
-    ClabelDefList clabelDefList_;
-    ClabelUndefList clabelUndefList_;
+    LabelDefList labelDefList_;
+    LabelUndefList labelUndefList_;
     LabelPtrList labelPtrList_;
 
     int GetId(const Label &label) const
@@ -87,12 +88,12 @@ class LabelManager {
             throw Error(Err::LABEL_IS_REDEFINED);
         }
         // search undefined label
-        for (;;) {
-            typename UndefList::iterator itr = undefList.find(labelId);
-            if (itr == undefList.end()) {
+        while (true) {
+            typename UndefList::iterator iter = undefList.find(labelId);
+            if (iter == undefList.end()) {
                 break;
             }
-            const JmpLabel *jmp = &itr->second;
+            const JmpLabel *jmp = &iter->second;
             const size_t offset = jmp->endOfJmp;
             int64_t labelOffset = static_cast<int64_t>(addrOffset - offset) * CSIZE;
             uint32_t disp = jmp->encFunc(labelOffset);
@@ -101,7 +102,7 @@ class LabelManager {
             } else {
                 base_->Rewrite(offset, disp);
             }
-            undefList.erase(itr);
+            undefList.erase(iter);
         }
     }
     template <class DefList, class T>
@@ -117,20 +118,20 @@ class LabelManager {
     friend class Label;
     void IncRefCount(int id, Label *label)
     {
-        clabelDefList_[id].refCount++;
+        labelDefList_[id].refCount++;
         labelPtrList_.insert(label);
     }
     void DecRefCount(int id, Label *label)
     {
         labelPtrList_.erase(label);
-        ClabelDefList::iterator i = clabelDefList_.find(id);
-        if (i == clabelDefList_.end()) {
+        LabelDefList::iterator iter = labelDefList_.find(id);
+        if (iter == labelDefList_.end()) {
             return;
         }
-        if (i->second.refCount == 1) {
-            clabelDefList_.erase(id);
+        if (iter->second.refCount == 1) {
+            labelDefList_.erase(id);
         } else {
-            --i->second.refCount;
+            --iter->second.refCount;
         }
     }
 
@@ -161,8 +162,8 @@ public:
     {
         base_ = nullptr;
         labelId_ = 1;
-        clabelDefList_.clear();
-        clabelUndefList_.clear();
+        labelDefList_.clear();
+        labelUndefList_.clear();
         ResetLabelPtrList();
     }
     void Set(CodeArray *base)
@@ -171,32 +172,32 @@ public:
     }
     void DefineClabel(Label &label)
     {
-        DefineInner(clabelDefList_, clabelUndefList_, GetId(label), base_->size_);
-        label.mgr = this;
+        DefineInner(labelDefList_, labelUndefList_, GetId(label), base_->size_);
+        label.mg = this;
         labelPtrList_.insert(&label);
     }
     void Assign(Label &dst, const Label &src)
     {
-        ClabelDefList::const_iterator i = clabelDefList_.find(src.id);
-        if (i == clabelDefList_.end()) {
+        LabelDefList::const_iterator i = labelDefList_.find(src.id);
+        if (i == labelDefList_.end()) {
             throw Error(Err::LABEL_ISNOT_SET_BY_L);
         }
-        DefineInner(clabelDefList_, clabelUndefList_, dst.id, i->second.offset);
-        dst.mgr = this;
+        DefineInner(labelDefList_, labelUndefList_, dst.id, i->second.offset);
+        dst.mg = this;
         labelPtrList_.insert(&dst);
     }
     bool GetOffset(size_t &offset, const Label &label) const
     {
-        return GetOffsetInner(clabelDefList_, offset, GetId(label));
+        return GetOffsetInner(labelDefList_, offset, GetId(label));
     }
     void AddUndefinedLabel(const Label &label, const JmpLabel &jmp)
     {
-        clabelUndefList_.insert(ClabelUndefList::value_type(label.id, jmp));
+        labelUndefList_.insert(LabelUndefList::value_type(label.id, jmp));
     }
 
     bool HasUndefClabel() const
     {
-        return HasUndefinedLabelInner(clabelUndefList_);
+        return HasUndefinedLabelInner(labelUndefList_);
     }
     uint8_t *GetCode() const
     {
@@ -211,9 +212,9 @@ public:
 inline Label::Label(const Label &rhs)
 {
     id = rhs.id;
-    mgr = rhs.mgr;
-    if (mgr) {
-        mgr->IncRefCount(id, this);
+    mg = rhs.mg;
+    if (mg) {
+        mg->IncRefCount(id, this);
     }
 }
 
@@ -223,42 +224,33 @@ inline Label &Label::operator=(const Label &rhs)
         throw Error(Err::LABEL_IS_ALREADY_SET_BY_L);
     }
     id = rhs.id;
-    mgr = rhs.mgr;
-    if (mgr) {
-        mgr->IncRefCount(id, this);
+    mg = rhs.mg;
+    if (mg) {
+        mg->IncRefCount(id, this);
     }
     return *this;
 }
 
 inline Label::~Label()
 {
-    if (id && mgr) {
-        mgr->DecRefCount(id, this);
+    if (id && mg) {
+        mg->DecRefCount(id, this);
     }
 }
-
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-#endif
 
 inline const uint8_t *Label::GetAddress() const
 {
-    if (mgr == nullptr || !mgr->IsReady()) {
+    if (mg == nullptr || !mg->IsReady()) {
         return nullptr;
     }
     size_t offset;
-    if (!mgr->GetOffset(offset, *this)) {
+    if (!mg->GetOffset(offset, *this)) {
         return nullptr;
     }
     // GetCode() is always a multiple of 4
-    return mgr->GetCode() + offset;
+    return mg->GetCode() + offset;
 }
 
 } // namespace ARMCG
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 #endif // CG_LABEL_HPP

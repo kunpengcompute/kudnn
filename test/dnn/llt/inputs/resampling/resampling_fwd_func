@@ -1,0 +1,27 @@
+# forward nearest/linear
+--dir=FWD_D
+--sdt=f32,f16,bf16,s32,s8,u8
+--ddt=f32,f16,bf16,s32,s8,u8
+--alg=linear,nearest
+--tag=abx,axb
+--skip-impl=ref,simple
+
+mb4ic2_iw4ow7
+mb2ic3_iw1ow2
+mb2ic2_iw2ow1
+mb2ic2_iw1ow1
+mb2ic2_ih2oh2_iw2ow7
+mb2ic2_ih2oh2_iw2ow1
+mb2ic2_ih2oh2_iw1ow7
+mb2ic2_ih2oh2_iw1ow1
+mb2ic2_ih16oh2_iw16ow7
+mb2ic2_id16od2_ih16oh2_iw16ow3
+mb2ic2_id16od2_ih16oh2_iw16ow1
+mb2ic2_id16od2_ih16oh2_iw1ow3
+mb2ic2_id16od2_ih16oh2_iw1ow1
+mb2ic2_id16od2_ih16oh1_iw16ow3
+mb2ic2_id16od2_ih1oh2_iw16ow3
+mb2ic2_id1od2_ih16oh2_iw16ow3
+mb2ic2_id16od1_ih16oh2_iw16ow3
+mb2ic2_id1od1_ih1oh1_iw1ow1
+

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -10,12 +10,16 @@
  * See the Mulan PSL v2 for more details.
  */
 
+#include <cstdlib>
+#include <exception>
+#include <iostream>
+#include <vector>
+
 #include "gtest/gtest.h"
 #include "kudnn.hpp"
 #include "kudnn_tensor_data.hpp"
 
 using SizeType = KuDNN::SizeType;
-using Shape = KuDNN::Shape;
 
 // forward
 static void ForwardCopyConstructor1()
@@ -135,39 +139,6 @@ static void BackwardMoveConstructor2()
     }
 }
 
-// forward
-template <typename T>
-static bool ForwardFunc1(const KuDNN::TensorInfo &srcTensor, const KuDNN::TensorInfo &dstTensor, KuDNN::ActivationFunction algKind)
-{
-    SizeType srcSize = srcTensor.GetTotalTensorSize();
-    SizeType dstSize = dstTensor.GetTotalTensorSize();
-
-    T *src = (T *)malloc(srcSize * sizeof(T));
-    T *dst = (T *)malloc(dstSize * sizeof(T));
-
-    KuDNN::ActivationLayerFWD activationLayer(srcTensor, dstTensor, algKind);
-
-    activationLayer.Run(src, dst);
-    return true;
-}
-
-// backward
-template <typename T>
-static bool BackwardFunc1(const KuDNN::TensorInfo &diffSrcTensor, const KuDNN::TensorInfo &diffDstTensor, const KuDNN::TensorInfo &srcTensor, KuDNN::ActivationFunction algKind)
-{
-    SizeType diffSrcSize = diffSrcTensor.GetTotalTensorSize();
-    SizeType diffDstSize = diffDstTensor.GetTotalTensorSize();
-    SizeType srcSize = srcTensor.GetTotalTensorSize();
-
-    T *src = (T *)malloc(srcSize * sizeof(T));
-    T *diffDst = (T *)malloc(diffDstSize * sizeof(T));
-    T *diffSrc = (T *)malloc(diffSrcSize * sizeof(T));
-
-    KuDNN::ActivationLayerBWD activationLayer(diffSrcTensor, diffDstTensor, srcTensor, algKind);
-    activationLayer.Run(diffSrc, diffDst, src);
-    return true;
-}
-
 // test cases
 TEST(EltwiseGTests, FWDCopyConstructor1)
 {
@@ -207,6 +178,39 @@ TEST(EltwiseGTests, BWDMoveConstructor1)
 TEST(EltwiseGTests, BWDMoveConstructor2)
 {
     EXPECT_NO_THROW(BackwardMoveConstructor2());
+}
+
+// forward
+template <typename T>
+static bool ForwardFunc1(const KuDNN::TensorInfo &srcTensor, const KuDNN::TensorInfo &dstTensor, KuDNN::ActivationFunction algKind)
+{
+    SizeType srcSize = srcTensor.GetTotalTensorSize();
+    SizeType dstSize = dstTensor.GetTotalTensorSize();
+
+    T *src = (T *)malloc(srcSize * sizeof(T));
+    T *dst = (T *)malloc(dstSize * sizeof(T));
+
+    KuDNN::ActivationLayerFWD activationLayer(srcTensor, dstTensor, algKind);
+
+    activationLayer.Run(src, dst);
+    return true;
+}
+
+// backward
+template <typename T>
+static bool BackwardFunc1(const KuDNN::TensorInfo &diffSrcTensor, const KuDNN::TensorInfo &diffDstTensor, const KuDNN::TensorInfo &srcTensor, KuDNN::ActivationFunction algKind)
+{
+    SizeType diffSrcSize = diffSrcTensor.GetTotalTensorSize();
+    SizeType diffDstSize = diffDstTensor.GetTotalTensorSize();
+    SizeType srcSize = srcTensor.GetTotalTensorSize();
+
+    T *src = (T *)malloc(srcSize * sizeof(T));
+    T *diffDst = (T *)malloc(diffDstSize * sizeof(T));
+    T *diffSrc = (T *)malloc(diffSrcSize * sizeof(T));
+
+    KuDNN::ActivationLayerBWD activationLayer(diffSrcTensor, diffDstTensor, srcTensor, algKind);
+    activationLayer.Run(diffSrc, diffDst, src);
+    return true;
 }
 
 // 获取所有枚举值的函数
@@ -274,7 +278,7 @@ TEST(EltwiseGTests, BackwardFunc4DF32_allKind)
     const KuDNN::TensorInfo srcTensor = {{8, 11, 17, 23}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo diffDstTensor = {{8, 11, 17, 23}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
     const KuDNN::TensorInfo diffSrcTensor = {{8, 11, 17, 23}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCD};
-    
+
     for(auto algKind : getAllActivationFunctions())
     {
         try {
@@ -308,7 +312,7 @@ TEST(EltwiseGTests, BackwardFunc5DF32_allKind)
     const KuDNN::TensorInfo srcTensor = {{8, 11, 17, 23, 34}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCED};
     const KuDNN::TensorInfo diffDstTensor = {{8, 11, 17, 23, 34}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCED};
     const KuDNN::TensorInfo diffSrcTensor = {{8, 11, 17, 23, 34}, KuDNN::Element::TypeT::F32, KuDNN::Layout::ABCED};
-    
+
     for(auto algKind : getAllActivationFunctions())
     {
         try {
@@ -319,4 +323,3 @@ TEST(EltwiseGTests, BackwardFunc5DF32_allKind)
         }
     }
 }
-

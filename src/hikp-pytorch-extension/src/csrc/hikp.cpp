@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
+ *
+ * KuDNN is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *        http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
+
+#include <torch/extension.h>
+#include "bind_alphafold.h"
+#include "bind_common.h"
+
+#ifdef HIKPEX_FUZZ_ENABLE
+#include "bind_fuzz.h"
+#else
+void BindDtFuzzFunc(pybind11::module &m) {}
+#endif
+
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+{
+    BindAlphafoldOperator(m);
+    BindCommonOperator(m);
+    BindDtFuzzFunc(m);
+}

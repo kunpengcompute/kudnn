@@ -1,0 +1,8 @@
+# DW
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g16ic16ih2oc16oh2kh1
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g32ic32ih3oc32oh2kh2
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g16ic16ih32oc16oh32kh1
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g80ic80ih32oc80oh32kh1
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g80ic80ih8oc80oh8kh1
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g80ic80ih7oc80oh7kh3ph0
+--dir=FWD_B --dt=f32:f32:f32 --stag=any --dtag=any --wtag=any g80ic80ih6oc80oh7kh2ph1

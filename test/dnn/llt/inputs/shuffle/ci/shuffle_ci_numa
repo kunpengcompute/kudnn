@@ -1,0 +1,6 @@
+--dir=FWD_D,BWD_D
+--dt=f32,f16,bf16,s32,s8,u8
+--tag=abx
+--axis=2
+--group=4
+--batch=shapes_numa

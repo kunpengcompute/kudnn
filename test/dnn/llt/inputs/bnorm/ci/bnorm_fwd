@@ -1,0 +1,13 @@
+--tag=axb --flags=GCH --dt=f32,f16,bf16
+--batch=shapes_fwd_axb
+--tag=axb --flags=GCH --dt=s8
+--batch=shapes_fwd_axb_gch_s8
+
+--tag=axb --flags=CH --dt=f32,f16,bf16
+--batch=shapes_fwd_axb
+
+--tag=abx --flags=GCH --dt=f32,f16,bf16,s8
+--batch=shapes_fwd_abx
+
+--tag=abx --flags=CH --dt=f32,f16,bf16
+--batch=shapes_fwd_abx

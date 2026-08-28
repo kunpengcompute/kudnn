@@ -1,0 +1,62 @@
+# Normal cases for fwd.
+--dt=f32,bf16,f16,s8
+--dir=FWD_D,FWD_I
+--tag=abx,axb
+--flags=,G,C,H,CH,GH,GC,GCH,R,RG,RC,RH,RCH,RGH,RGC,RGCH
+--mode=C
+
+mb1ic192ih71iw71
+mb2ic128id12ih10iw8
+mb7ic8ih17iw17
+mb2ic2id7ih10iw8
+mb1ic16iw1
+mb1ic16iw8
+
+--reset
+
+# special case for fwd abx: mb=1 and ic=1.
+--dir=FWD_D,FWD_I --tag=abx --flags=GCH,CH --mode=C mb1ic1id2ih3iw4
+--reset
+
+# special case for fwd axb: ic>256
+--dir=FWD_D,FWD_I --tag=axb --flags=GCH,CH --mode=C mb1ic512id2ih3iw4
+--reset
+
+# cases for covering axb looping unroll: ic=8,16,24,32...
+--dir=FWD_D
+--tag=axb
+--flags=GCH,CH
+--dt=f32,f16,bf16,s8
+--mode=C
+
+mb2ic8id5ih6iw7
+mb2ic16id5ih6iw7
+mb2ic24id5ih6iw7
+mb2ic32id5ih6iw7
+mb2ic40id5ih6iw7
+mb2ic48id5ih6iw7
+mb2ic56id5ih6iw7
+mb2ic64id5ih6iw7
+mb2ic72id5ih6iw7
+mb2ic80id5ih6iw7
+mb2ic88id5ih6iw7
+mb2ic96id5ih6iw7
+mb2ic104id5ih6iw7
+mb2ic112id5ih6iw7
+mb2ic120id5ih6iw7
+mb2ic128id5ih6iw7
+
+# Normal cases for BWD.
+--dt=f32,bf16,f16
+--dir=BWD_D
+--tag=abx,axb
+--flags=,G,C,H,CH,GH,GC,GCH,R,RG,RC,RH,RCH,RGH,RGC,RGCH
+--mode=C
+
+mb1ic192ih71iw71
+mb2ic128id12ih10iw8
+mb7ic8ih17iw17
+mb2ic2id7ih10iw8
+mb1ic16iw1
+mb1ic16iw8
+ic23

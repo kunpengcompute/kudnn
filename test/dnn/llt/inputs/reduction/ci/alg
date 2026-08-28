@@ -1,0 +1,18 @@
+--alg=max
+--batch=size
+--alg=min
+--batch=size
+--alg=mean
+--batch=size
+--alg=sum
+--batch=size
+--alg=mul
+--batch=size
+--alg=norm_lp_sum --p=2 --eps=625
+--batch=size_lp
+--alg=norm_lp_max --p=2 --eps=625
+--batch=size_lp
+--alg=norm_lp_power_p_sum --p=2 --eps=625
+--batch=size_lp
+--alg=norm_lp_power_p_max --p=2 --eps=625
+--batch=size_lp

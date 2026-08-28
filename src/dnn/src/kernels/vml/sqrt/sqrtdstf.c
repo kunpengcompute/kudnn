@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
  *
  * KuDNN is licensed under Mulan PSL v2.
@@ -16,26 +16,26 @@
 static void SqrtMainKernelBwdF32(svfloat32_t a, const float *src, const float *dd, float *ds, int step)
 {
     svbool_t pg = svptrue_b32();
-    VML_VectorComputation_DECLARE(svfloat32_t, src_x);
-    VML_VectorComputation_DECLARE(svfloat32_t, dd_x);
-    VML_VectorComputation_DECLARE(svfloat32_t, res);
+    VML_VC_DECLARE(svfloat32_t, src_x);
+    VML_VC_DECLARE(svfloat32_t, dd_x);
+    VML_VC_DECLARE(svfloat32_t, res);
 
-    VML_VectorComputation_LD_STEP(src_x, svld1_f32, pg, src, step);
+    VML_VC_LD_STEP(src_x, svld1_f32, pg, src, step);
 
-    VML_VectorComputation_LD_STEP(dd_x, svld1_f32, pg, dd, step);
+    VML_VC_LD_STEP(dd_x, svld1_f32, pg, dd, step);
 
-    VML_VectorComputation_FUNC_PG_N2_2PARA(res, svmul_f32_m, pg, src_x, a);
-    VML_VectorComputation_FUNC_PG_2PARA(res, svdiv_f32_x, pg, dd_x, res);
-    VML_VectorComputation_ST_STEP(svst1_f32, pg, ds, step, res);
+    VML_VC_FUNC_PG_N2_2PARA(res, svmul_f32_m, pg, src_x, a);
+    VML_VC_FUNC_PG_2PARA(res, svdiv_f32_x, pg, dd_x, res);
+    VML_VC_ST_STEP(svst1_f32, pg, ds, step, res);
 }
 
-void SqrtDstSveBWDF32(const int64_t len, const float *src, const float *dd, float *ds)
+void SqrtDstVCBWDF32(const int64_t len, const float *src, const float *dd, float *ds)
 {
     int64_t i = 0;
     int64_t loopSqrtDstf = svcntw();
     svfloat32_t va = svdup_n_f32(FLOAT_TWO);
 
-    for (; i <= len - loopSqrtDstf * VML_VectorComputation_UNFOLD_N; i += loopSqrtDstf * VML_VectorComputation_UNFOLD_N) {
+    for (; i <= len - loopSqrtDstf * VML_VC_UNFOLD_N; i += loopSqrtDstf * VML_VC_UNFOLD_N) {
         SqrtMainKernelBwdF32(va, src + i, dd + i, ds + i, loopSqrtDstf);
     }
     for (; i < len; i += loopSqrtDstf) {
