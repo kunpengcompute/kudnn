@@ -2,7 +2,7 @@
 
 ## 🔥release-notes
 - [2026/03] KuDNN首次上线，支持linear、softmax和normal等算子，使用KML BLAS高性能库和JIT动态代码生成kernel作为底层计算方法
-- [2026/08] 新增bf16和fp16的JIT支持，优化GEMM和卷积性能；删除KML BLAS依赖
+- [2026/08] 新增bf16和fp16的JIT支持，优化GEMM和卷积性能；删除KML BLAS依赖；新增若干接口
 
 ## 🚀概述
 KuDNN鲲鹏深度神经网络算子库，结合鲲鹏CPU微架构特性与软优化手段，优化AI算子性能。KuDNN可以通过算子库插件形式集成进开源软件oneDNN框架，也可以单独作为后端加速算子集成到TensorFlow或者Pytorch。
@@ -85,11 +85,11 @@ module load gcc/compiler12.3.1/gccmodule    #加载gcc编译器，版本号根�
 
 上传并解压 KuDNN 项目源码包（分支名根据实际情况调整）
 ```
-unzip kudnn-main.zip
+unzip kudnn-developer.zip
 ```
 进入KuDNN项目源码根目录（分支名根据实际情况调整）
 ```
-cd kudnn-main
+cd kudnn-developer
 ```
 执行如下命令
 ``` shell
@@ -163,20 +163,7 @@ OMP_NUM_THREADS=8 ./benchdnn --mode=P --matmul --dt=s8:s8:s32 --stag=ab --wtag=b
 
 ## 📖学习教程
 
-### 算子说明
-KuDNN目前支持的算子如表 KuDNN支持的算子如下所示。
-
-|算子名称|算子说明|
-|:---:|:---|
-|[GEMM & Linear](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_163.html)|矩阵乘法算子|
-|[Linear+postops](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_166.html)|在Linear算子计算后进行relu、silu、gelu、resext、resmul及residential等操作|
-|[Softmax](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_172.html)|Softmax归一化算子|
-|[Conv2d/Conv3d](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_175.html)|2d/3d卷积算子|
-|[Group Normalization](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_178.html)|组归一化算子|
-|[Layer Normalization](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_181.html)|层归一化算子|
-|[Embedding](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_184.html)|映射|
-|[Root Mean Square Normalization](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_187.html)|均方根归一化算子|
-|[Rotary Position Embedding](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_190.html)|旋转位置编码|
+通过oneDNN实现pytorch适配KuDNN方法见`doc/pytorch.md`
 
 更多学习教程见KuDNN开发指南。
 
